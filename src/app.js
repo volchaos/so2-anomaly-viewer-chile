@@ -121,11 +121,37 @@
       layerControl.addOverlay(borderLayer, "Límite Chile");
 
       const volcanos = await loadGeoJson(cfg.data.volcanoes, volcanoMarker, "Volcán");
+      // --- Labels: Volcanoes ---
+      volcanos.eachLayer(l => {
+        const p = l.feature?.properties || {};
+        const name = p.name || p.Name || p.NOMBRE || "Volcán";
+        l.bindTooltip(name, {
+          permanent: true,
+          direction: "top",
+          offset: [0, -10],
+          opacity: 0.9,
+          className: "label-volcano"
+        });
+      });
+
       volcanos.addTo(map);
       layerControl.addOverlay(volcanos, "Volcanes");
 
       const smelters = await loadGeoJson(cfg.data.smelters, smelterMarker, "Fundición");
       smelters.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
+      // --- Labels: Smelters ---
+      smelters.eachLayer(l => {
+        const p = l.feature?.properties || {};
+        const name = p.name || p.Name || p.NOMBRE || "Fundición";
+        l.bindTooltip(name, {
+          permanent: true,
+          direction: "right",
+          offset: [8, 0],
+          opacity: 0.9,
+          className: "label-smelter"
+        });
+      });
+
       smelters.addTo(map);
       layerControl.addOverlay(smelters, "Fundiciones");
 
@@ -135,7 +161,28 @@
       setStatus(`Error: ${err.message}`);
     }
   }
+// --- Show/hide labels by zoom ---
+function updateLabels() {
+  const z = map.getZoom();
+  const showSmelter = z >= 5;
+  const showVolcano = z >= 7;
 
+  volcanos.eachLayer(l => {
+    if (!l.getTooltip()) return;
+    if (showVolcano) l.openTooltip();
+    else l.closeTooltip();
+  });
+
+  smelters.eachLayer(l => {
+    if (!l.getTooltip()) return;
+    if (showSmelter) l.openTooltip();
+    else l.closeTooltip();
+  });
+}
+
+map.on("zoomend", updateLabels);
+updateLabels();
+  
   dateInput.addEventListener("change", () => addSo2Layer(dateInput.value));
   opacityInput.addEventListener("input", () => { if (so2Layer) so2Layer.setOpacity(parseFloat(opacityInput.value)); });
   todayBtn.addEventListener("click", () => { dateInput.value = todayUtcDateString(); addSo2Layer(dateInput.value); });
