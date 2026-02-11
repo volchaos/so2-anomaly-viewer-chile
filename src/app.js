@@ -219,7 +219,7 @@
 
   // --- Label thresholds by SCALE ---
   // Show labels when scale is "close enough" (denominator <= threshold)
-  const SCALE_OVDAS_LABEL = 2500000; // 1:250.000
+  const SCALE_OVDAS_LABEL = 3500000; // 1:250.000
   const SCALE_OTHER_LABEL = 750000;  // 1:50.000
   const SCALE_SMELTER_LABEL = 750000; // 1:50.000
 
