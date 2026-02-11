@@ -22,6 +22,8 @@ main { position:relative; height: calc(100% - 58px); }
 .swatch.smelter { background:#000; border-radius:50%; }
 .swatch.border { background: transparent; border:2px solid #000; }
 .swatch.so2 { background:#ddd; }
+
+/* Labels */
 .label-volcano, .label-smelter {
   background: rgba(255,255,255,0.92);
   border: 1px solid rgba(0,0,0,0.15);
@@ -34,3 +36,42 @@ main { position:relative; height: calc(100% - 58px); }
 
 .label-volcano { font-weight: 600; }
 .label-smelter { font-weight: 600; }
+
+/* Optional: cleaner Leaflet tooltips */
+.leaflet-tooltip.label-volcano,
+.leaflet-tooltip.label-smelter {
+  border: none;
+}
+
+.leaflet-tooltip.label-volcano::before,
+.leaflet-tooltip.label-smelter::before {
+  display: none;
+}
+
+/* Differentiate OVDAS vs other volcano labels (optional) */
+.label-volcano-ovdas { font-weight: 700; }
+.label-volcano-other { opacity: 0.85; }
+
+/* Numeric scale control (bottom-left, stacked above graphic scale) */
+.numeric-scale {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  margin-bottom: 6px; /* separate from graphic scale */
+}
+
+/* Make Leaflet's scale match our style a bit */
+.leaflet-control-scale {
+  background: transparent;
+}
+.leaflet-control-scale-line {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 2px 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+}
