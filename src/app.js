@@ -25,7 +25,10 @@
     return `${dateStr}T05:00:00Z`;
   }
 
-  const map = L.map("map", { worldCopyJump: true }).setView(cfg.map.center, cfg.map.zoom);
+  const map = L.map("map", { worldCopyJump: true }).setView(
+    cfg.map.center,
+    cfg.map.zoom
+  );
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -59,7 +62,8 @@
     return L.marker(latlng, {
       icon: L.divIcon({
         className: "volcano-icon",
-        html: '<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:14px solid black;"></div>',
+        html:
+          '<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:14px solid black;"></div>',
         iconSize: [14, 14],
         iconAnchor: [7, 14]
       })
@@ -71,7 +75,10 @@
   }
 
   function bindPopup(layer, props, fallbackTitle) {
-    const name = (props && (props.name || props.Name || props.NOMBRE)) || fallbackTitle || "Sin nombre";
+    const name =
+      (props && (props.name || props.Name || props.NOMBRE)) ||
+      fallbackTitle ||
+      "Sin nombre";
     const extra = [];
     if (props && props.type) extra.push(`Tipo: ${props.type}`);
     if (props && props.empresa) extra.push(`Empresa: ${props.empresa}`);
@@ -102,12 +109,39 @@
       return false;
     }
 
-    const chile = { type: "FeatureCollection", features: (gj.features || []).filter(f => isChileFeature(f.properties)) };
+    const chile = {
+      type: "FeatureCollection",
+      features: (gj.features || []).filter(f => isChileFeature(f.properties))
+    };
 
     return L.geoJSON(chile, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
   }
 
   const layerControl = L.control.layers({}, {}, { collapsed: false }).addTo(map);
+
+  // Keep references for zoom label control
+  let volcanos = null;
+  let smelters = null;
+
+  function updateLabels() {
+    if (!volcanos || !smelters) return;
+
+    const z = map.getZoom();
+    const showSmelter = z >= 5;
+    const showVolcano = z >= 7;
+
+    volcanos.eachLayer(l => {
+      if (!l.getTooltip()) return;
+      if (showVolcano) l.openTooltip();
+      else l.closeTooltip();
+    });
+
+    smelters.eachLayer(l => {
+      if (!l.getTooltip()) return;
+      if (showSmelter) l.openTooltip();
+      else l.closeTooltip();
+    });
+  }
 
   async function init() {
     try {
@@ -120,8 +154,7 @@
       borderLayer.addTo(map);
       layerControl.addOverlay(borderLayer, "Límite Chile");
 
-      const volcanos = await loadGeoJson(cfg.data.volcanoes, volcanoMarker, "Volcán");
-      // --- Labels: Volcanoes ---
+      volcanos = await loadGeoJson(cfg.data.volcanoes, volcanoMarker, "Volcán");
       volcanos.eachLayer(l => {
         const p = l.feature?.properties || {};
         const name = p.name || p.Name || p.NOMBRE || "Volcán";
@@ -133,13 +166,13 @@
           className: "label-volcano"
         });
       });
-
       volcanos.addTo(map);
       layerControl.addOverlay(volcanos, "Volcanes");
 
-      const smelters = await loadGeoJson(cfg.data.smelters, smelterMarker, "Fundición");
-      smelters.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
-      // --- Labels: Smelters ---
+      smelters = await loadGeoJson(cfg.data.smelters, smelterMarker, "Fundición");
+      smelters.eachLayer(l => {
+        if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" });
+      });
       smelters.eachLayer(l => {
         const p = l.feature?.properties || {};
         const name = p.name || p.Name || p.NOMBRE || "Fundición";
@@ -151,29 +184,13 @@
           className: "label-smelter"
         });
       });
-
       smelters.addTo(map);
       layerControl.addOverlay(smelters, "Fundiciones");
 
-      // --- Show/hide labels by zoom ---
-      function updateLabels() {
-        const z = map.getZoom();
-        const showSmelter = z >= 5;
-        const showVolcano = z >= 7;
+      // Wire zoom control AFTER layers exist
+      map.on("zoomend", updateLabels);
+      updateLabels();
 
-        volcanos.eachLayer(l => {
-          if (!l.getTooltip()) return;
-          if (showVolcano) l.openTooltip();
-          else l.closeTooltip();
-        });
-
-  smelters.eachLayer(l => {
-    if (!l.getTooltip()) return;
-    if (showSmelter) l.openTooltip();
-    else l.closeTooltip();
-  });
-}
-      
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar TIME del WMS.`);
     } catch (err) {
       console.error(err);
@@ -181,12 +198,15 @@
     }
   }
 
-map.on("zoomend", updateLabels);
-updateLabels();
-  
+  // UI events
   dateInput.addEventListener("change", () => addSo2Layer(dateInput.value));
-  opacityInput.addEventListener("input", () => { if (so2Layer) so2Layer.setOpacity(parseFloat(opacityInput.value)); });
-  todayBtn.addEventListener("click", () => { dateInput.value = todayUtcDateString(); addSo2Layer(dateInput.value); });
+  opacityInput.addEventListener("input", () => {
+    if (so2Layer) so2Layer.setOpacity(parseFloat(opacityInput.value));
+  });
+  todayBtn.addEventListener("click", () => {
+    dateInput.value = todayUtcDateString();
+    addSo2Layer(dateInput.value);
+  });
 
   init();
 })();
