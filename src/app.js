@@ -22,7 +22,7 @@
 
   function toWmsTime(dateStr) {
     if (cfg.wms.timeFormat === "date") return dateStr;
-    return `${dateStr}T00:00:00Z`;
+    return `${dateStr}T05:00:00Z`;
   }
 
   const map = L.map("map", { worldCopyJump: true }).setView(cfg.map.center, cfg.map.zoom);
