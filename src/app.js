@@ -155,23 +155,17 @@
       smelters.addTo(map);
       layerControl.addOverlay(smelters, "Fundiciones");
 
-      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar TIME del WMS.`);
-    } catch (err) {
-      console.error(err);
-      setStatus(`Error: ${err.message}`);
-    }
-  }
-// --- Show/hide labels by zoom ---
-function updateLabels() {
-  const z = map.getZoom();
-  const showSmelter = z >= 5;
-  const showVolcano = z >= 7;
+      // --- Show/hide labels by zoom ---
+      function updateLabels() {
+        const z = map.getZoom();
+        const showSmelter = z >= 5;
+        const showVolcano = z >= 7;
 
-  volcanos.eachLayer(l => {
-    if (!l.getTooltip()) return;
-    if (showVolcano) l.openTooltip();
-    else l.closeTooltip();
-  });
+        volcanos.eachLayer(l => {
+          if (!l.getTooltip()) return;
+          if (showVolcano) l.openTooltip();
+          else l.closeTooltip();
+        });
 
   smelters.eachLayer(l => {
     if (!l.getTooltip()) return;
@@ -179,6 +173,13 @@ function updateLabels() {
     else l.closeTooltip();
   });
 }
+      
+      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar TIME del WMS.`);
+    } catch (err) {
+      console.error(err);
+      setStatus(`Error: ${err.message}`);
+    }
+  }
 
 map.on("zoomend", updateLabels);
 updateLabels();
