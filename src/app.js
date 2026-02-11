@@ -36,6 +36,56 @@
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
 
+  // --- Scale controls (bottom-left) ---
+  // Graphic scale
+  L.control.scale({
+    position: "bottomleft",
+    metric: true,
+    imperial: false,
+    maxWidth: 140
+  }).addTo(map);
+
+  // Numeric scale control (1:XX.XXX)
+  const NumericScaleControl = L.Control.extend({
+    options: { position: "bottomleft" },
+    onAdd: function () {
+      const div = L.DomUtil.create("div", "numeric-scale");
+      div.textContent = "1:—";
+      return div;
+    }
+  });
+  const numericScale = new NumericScaleControl();
+  numericScale.addTo(map);
+
+  function formatScale(n) {
+    // Spanish-style thousands separators: 250.000
+    try {
+      return `1:${Math.round(n).toLocaleString("es-CL")}`;
+    } catch {
+      return `1:${Math.round(n)}`;
+    }
+  }
+
+  // Approx scale denominator at current view center
+  function currentScaleDenominator() {
+    const DPI = 96;
+    const INCHES_PER_METER = 39.37;
+
+    const centerLat = map.getCenter().lat;
+    const z = map.getZoom();
+    const metersPerPixel =
+      156543.03392 * Math.cos(centerLat * Math.PI / 180) / Math.pow(2, z);
+
+    return metersPerPixel * DPI * INCHES_PER_METER;
+  }
+
+  function updateNumericScale() {
+    const el = numericScale.getContainer();
+    if (!el) return;
+    const scale = currentScaleDenominator();
+    el.textContent = formatScale(scale);
+  }
+
   let so2Layer = null;
   function addSo2Layer(dateStr) {
     const timeParam = toWmsTime(dateStr);
@@ -60,18 +110,35 @@
   }
 
   // --- Icons ---
-  function volcanoDivIcon(sizePx) {
-    const s = sizePx;
+  function volcanoDivIcon(sizePx, isOvdas) {
+    const w = sizePx;
+    const h = Math.round(sizePx * 1.1);
+    const strokeWidth = isOvdas ? 2 : 0;
+
+    const svg = `
+      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <polygon
+          points="${w / 2},0 0,${h} ${w},${h}"
+          fill="black"
+          stroke="${isOvdas ? "red" : "none"}"
+          stroke-width="${strokeWidth}"
+          stroke-linejoin="round"
+        />
+      </svg>
+    `;
+
     return L.divIcon({
       className: "volcano-icon",
-      html: `<div style="width:0;height:0;border-left:${Math.round(s/2)}px solid transparent;border-right:${Math.round(s/2)}px solid transparent;border-bottom:${Math.round(s*1.1)}px solid black;"></div>`,
-      iconSize: [s, Math.round(s*1.1)],
-      iconAnchor: [Math.round(s/2), Math.round(s*1.1)]
+      html: svg,
+      iconSize: [w, h],
+      iconAnchor: [Math.round(w / 2), h]
     });
   }
 
   function volcanoMarker(latlng, isOvdas) {
-    return L.marker(latlng, { icon: volcanoDivIcon(isOvdas ? 18 : 12) });
+    // Other volcanoes = half the size of OVDAS
+    const size = isOvdas ? 18 : 9;
+    return L.marker(latlng, { icon: volcanoDivIcon(size, isOvdas) });
   }
 
   function smelterMarker(latlng) {
@@ -136,7 +203,7 @@
 
   const layerControl = L.control.layers({}, {}, { collapsed: false }).addTo(map);
 
-  // Layer refs for zoom label control
+  // Layer refs for label control
   let volcanosOvdasLayer = null;
   let volcanosOtherLayer = null;
   let smeltersLayer = null;
@@ -150,13 +217,18 @@
     });
   }
 
-  function updateLabels() {
-    const z = map.getZoom();
-    const zl = cfg.zoomLabels || { smelter: 5, ovdas: 7, other: 9 };
+  // --- Label thresholds by SCALE ---
+  // Show labels when scale is "close enough" (denominator <= threshold)
+  const SCALE_OVDAS_LABEL = 250000; // 1:250.000
+  const SCALE_OTHER_LABEL = 50000;  // 1:50.000
+  const SCALE_SMELTER_LABEL = 50000; // 1:50.000
 
-    const showSmelter = z >= zl.smelter;
-    const showOvdas = z >= zl.ovdas;
-    const showOther = z >= zl.other;
+  function updateLabels() {
+    const scale = currentScaleDenominator();
+
+    const showOvdas = scale <= SCALE_OVDAS_LABEL;
+    const showOther = scale <= SCALE_OTHER_LABEL;
+    const showSmelter = scale <= SCALE_SMELTER_LABEL;
 
     if (volcanosOvdasLayer) {
       volcanosOvdasLayer.eachLayer(l => {
@@ -165,6 +237,7 @@
         else l.closeTooltip();
       });
     }
+
     if (volcanosOtherLayer) {
       volcanosOtherLayer.eachLayer(l => {
         if (!l.getTooltip()) return;
@@ -172,6 +245,7 @@
         else l.closeTooltip();
       });
     }
+
     if (smeltersLayer) {
       smeltersLayer.eachLayer(l => {
         if (!l.getTooltip()) return;
@@ -251,26 +325,38 @@
       layerControl.addOverlay(volcanosOtherLayer, "Volcanes (otros)");
 
       // Smelters
-      smeltersLayer = await loadGeoJson(cfg.data.smelters, (feature, latlng) => smelterMarker(latlng), "Fundición");
+      smeltersLayer = await loadGeoJson(
+        cfg.data.smelters,
+        (feature, latlng) => smelterMarker(latlng),
+        "Fundición"
+      );
+
       smeltersLayer.eachLayer(l => {
         if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" });
       });
+
+      // Labels for smelters: RIGHT of point
       smeltersLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
         const name = p.name || p.Name || p.NOMBRE || "Fundición";
         bindLabel(l, name, "label-smelter", {
           direction: "right",
-          offset: [8, 0]
+          offset: [10, 0]
         });
       });
+
       smeltersLayer.addTo(map);
       layerControl.addOverlay(smeltersLayer, "Fundiciones");
 
-      map.on("zoomend", updateLabels);
+      // Update labels + numeric scale when view changes
+      map.on("zoomend", () => { updateLabels(); updateNumericScale(); });
+      map.on("moveend", () => { updateLabels(); updateNumericScale(); });
+
+      // First update
+      updateNumericScale();
       updateLabels();
 
-      const zl = cfg.zoomLabels || { smelter: 5, ovdas: 7, other: 9 };
-      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Etiquetas: fundiciones ≥${zl.smelter}, OVDAS ≥${zl.ovdas}, otros ≥${zl.other}.`);
+      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Etiquetas por escala: OVDAS ≤1:${SCALE_OVDAS_LABEL.toLocaleString("es-CL")}, otros/fundiciones ≤1:${SCALE_OTHER_LABEL.toLocaleString("es-CL")}.`);
     } catch (err) {
       console.error(err);
       setStatus(`Error: ${err.message}`);
