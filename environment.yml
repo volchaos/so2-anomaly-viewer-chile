@@ -1,0 +1,12 @@
+name: so2-wind
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - requests
+  - xarray
+  - cfgrib
+  - eccodes

@@ -1,0 +1,29 @@
+{
+  "roi_bbox": {
+    "leftlon": -120.0,
+    "rightlon": -30.0,
+    "bottomlat": -60.0,
+    "toplat": 15.0
+  },
+  "levels": {
+    "10m": {
+      "type": "height",
+      "level": "10_m_above_ground"
+    },
+    "900hPa": {
+      "type": "isobaric",
+      "level": "900_mb"
+    },
+    "400hPa": {
+      "type": "isobaric",
+      "level": "400_mb"
+    },
+    "150hPa": {
+      "type": "isobaric",
+      "level": "150_mb"
+    }
+  },
+  "tolerance_minutes": 90,
+  "target_time_utc": "06:00:00Z",
+  "sampling_step_grid": 2
+}
