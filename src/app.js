@@ -446,8 +446,19 @@
       smeltersLayer.addTo(map);
       layerControl.addOverlay(smeltersLayer, "Fundiciones");
 
-      // Wind overlays (OFF by default)
+      // Wind overlays (ON by default)
       wireWindOverlays();
+
+      // Activar todas las capas de viento al cargar la página (quedan "cliqueadas")
+      for (const wl of WIND_LEVELS) {
+        const lg = windLayers[wl.key];
+        if (lg && !map.hasLayer(lg)) map.addLayer(lg);
+      }
+
+      // Cargar el viento inmediatamente para la fecha inicial
+      for (const wl of WIND_LEVELS) {
+        await refreshWindLayer(wl.key);
+      }
 
       // Update labels + numeric scale when view changes
       map.on("zoomend", () => { updateLabels(); updateNumericScale(); });
