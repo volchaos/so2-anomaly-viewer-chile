@@ -32,6 +32,12 @@
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
 
+
+  // Pane para viento (arriba del WMS)
+  map.createPane("windPane");
+  map.getPane("windPane").style.zIndex = 650; // arriba de tiles/WMS
+
+  
   // --- Scale controls (bottom-left) ---
   // Graphic scale
   L.control.scale({
@@ -521,6 +527,8 @@
     const headPx = Math.max(4, Math.min(7, lenPx * 0.35));
     const headAngle = opts.headAngleRad;
 
+
+    
     // Leaflet pixel coords: x east, y south; northward v should reduce y => use -v
     const ang = Math.atan2(-v, u);
 
@@ -541,10 +549,17 @@
     const llL = map.layerPointToLatLng(left);
     const llR = map.layerPointToLatLng(right);
 
-    const common = { color: opts.stroke, weight: opts.weight, opacity: opts.opacity, interactive: false };
+    const common = {
+      color: opts.stroke,
+      weight: opts.weight,
+      opacity: opts.opacity,
+      interactive: false,
+      pane: "windPane"
+    };
     L.polyline([ll0, ll1], common).addTo(opts.group);
     L.polyline([ll1, llL], common).addTo(opts.group);
     L.polyline([ll1, llR], common).addTo(opts.group);
+
   }
 
   function renderWindLayer(windData, layerGroup) {
