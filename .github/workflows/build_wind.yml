@@ -39,8 +39,8 @@ jobs:
             RUN_DATE="$(python -c "import datetime as d; print(d.datetime.utcnow().date().isoformat())")"
           fi
           echo "RUN_DATE=$RUN_DATE"
-echo "Lookback days (wind_config.json): $(python -c \"import json; print(json.load(open(\'wind_config.json\')).get(\'lookback_days\',\'?\'))\")"
-micromamba run -n so2-wind python scripts/run_wind_daily.py "$RUN_DATE"
+          echo "Lookback days (wind_config.json): $(python -c \"import json; print(json.load(open(\'wind_config.json\')).get(\'lookback_days\',\'?\'))\")"
+          micromamba run -n so2-wind python scripts/run_wind_daily.py "$RUN_DATE"
 
       - name: Commit and push if changed
         shell: bash -l {0}
