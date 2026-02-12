@@ -1,0 +1,54 @@
+name: Build daily wind overlays
+
+on:
+  schedule:
+    - cron: "10 20 * * *"
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: "YYYY-MM-DD (vacío = hoy UTC)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build-wind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          cache-environment: true
+
+      - name: Decide date (UTC)
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.run_date }}" ]; then
+            echo "RUN_DATE=${{ inputs.run_date }}" >> $GITHUB_ENV
+          else
+            echo "RUN_DATE=$(date -u +%F)" >> $GITHUB_ENV
+          fi
+
+      - name: Generate wind JSON (10m, 900, 400, 150)
+        shell: bash
+        run: |
+          micromamba run -n so2-wind python scripts/run_wind_daily.py "$RUN_DATE"
+
+      - name: Commit & push (if changes)
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/wind
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Add wind overlays for $RUN_DATE"
+          git push
