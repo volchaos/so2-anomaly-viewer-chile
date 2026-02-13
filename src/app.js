@@ -27,6 +27,12 @@
 
   const map = L.map("map", { worldCopyJump: true }).setView(cfg.map.center, cfg.map.zoom);
 
+  // Pane + renderer Canvas para viento (rápido y encima del WMS)
+  map.createPane("windPane");
+  map.getPane("windPane").style.zIndex = 650; // encima del WMS
+  const windRenderer = L.canvas({ pane: "windPane", padding: 0.5 });
+
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap contributors"
@@ -451,19 +457,23 @@
       wireWindOverlays();
 
       // Re-render visible wind layers on zoom/pan so arrows keep stable pixel size
+      let windRaf = null;
       function rerenderVisibleWind() {
-        for (const wl of WIND_LEVELS) {
-          const lg = windLayers[wl.key];
-          if (!lg) continue;
-          if (map.hasLayer(lg) && windCache[wl.key] && windCache[wl.key].points && windCache[wl.key].points.length) {
-            renderWindLayer(windCache[wl.key], lg);
+        if (windRaf) cancelAnimationFrame(windRaf);
+        windRaf = requestAnimationFrame(() => {
+          for (const wl of WIND_LEVELS) {
+            const lg = windLayers[wl.key];
+            if (!lg) continue;
+            if (map.hasLayer(lg) && windCache[wl.key] && windCache[wl.key].points && windCache[wl.key].points.length) {
+              renderWindLayer(windCache[wl.key], lg);
+            }
           }
-        }
+        });
       }
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
 
-      // Activar todas las capas de viento al cargar la página (quedan "cliqueadas")
+// Activar todas las capas de viento al cargar la página (quedan "cliqueadas")
       for (const wl of WIND_LEVELS) {
         const lg = windLayers[wl.key];
         if (lg && !map.hasLayer(lg)) map.addLayer(lg);
@@ -541,7 +551,15 @@
     const llL = map.layerPointToLatLng(left);
     const llR = map.layerPointToLatLng(right);
 
-    const common = { color: opts.stroke, weight: opts.weight, opacity: opts.opacity, interactive: false };
+    const common = {
+      color: opts.stroke,
+      weight: opts.weight,
+      opacity: opts.opacity,
+      interactive: false,
+      pane: "windPane",
+      renderer: opts.renderer
+    };
+
     L.polyline([ll0, ll1], common).addTo(opts.group);
     L.polyline([ll1, llL], common).addTo(opts.group);
     L.polyline([ll1, llR], common).addTo(opts.group);
@@ -549,21 +567,53 @@
 
   function renderWindLayer(windData, layerGroup) {
     layerGroup.clearLayers();
-    if (!windData || !windData.points || windData.points.length === 0) return;
+    if (!windData || !windData.points || windData.points.length === 0) {
+      return;
+    }
 
-    // Windy-like styling: subtle grey arrows with nearly fixed screen length
+    const bounds = map.getBounds();
+
+    // Estilo tipo Windy (gris un poco más oscuro)
     const opts = {
       group: layerGroup,
       stroke: "#555555",
       weight: 1.2,
-      opacity: 0.7,
+      opacity: 0.75,
       baseLenPx: 14,
       minLenPx: 10,
       maxLenPx: 22,
       speedCap: 25,
       speedScalePxPerMs: 0.18,
-      headAngleRad: Math.PI / 7
+      headAngleRad: Math.PI / 7,
+      renderer: windRenderer
     };
+
+    // Submuestreo por zoom para evitar "matar" el navegador
+    const z = map.getZoom();
+    const stride =
+      z <= 3 ? 40 :
+      z <= 4 ? 25 :
+      z <= 5 ? 14 :
+      z <= 6 ? 9  :
+      z <= 7 ? 6  : 3;
+
+    const pts = windData.points;
+    let drawn = 0;
+    for (let i = 0; i < pts.length; i += stride) {
+      const p = pts[i];
+      if (!bounds.contains([p.lat, p.lon])) continue;
+      drawArrowPixel(p.lat, p.lon, p.u, p.v, opts);
+      drawn++;
+    }
+
+    // Debug suave (no molesta): muestra cuántas flechas se dibujaron
+    try {
+      if (typeof setStatus === "function") {
+        const lvl = windData?.meta?.level_key || "";
+        setStatus(`Viento ${lvl}: ${drawn} flechas (de ${pts.length} vectores) | Δt=${windData?.meta?.delta_minutes ?? "?"} min`);
+      }
+    } catch (_) {}
+  };
 
     for (const p of windData.points) {
       drawArrowPixel(p.lat, p.lon, p.u, p.v, opts);
