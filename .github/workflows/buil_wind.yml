@@ -23,11 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup micromamba
+      - name: Setup micromamba (NO cache)
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment.yml
-          cache-environment: true
+          cache-environment: false
           init-shell: bash
 
       - name: Generate wind JSON (10m, 900, 400, 150)
@@ -39,7 +39,7 @@ jobs:
             RUN_DATE="$(python -c "import datetime as d; print(d.datetime.utcnow().date().isoformat())")"
           fi
           echo "RUN_DATE=$RUN_DATE"
-          echo "Lookback days (wind_config.json): $(python -c \"import json; print(json.load(open(\'wind_config.json\')).get(\'lookback_days\',\'?\'))\")"
+          echo "Lookback days (wind_config.json): $(python -c "import json; print(json.load(open('wind_config.json')).get('lookback_days','?'))")"
           micromamba run -n so2-wind python scripts/run_wind_daily.py "$RUN_DATE"
 
       - name: Commit and push if changed
