@@ -27,65 +27,10 @@
 
   const map = L.map("map", { worldCopyJump: true }).setView(cfg.map.center, cfg.map.zoom);
 
-  // Pane + renderer Canvas para viento (rápido y encima del WMS)
-  map.createPane("windPane");
-  map.getPane("windPane").style.zIndex = 650;
-  const windRenderer = L.canvas({ pane: "windPane", padding: 0.5 });
-
-
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
-
-  // --- Scale controls (bottom-left) ---
-  // Graphic scale
-  L.control.scale({
-    position: "bottomleft",
-    metric: true,
-    imperial: false,
-    maxWidth: 140
-  }).addTo(map);
-
-  // Numeric scale control (1:XX.XXX)
-  const NumericScaleControl = L.Control.extend({
-    options: { position: "bottomleft" },
-    onAdd: function () {
-      const div = L.DomUtil.create("div", "numeric-scale");
-      div.textContent = "1:—";
-      return div;
-    }
-  });
-  const numericScale = new NumericScaleControl();
-  numericScale.addTo(map);
-
-  function formatScale(n) {
-    try {
-      return `1:${Math.round(n).toLocaleString("es-CL")}`;
-    } catch {
-      return `1:${Math.round(n)}`;
-    }
-  }
-
-  // Approx scale denominator at current view center (96 DPI)
-  function currentScaleDenominator() {
-    const DPI = 96;
-    const INCHES_PER_METER = 39.37;
-
-    const centerLat = map.getCenter().lat;
-    const z = map.getZoom();
-    const metersPerPixel =
-      156543.03392 * Math.cos(centerLat * Math.PI / 180) / Math.pow(2, z);
-
-    return metersPerPixel * DPI * INCHES_PER_METER;
-  }
-
-  function updateNumericScale() {
-    const el = numericScale.getContainer();
-    if (!el) return;
-    const scale = currentScaleDenominator();
-    el.textContent = formatScale(scale);
-  }
 
   let so2Layer = null;
   function addSo2Layer(dateStr) {
@@ -110,35 +55,15 @@
     setStatus(`SO₂ (WMS) | Fecha seleccionada (UTC): ${dateStr} | TIME=${timeParam}`);
   }
 
-  // --- Icons ---
-  function volcanoDivIcon(sizePx, isOvdas) {
-    const w = sizePx;
-    const h = Math.round(sizePx * 1.1);
-    const strokeWidth = isOvdas ? 2 : 0;
-
-    const svg = `
-      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-        <polygon
-          points="${w / 2},0 0,${h} ${w},${h}"
-          fill="black"
-          stroke="${isOvdas ? "red" : "none"}"
-          stroke-width="${strokeWidth}"
-          stroke-linejoin="round"
-        />
-      </svg>
-    `;
-
-    return L.divIcon({
-      className: "volcano-icon",
-      html: svg,
-      iconSize: [w, h],
-      iconAnchor: [Math.round(w / 2), h]
+  function volcanoMarker(latlng) {
+    return L.marker(latlng, {
+      icon: L.divIcon({
+        className: "volcano-icon",
+        html: '<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:14px solid black;"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 14]
+      })
     });
-  }
-
-  function volcanoMarker(latlng, isOvdas) {
-    const size = isOvdas ? 18 : 9;
-    return L.marker(latlng, { icon: volcanoDivIcon(size, isOvdas) });
   }
 
   function smelterMarker(latlng) {
@@ -154,33 +79,20 @@
     layer.bindPopup(html);
   }
 
-  function normalizeName(s) {
-    if (!s) return "";
-    return String(s)
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .replace(/^volcan\s+/i, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  async function fetchJson(url, label, cacheMode) {
-    const r = await fetch(url, { cache: cacheMode || "no-store" });
-    if (!r.ok) throw new Error(`No se pudo cargar ${label}: ${r.status}`);
-    return await r.json();
-  }
-
   async function loadGeoJson(url, pointToLayerFn, label) {
-    const gj = await fetchJson(url, label, "no-store");
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error(`No se pudo cargar ${label}: ${r.status}`);
+    const gj = await r.json();
     return L.geoJSON(gj, {
-      pointToLayer: (feature, latlng) => pointToLayerFn(feature, latlng),
+      pointToLayer: (feature, latlng) => pointToLayerFn(latlng),
       onEachFeature: (feature, lyr) => bindPopup(lyr, feature.properties, label)
     });
   }
 
   async function loadChileBorder() {
-    const gj = await fetchJson(cfg.data.countriesUrl, "países", "force-cache");
+    const r = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
+    if (!r.ok) throw new Error(`No se pudo cargar países: ${r.status}`);
+    const gj = await r.json();
 
     function isChileFeature(props) {
       if (!props) return false;
@@ -191,57 +103,11 @@
     }
 
     const chile = { type: "FeatureCollection", features: (gj.features || []).filter(f => isChileFeature(f.properties)) };
+
     return L.geoJSON(chile, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
   }
 
   const layerControl = L.control.layers({}, {}, { collapsed: false }).addTo(map);
-
-  let volcanosOvdasLayer = null;
-  let volcanosOtherLayer = null;
-  let smeltersLayer = null;
-
-  function bindLabel(layer, name, className, opts) {
-    layer.bindTooltip(name, {
-      permanent: true,
-      opacity: 0.9,
-      className,
-      ...opts
-    });
-  }
-
-  // Label thresholds by SCALE (denominator <= threshold)
-  const SCALE_OVDAS_LABEL = 250000; // 1:250.000
-  const SCALE_OTHER_LABEL = 50000;  // 1:50.000
-  const SCALE_SMELTER_LABEL = 50000; // 1:50.000
-
-  function updateLabels() {
-    const scale = currentScaleDenominator();
-    const showOvdas = scale <= SCALE_OVDAS_LABEL;
-    const showOther = scale <= SCALE_OTHER_LABEL;
-    const showSmelter = scale <= SCALE_SMELTER_LABEL;
-
-    if (volcanosOvdasLayer) {
-      volcanosOvdasLayer.eachLayer(l => {
-        if (!l.getTooltip()) return;
-        if (showOvdas) l.openTooltip();
-        else l.closeTooltip();
-      });
-    }
-    if (volcanosOtherLayer) {
-      volcanosOtherLayer.eachLayer(l => {
-        if (!l.getTooltip()) return;
-        if (showOther) l.openTooltip();
-        else l.closeTooltip();
-      });
-    }
-    if (smeltersLayer) {
-      smeltersLayer.eachLayer(l => {
-        if (!l.getTooltip()) return;
-        if (showSmelter) l.openTooltip();
-        else l.closeTooltip();
-      });
-    }
-  }
 
   // --- Wind overlays (OFF by default; expects prebuilt JSON under data/wind/YYYY-MM-DD/) ---
   const windLayers = {};
@@ -251,6 +117,8 @@
     { key: "400hPa", label: "Viento (~7 km, 400 hPa)" },
     { key: "150hPa", label: "Viento (~15 km, 150 hPa)" }
   ];
+
+  const windCache = {}; // por nivel
 
   function toRad(deg) { return (deg * Math.PI) / 180; }
 
@@ -282,7 +150,9 @@
   }
 
   function windJsonPath(dateStr, levelKey) {
-    return `data/wind/${dateStr}/${levelKey}.json`;
+    // Resuelve bien en GitHub Pages (Project Pages) y con dominio custom
+    const rel = `data/wind/${dateStr}/${levelKey}.json`;
+    return new URL(rel, document.baseURI).toString();
   }
 
   async function loadWindFor(dateStr, levelKey) {
@@ -294,7 +164,6 @@
 
   function renderWindToLayer(windData, layerGroup) {
     layerGroup.clearLayers();
-      windCache[levelKey] = null;
 
     const pts = windData.points || [];
 
@@ -333,6 +202,8 @@
       const dateStr = dateInput.value;
       const windData = await loadWindFor(dateStr, levelKey);
 
+      windCache[levelKey] = windData;
+
       const dmin = windData?.meta?.delta_minutes;
       if (typeof dmin === "number" && dmin > 90) {
         setStatus(`⚠ Viento ${levelKey}: desfase ${dmin} min (>90). Fecha: ${dateStr}`);
@@ -342,6 +213,7 @@
     } catch (e) {
       console.warn(e);
       layerGroup.clearLayers();
+      windCache[levelKey] = null;
       setStatus(`(Sin viento ${levelKey} para ${dateInput.value})`);
     }
   }
@@ -379,230 +251,92 @@
 
       setStatus("Cargando capas…");
 
-      // Border (best effort)
-      try {
-        const borderLayer = await loadChileBorder();
-        borderLayer.addTo(map);
-        layerControl.addOverlay(borderLayer, "Límite fronterizo Chile");
-      } catch (e) {
-        console.warn("Chile border failed:", e);
-      }
+      const borderLayer = await loadChileBorder();
+      borderLayer.addTo(map);
+      layerControl.addOverlay(borderLayer, "Límite Chile");
 
-      // Volcano split: OVDAS vs other (by normalized name match)
-      const ovdasGJ = await fetchJson(cfg.data.volcanoesOvdas, "Volcanes OVDAS (44)", "no-store");
-      const ovdasNameSet = new Set(
-        (ovdasGJ.features || []).map(f =>
-          normalizeName(f.properties && (f.properties.name || f.properties.Name || f.properties.NOMBRE))
-        )
-      );
+      const volcanos = await loadGeoJson(cfg.data.volcanoes, volcanoMarker, "Volcán");
 
-      const allGJ = await fetchJson(cfg.data.volcanoesAll, "Volcanes (All)", "no-store");
-      const ovdasFeatures = [];
-      const otherFeatures = [];
-
-      for (const f of (allGJ.features || [])) {
-        const n = normalizeName(f.properties && (f.properties.name || f.properties.Name || f.properties.NOMBRE));
-        if (ovdasNameSet.has(n)) ovdasFeatures.push(f);
-        else otherFeatures.push(f);
-      }
-
-      volcanosOvdasLayer = L.geoJSON({ type: "FeatureCollection", features: ovdasFeatures }, {
-        pointToLayer: (feature, latlng) => volcanoMarker(latlng, true),
-        onEachFeature: (feature, lyr) => {
-          bindPopup(lyr, feature.properties, "Volcán");
-          const p = feature.properties || {};
-          const name = p.name || p.Name || p.NOMBRE || "Volcán";
-          bindLabel(lyr, name, "label-volcano label-volcano-ovdas", {
-            direction: "top",
-            offset: [0, -12]
-          });
-        }
-      });
-
-      volcanosOtherLayer = L.geoJSON({ type: "FeatureCollection", features: otherFeatures }, {
-        pointToLayer: (feature, latlng) => volcanoMarker(latlng, false),
-        onEachFeature: (feature, lyr) => {
-          bindPopup(lyr, feature.properties, "Volcán");
-          const p = feature.properties || {};
-          const name = p.name || p.Name || p.NOMBRE || "Volcán";
-          bindLabel(lyr, name, "label-volcano label-volcano-other", {
-            direction: "top",
-            offset: [0, -10]
-          });
-        }
-      });
-
-      volcanosOtherLayer.addTo(map);
-      volcanosOvdasLayer.addTo(map);
-      layerControl.addOverlay(volcanosOvdasLayer, "Volcanes monitoreados (OVDAS)");
-      layerControl.addOverlay(volcanosOtherLayer, "Volcanes no monitoreados");
-
-      // Smelters
-      smeltersLayer = await loadGeoJson(cfg.data.smelters, (feature, latlng) => smelterMarker(latlng), "Fundición");
-      smeltersLayer.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
-
-      smeltersLayer.eachLayer(l => {
+      volcanos.eachLayer(l => {
         const p = l.feature?.properties || {};
-        const name = p.name || p.Name || p.NOMBRE || "Fundición";
-        bindLabel(l, name, "label-smelter", {
-          direction: "right",
-          offset: [10, 0]
+        const name = p.name || p.Name || p.NOMBRE || "Volcán";
+        l.bindTooltip(name, {
+          permanent: true,
+          direction: "top",
+          offset: [0, -10],
+          opacity: 0.9,
+          className: "label-volcano"
         });
       });
 
-      smeltersLayer.addTo(map);
-      layerControl.addOverlay(smeltersLayer, "Fundiciones");
+      volcanos.addTo(map);
+      layerControl.addOverlay(volcanos, "Volcanes");
 
-      // Wind overlays (OFF by default)
-      wireWindOverlays();
+      const smelters = await loadGeoJson(cfg.data.smelters, smelterMarker, "Fundición");
+      smelters.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
 
-      // Re-render visible wind layers on zoom/pan so arrows keep stable pixel size
-      function rerenderVisibleWind() {
-        for (const wl of WIND_LEVELS) {
-          const lg = windLayers[wl.key];
-          if (!lg) continue;
-          if (map.hasLayer(lg) && windCache[wl.key] && windCache[wl.key].points && windCache[wl.key].points.length) {
-            renderWindLayer(windCache[wl.key], lg);
-          }
-        }
+      smelters.eachLayer(l => {
+        const p = l.feature?.properties || {};
+        const name = p.name || p.Name || p.NOMBRE || "Fundición";
+        l.bindTooltip(name, {
+          permanent: true,
+          direction: "right",
+          offset: [8, 0],
+          opacity: 0.9,
+          className: "label-smelter"
+        });
+      });
+
+      smelters.addTo(map);
+      layerControl.addOverlay(smelters, "Fundiciones");
+
+      // --- Show/hide labels by zoom ---
+      function updateLabels() {
+        const z = map.getZoom();
+        const showSmelter = z >= 5;
+        const showVolcano = z >= 7;
+
+        volcanos.eachLayer(l => {
+          if (!l.getTooltip()) return;
+          if (showVolcano) l.openTooltip();
+          else l.closeTooltip();
+        });
+
+        smelters.eachLayer(l => {
+          if (!l.getTooltip()) return;
+          if (showSmelter) l.openTooltip();
+          else l.closeTooltip();
+        });
       }
-      map.on("zoomend", rerenderVisibleWind);
-      map.on("moveend", rerenderVisibleWind);
 
-      // Activar todas las capas de viento al cargar la página (quedan "cliqueadas")
-      for (const wl of WIND_LEVELS) {
-        const lg = windLayers[wl.key];
-        if (lg && !map.hasLayer(lg)) map.addLayer(lg);
-      }
-      // Cargar el viento inmediatamente para la fecha inicial
-      for (const wl of WIND_LEVELS) {
-        await refreshWindLayer(wl.key);
-      }
-
-      // Update labels + numeric scale when view changes
-      map.on("zoomend", () => { updateLabels(); updateNumericScale(); });
-      map.on("moveend", () => { updateLabels(); updateNumericScale(); });
-
-      updateNumericScale();
+      map.on("zoomend", updateLabels);
       updateLabels();
 
-      setStatus(
-        `Listo. Fecha (UTC): ${dateInput.value}. Etiquetas por escala: OVDAS ≤1:${SCALE_OVDAS_LABEL.toLocaleString("es-CL")}, otros/fundiciones ≤1:${SCALE_OTHER_LABEL.toLocaleString("es-CL")}. Capas de viento disponibles (apagadas por defecto).`
-      );
+      // Wind overlays (added to layer control; OFF by default)
+      wireWindOverlays();
+
+      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar TIME del WMS.`);
     } catch (err) {
       console.error(err);
       setStatus(`Error: ${err.message}`);
     }
   }
 
-  dateInput.addEventListener("change", async () => {
+  dateInput.addEventListener("change", () => {
     addSo2Layer(dateInput.value);
-    for (const wl of WIND_LEVELS) await refreshWindLayer(wl.key);
+    // refresca viento si está encendido
+    for (const wl of WIND_LEVELS) refreshWindLayer(wl.key);
   });
 
   opacityInput.addEventListener("input", () => {
     if (so2Layer) so2Layer.setOpacity(parseFloat(opacityInput.value));
   });
 
-  todayBtn.addEventListener("click", async () => {
+  todayBtn.addEventListener("click", () => {
     dateInput.value = todayUtcDateString();
     addSo2Layer(dateInput.value);
-    for (const wl of WIND_LEVELS) await refreshWindLayer(wl.key);
+    for (const wl of WIND_LEVELS) refreshWindLayer(wl.key);
   });
 
   init();
 })();
-
-
-  // --- Wind cache (for re-render on zoom/move) ---
-  const windCache = {}; // { levelKey: windData }
-
-  function drawArrowPixel(lat, lon, u, v, opts) {
-    const speed = Math.hypot(u, v);
-
-    const baseLen = opts.baseLenPx;
-    const extra = Math.min(speed, opts.speedCap) * opts.speedScalePxPerMs;
-    const lenPx = Math.max(opts.minLenPx, Math.min(opts.maxLenPx, baseLen + extra));
-
-    const headPx = Math.max(4, Math.min(7, lenPx * 0.35));
-    const headAngle = opts.headAngleRad;
-
-    // Leaflet pixel coords: x east, y south; northward v should reduce y => use -v
-    const ang = Math.atan2(-v, u);
-
-    const p0 = map.latLngToLayerPoint([lat, lon]);
-    const p1 = L.point(p0.x + lenPx * Math.cos(ang), p0.y + lenPx * Math.sin(ang));
-
-    const left = L.point(
-      p1.x - headPx * Math.cos(ang - headAngle),
-      p1.y - headPx * Math.sin(ang - headAngle)
-    );
-    const right = L.point(
-      p1.x - headPx * Math.cos(ang + headAngle),
-      p1.y - headPx * Math.sin(ang + headAngle)
-    );
-
-    const ll0 = map.layerPointToLatLng(p0);
-    const ll1 = map.layerPointToLatLng(p1);
-    const llL = map.layerPointToLatLng(left);
-    const llR = map.layerPointToLatLng(right);
-
-    const common = {
-      color: opts.stroke,
-      weight: opts.weight,
-      opacity: opts.opacity,
-      interactive: false,
-      pane: "windPane",
-      renderer: opts.renderer
-    };
-    L.polyline([ll0, ll1], common).addTo(opts.group);
-    L.polyline([ll1, llL], common).addTo(opts.group);
-    L.polyline([ll1, llR], common).addTo(opts.group);
-  }
-
-  function renderWindLayer(windData, layerGroup) {
-    layerGroup.clearLayers();
-    if (!windData || !windData.points || windData.points.length === 0) return;
-
-    const bounds = map.getBounds();
-
-    const opts = {
-      group: layerGroup,
-      stroke: "#555555",
-      weight: 1.2,
-      opacity: 0.75,
-      baseLenPx: 14,
-      minLenPx: 10,
-      maxLenPx: 22,
-      speedCap: 25,
-      speedScalePxPerMs: 0.18,
-      headAngleRad: Math.PI / 7,
-      renderer: windRenderer
-    };
-
-    const z = map.getZoom();
-    const stride =
-      z <= 3 ? 40 :
-      z <= 4 ? 25 :
-      z <= 5 ? 14 :
-      z <= 6 ? 9  :
-      z <= 7 ? 6  : 3;
-
-    const pts = windData.points;
-    let drawn = 0;
-    for (let i = 0; i < pts.length; i += stride) {
-      const p = pts[i];
-      if (!bounds.contains([p.lat, p.lon])) continue;
-      drawArrowPixel(p.lat, p.lon, p.u, p.v, opts);
-      drawn++;
-    }
-
-    // Debug: muestra conteo
-    try {
-      if (typeof setStatus === "function") {
-        const lvl = windData?.meta?.level_key || "";
-        setStatus(`Viento ${lvl}: ${drawn} flechas (de ${pts.length} vectores) | Δt=${windData?.meta?.delta_minutes ?? "?"} min`);
-      }
-    } catch (_) {}
-  }
-
