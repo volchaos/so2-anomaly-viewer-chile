@@ -29,7 +29,7 @@
 
   // Pane + renderer Canvas para viento (rápido y encima del WMS)
   map.createPane("windPane");
-  map.getPane("windPane").style.zIndex = 650; // encima del WMS
+  map.getPane("windPane").style.zIndex = 650;
   const windRenderer = L.canvas({ pane: "windPane", padding: 0.5 });
 
 
@@ -457,23 +457,19 @@
       wireWindOverlays();
 
       // Re-render visible wind layers on zoom/pan so arrows keep stable pixel size
-      let windRaf = null;
       function rerenderVisibleWind() {
-        if (windRaf) cancelAnimationFrame(windRaf);
-        windRaf = requestAnimationFrame(() => {
-          for (const wl of WIND_LEVELS) {
-            const lg = windLayers[wl.key];
-            if (!lg) continue;
-            if (map.hasLayer(lg) && windCache[wl.key] && windCache[wl.key].points && windCache[wl.key].points.length) {
-              renderWindLayer(windCache[wl.key], lg);
-            }
+        for (const wl of WIND_LEVELS) {
+          const lg = windLayers[wl.key];
+          if (!lg) continue;
+          if (map.hasLayer(lg) && windCache[wl.key] && windCache[wl.key].points && windCache[wl.key].points.length) {
+            renderWindLayer(windCache[wl.key], lg);
           }
-        });
+        }
       }
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
 
-// Activar todas las capas de viento al cargar la página (quedan "cliqueadas")
+      // Activar todas las capas de viento al cargar la página (quedan "cliqueadas")
       for (const wl of WIND_LEVELS) {
         const lg = windLayers[wl.key];
         if (lg && !map.hasLayer(lg)) map.addLayer(lg);
@@ -559,7 +555,6 @@
       pane: "windPane",
       renderer: opts.renderer
     };
-
     L.polyline([ll0, ll1], common).addTo(opts.group);
     L.polyline([ll1, llL], common).addTo(opts.group);
     L.polyline([ll1, llR], common).addTo(opts.group);
@@ -567,13 +562,10 @@
 
   function renderWindLayer(windData, layerGroup) {
     layerGroup.clearLayers();
-    if (!windData || !windData.points || windData.points.length === 0) {
-      return;
-    }
+    if (!windData || !windData.points || windData.points.length === 0) return;
 
     const bounds = map.getBounds();
 
-    // Estilo tipo Windy (gris un poco más oscuro)
     const opts = {
       group: layerGroup,
       stroke: "#555555",
@@ -588,7 +580,6 @@
       renderer: windRenderer
     };
 
-    // Submuestreo por zoom para evitar "matar" el navegador
     const z = map.getZoom();
     const stride =
       z <= 3 ? 40 :
@@ -606,17 +597,12 @@
       drawn++;
     }
 
-    // Debug suave (no molesta): muestra cuántas flechas se dibujaron
+    // Debug: muestra conteo
     try {
       if (typeof setStatus === "function") {
         const lvl = windData?.meta?.level_key || "";
         setStatus(`Viento ${lvl}: ${drawn} flechas (de ${pts.length} vectores) | Δt=${windData?.meta?.delta_minutes ?? "?"} min`);
       }
     } catch (_) {}
-  };
-
-    for (const p of windData.points) {
-      drawArrowPixel(p.lat, p.lon, p.u, p.v, opts);
-    }
   }
 
