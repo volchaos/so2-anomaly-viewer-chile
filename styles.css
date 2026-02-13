@@ -1,0 +1,72 @@
+html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.topbar { display:flex; gap:16px; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #ddd; background:#fff; }
+.brand .title { font-weight: 700; }
+.brand .subtitle { font-size: 12px; color: #444; }
+.controls { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+.ctrl { display:flex; flex-direction:column; gap:4px; font-size:12px; color:#333; }
+.ctrl input[type="date"] { padding:6px 8px; border:1px solid #ccc; border-radius:8px; }
+.ctrl input[type="range"] { width:140px; }
+.btn { padding:7px 10px; border:1px solid #ccc; border-radius:10px; background:#f7f7f7; cursor:pointer; }
+.btn:hover { background:#eee; }
+main { position:relative; height: calc(100% - 58px); }
+#map { height: 100%; width: 100%; }
+.status { position:absolute; left:12px; bottom:12px; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:10px; border:1px solid #ddd; font-size:12px; max-width: 520px; }
+.legend { position:absolute; right:12px; bottom:12px; background:rgba(255,255,255,0.92); padding:10px 12px; border-radius:12px; border:1px solid #ddd; font-size:12px; width: 240px; }
+.legend-title { font-weight:700; margin-bottom:6px; }
+.legend-item { display:flex; align-items:center; gap:8px; margin:4px 0; }
+.legend-foot { margin-top:8px; font-size:12px; }
+.legend-foot a { color:#0b57d0; text-decoration:none; }
+.legend-foot a:hover { text-decoration:underline; }
+.swatch { width:14px; height:14px; display:inline-block; border-radius:3px; border:1px solid #3333; }
+.swatch.volcano { background:#000; border:2px solid red; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+.swatch.volcano-other { background:#000; border:1px solid rgba(0,0,0,0.5); clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+.swatch.smelter { background:#000; border-radius:50%; }
+.swatch.border { background: transparent; border:2px solid #000; }
+.swatch.so2 { background:#ddd; }
+.swatch.wind { background: transparent; border:2px solid #111; }
+
+.label-volcano, .label-smelter {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-size: 11px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  white-space: nowrap;
+}
+.label-volcano { font-weight: 600; }
+.label-smelter { font-weight: 600; }
+
+.leaflet-tooltip.label-volcano,
+.leaflet-tooltip.label-smelter {
+  border: none;
+}
+.leaflet-tooltip.label-volcano::before,
+.leaflet-tooltip.label-smelter::before {
+  display: none;
+}
+
+.label-volcano-ovdas { font-weight: 700; }
+.label-volcano-other { opacity: 0.85; }
+
+.numeric-scale {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  margin-bottom: 6px;
+}
+
+.leaflet-control-scale {
+  background: transparent;
+}
+.leaflet-control-scale-line {
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 2px 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+}
