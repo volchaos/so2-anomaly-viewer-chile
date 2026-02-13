@@ -9,7 +9,7 @@
   const openEoc = document.getElementById("openEoc");
 
   function setStatus(msg) {
-    statusEl.textContent = msg;
+    if (statusEl) statusEl.textContent = msg;
   }
 
   function todayUtcDateString() {
@@ -21,10 +21,12 @@
   }
 
   function toWmsTime(dateStr) {
+    // Tu WMS usa isoZ y ya acordamos usar 05:00:00Z para calzar el "día"
     if (cfg.wms.timeFormat === "date") return dateStr;
     return `${dateStr}T05:00:00Z`;
   }
 
+  // ---------------- Map ----------------
   const map = L.map("map", { worldCopyJump: true }).setView(cfg.map.center, cfg.map.zoom);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -32,56 +34,9 @@
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
 
-  // --- Scale controls (bottom-left) ---
-  // Graphic scale
-  L.control.scale({
-    position: "bottomleft",
-    metric: true,
-    imperial: false,
-    maxWidth: 140
-  }).addTo(map);
-
-  // Numeric scale control (1:XX.XXX)
-  const NumericScaleControl = L.Control.extend({
-    options: { position: "bottomleft" },
-    onAdd: function () {
-      const div = L.DomUtil.create("div", "numeric-scale");
-      div.textContent = "1:—";
-      return div;
-    }
-  });
-  const numericScale = new NumericScaleControl();
-  numericScale.addTo(map);
-
-  function formatScale(n) {
-    try {
-      return `1:${Math.round(n).toLocaleString("es-CL")}`;
-    } catch {
-      return `1:${Math.round(n)}`;
-    }
-  }
-
-  // Approx scale denominator at current view center (96 DPI)
-  function currentScaleDenominator() {
-    const DPI = 96;
-    const INCHES_PER_METER = 39.37;
-
-    const centerLat = map.getCenter().lat;
-    const z = map.getZoom();
-    const metersPerPixel =
-      156543.03392 * Math.cos(centerLat * Math.PI / 180) / Math.pow(2, z);
-
-    return metersPerPixel * DPI * INCHES_PER_METER;
-  }
-
-  function updateNumericScale() {
-    const el = numericScale.getContainer();
-    if (!el) return;
-    const scale = currentScaleDenominator();
-    el.textContent = formatScale(scale);
-  }
-
+  // ---------------- SO2 WMS ----------------
   let so2Layer = null;
+
   function addSo2Layer(dateStr) {
     const timeParam = toWmsTime(dateStr);
 
@@ -100,22 +55,23 @@
     so2Layer.setOpacity(parseFloat(opacityInput.value));
     so2Layer.addTo(map);
 
-    openEoc.href = cfg.ui.eocDatasetPage;
-    setStatus(`SO₂ (WMS) | Fecha seleccionada (UTC): ${dateStr} | TIME=${timeParam}`);
+    if (openEoc) openEoc.href = cfg.ui.eocDatasetPage;
+    setStatus(`SO₂ (WMS) | Fecha (UTC): ${dateStr} | TIME=${timeParam}`);
   }
 
-  // --- Icons ---
-  function volcanoDivIcon(sizePx, isOvdas) {
+  // ---------------- Icons ----------------
+  function volcanoDivIcon(sizePx, strokeColor) {
     const w = sizePx;
     const h = Math.round(sizePx * 1.1);
-    const strokeWidth = isOvdas ? 2 : 0;
+    const stroke = strokeColor || "none";
+    const strokeWidth = strokeColor ? 2 : 0;
 
     const svg = `
       <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
         <polygon
           points="${w / 2},0 0,${h} ${w},${h}"
           fill="black"
-          stroke="${isOvdas ? "red" : "none"}"
+          stroke="${stroke}"
           stroke-width="${strokeWidth}"
           stroke-linejoin="round"
         />
@@ -130,17 +86,27 @@
     });
   }
 
-  function volcanoMarker(latlng, isOvdas) {
-    const size = isOvdas ? 18 : 9;
-    return L.marker(latlng, { icon: volcanoDivIcon(size, isOvdas) });
+  function volcanoMarkerOVDAS(latlng) {
+    // Triángulo grande, borde rojo, relleno negro
+    return L.marker(latlng, { icon: volcanoDivIcon(18, "red") });
+  }
+
+  function volcanoMarkerOther(latlng) {
+    // Triángulo mitad de tamaño, sin borde
+    return L.marker(latlng, { icon: volcanoDivIcon(9, null) });
   }
 
   function smelterMarker(latlng) {
     return L.circleMarker(latlng, { radius: 6, weight: 2, fillOpacity: 0.9 });
   }
 
+  // ---------------- Helpers ----------------
+  function nameFromProps(props, fallback) {
+    return (props && (props.name || props.Name || props.NOMBRE)) || fallback || "Sin nombre";
+  }
+
   function bindPopup(layer, props, fallbackTitle) {
-    const name = (props && (props.name || props.Name || props.NOMBRE)) || fallbackTitle || "Sin nombre";
+    const name = nameFromProps(props, fallbackTitle);
     const extra = [];
     if (props && props.type) extra.push(`Tipo: ${props.type}`);
     if (props && props.empresa) extra.push(`Empresa: ${props.empresa}`);
@@ -149,7 +115,9 @@
   }
 
   async function loadGeoJson(url, pointToLayerFn, label) {
-    const r = await fetch(url, { cache: "no-store" });
+    // Importante: resolver relativo a baseURI para GitHub Pages
+    const absUrl = new URL(url, document.baseURI).toString();
+    const r = await fetch(absUrl, { cache: "no-store" });
     if (!r.ok) throw new Error(`No se pudo cargar ${label}: ${r.status}`);
     const gj = await r.json();
     return L.geoJSON(gj, {
@@ -171,61 +139,73 @@
       return false;
     }
 
-    const chile = { type: "FeatureCollection", features: (gj.features || []).filter(f => isChileFeature(f.properties)) };
+    const chile = {
+      type: "FeatureCollection",
+      features: (gj.features || []).filter(f => isChileFeature(f.properties))
+    };
 
     return L.geoJSON(chile, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
   }
 
+  // ---------------- Layer control ----------------
   const layerControl = L.control.layers({}, {}, { collapsed: false }).addTo(map);
 
-  // --- Data layers ---
+  // ---------------- Layers ----------------
+  let borderLayer = null;
   let volcanesOvdasLayer = null;
   let volcanesOtrosLayer = null;
   let smeltersLayer = null;
-  let borderLayer = null;
 
-  function volcanoNameFromProps(p) {
-    return p?.name || p?.Name || p?.NOMBRE || p?.volcano || p?.VOLCANO || "Volcán";
+  // ---------------- Labels by zoom (uses cfg.zoomLabels) ----------------
+  function bindPermanentLabel(layer, text, className, direction, offset) {
+    layer.bindTooltip(text, {
+      permanent: true,
+      direction: direction || "top",
+      offset: offset || [0, -10],
+      opacity: 0.9,
+      className: className || ""
+    });
   }
 
-  function smelterNameFromProps(p) {
-    return p?.name || p?.Name || p?.NOMBRE || p?.smelter || p?.SMELTER || "Fundición";
-  }
+  function updateLabelsByZoom() {
+    const z = map.getZoom();
+    const zSmelter = cfg.zoomLabels?.smelter ?? 5;
+    const zOvdas = cfg.zoomLabels?.ovdas ?? 7;
+    const zOther = cfg.zoomLabels?.other ?? 9;
 
-  function updateLabels() {
-    // OVDAS labels from 1:250.000
-    const showOvdas = currentScaleDenominator() <= 250000;
-    // Others + Smelters labels from 1:50.000
-    const showClose = currentScaleDenominator() <= 50000;
+    if (smeltersLayer) {
+      const show = z >= zSmelter;
+      smeltersLayer.eachLayer(l => {
+        if (!l.getTooltip) return;
+        const t = l.getTooltip?.();
+        if (!t) return;
+        if (show) l.openTooltip();
+        else l.closeTooltip();
+      });
+    }
 
     if (volcanesOvdasLayer) {
+      const show = z >= zOvdas;
       volcanesOvdasLayer.eachLayer(l => {
-        if (!l.getTooltip()) return;
-        if (showOvdas) l.openTooltip();
+        const t = l.getTooltip?.();
+        if (!t) return;
+        if (show) l.openTooltip();
         else l.closeTooltip();
       });
     }
 
     if (volcanesOtrosLayer) {
+      const show = z >= zOther;
       volcanesOtrosLayer.eachLayer(l => {
-        if (!l.getTooltip()) return;
-        if (showClose) l.openTooltip();
+        const t = l.getTooltip?.();
+        if (!t) return;
+        if (show) l.openTooltip();
         else l.closeTooltip();
       });
     }
-
-    if (smeltersLayer) {
-      smeltersLayer.eachLayer(l => {
-        if (!l.getTooltip()) return;
-        if (showClose) l.openTooltip();
-        else l.closeTooltip();
-      });
-    }
-
-    updateNumericScale();
   }
 
-  // --- Wind overlays (OFF by default; expects prebuilt JSON under data/wind/YYYY-MM-DD/) ---
+  // ---------------- Wind overlays ----------------
   const windLayers = {};
   const WIND_LEVELS = [
     { key: "10m", label: "Viento (10 m)" },
@@ -233,6 +213,22 @@
     { key: "400hPa", label: "Viento (~7 km, 400 hPa)" },
     { key: "150hPa", label: "Viento (~15 km, 150 hPa)" }
   ];
+
+  function windJsonUrl(dateStr, levelKey) {
+    // ✅ FIX crítico: resolver con baseURI para Project Pages (/REPO/)
+    const rel = `data/wind/${dateStr}/${levelKey}.json`;
+    return new URL(rel, document.baseURI).toString();
+  }
+
+  async function loadWindFor(dateStr, levelKey) {
+    const url = windJsonUrl(dateStr, levelKey);
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) {
+      // Debug útil en status
+      throw new Error(`No hay viento (${levelKey}) para ${dateStr} (${r.status}) | ${url}`);
+    }
+    return await r.json();
+  }
 
   function toRad(deg) { return (deg * Math.PI) / 180; }
 
@@ -263,35 +259,36 @@
     return { tail, tip, left, right };
   }
 
-  // ✅ FIX 1: URL correcta en GitHub Pages (Project Pages)
-  function windJsonPath(dateStr, levelKey) {
-    const rel = `data/wind/${dateStr}/${levelKey}.json`;
-    return new URL(rel, document.baseURI).toString();
-  }
-
-  async function loadWindFor(dateStr, levelKey) {
-    const url = windJsonPath(dateStr, levelKey);
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error(`No hay viento (${levelKey}) para ${dateStr} (${r.status})`);
-    return await r.json();
-  }
-
   function renderWindToLayer(windData, layerGroup) {
     layerGroup.clearLayers();
 
     const pts = windData.points || [];
+    if (!pts.length) return;
 
-    // Visual mapping: length ~200 km at 10 m/s; clamp for usability.
-    const refSpeed = 10; // m/s
-    const baseLenKm = 200;
-    const minLenKm = 40;
-    const maxLenKm = 300;
-    const headKm = 18;
+    // Flechas tipo "windy-ish"
+    const refSpeed = 10;     // m/s
+    const baseLenKm = 120;   // más corto que antes para que no se vea gigante
+    const minLenKm = 30;
+    const maxLenKm = 220;
+    const headKm = 10;
+    const color = "#555";    // gris un poco más oscuro que windy
+    const weight = 1.4;
+    const opacity = 0.75;
 
-    for (const p of pts) {
+    // Para no saturar: sample por zoom (suave)
+    const z = map.getZoom();
+    const stride = (z <= 3) ? 40 : (z === 4) ? 25 : (z === 5) ? 14 : (z === 6) ? 9 : (z === 7) ? 6 : 3;
+
+    // Solo dentro del viewport (clave para performance + “se ve”)
+    const bounds = map.getBounds();
+
+    let drawn = 0;
+    for (let i = 0; i < pts.length; i += stride) {
+      const p = pts[i];
       const lat = p.lat, lon = p.lon;
       const u = p.u, v = p.v;
       if (!isFinite(lat) || !isFinite(lon) || !isFinite(u) || !isFinite(v)) continue;
+      if (!bounds.contains([lat, lon])) continue;
 
       const speed = Math.sqrt(u*u + v*v);
       const bearing = (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
@@ -300,10 +297,19 @@
       lenKm = Math.max(minLenKm, Math.min(maxLenKm, lenKm));
 
       const a = arrowPolyline(lat, lon, bearing, lenKm, headKm);
-      const color = "#111";
 
-      L.polyline([a.tail, a.tip], { color, weight: 2, opacity: 0.85 }).addTo(layerGroup);
-      L.polyline([a.left, a.tip, a.right], { color, weight: 2, opacity: 0.85 }).addTo(layerGroup);
+      L.polyline([a.tail, a.tip], { color, weight, opacity, interactive: false }).addTo(layerGroup);
+      L.polyline([a.left, a.tip, a.right], { color, weight, opacity, interactive: false }).addTo(layerGroup);
+      drawn++;
+    }
+
+    // Debug útil
+    const lvl = windData?.meta?.level_key || "";
+    const dmin = windData?.meta?.delta_minutes;
+    if (typeof dmin === "number") {
+      setStatus(`Viento ${lvl}: ${drawn} flechas (de ${pts.length}, stride=${stride}) | Δt=${dmin} min`);
+    } else {
+      setStatus(`Viento: ${drawn} flechas (de ${pts.length}, stride=${stride})`);
     }
   }
 
@@ -315,12 +321,6 @@
     try {
       const dateStr = dateInput.value;
       const windData = await loadWindFor(dateStr, levelKey);
-
-      const dmin = windData?.meta?.delta_minutes;
-      if (typeof dmin === "number" && dmin > 90) {
-        setStatus(`⚠ Viento ${levelKey}: desfase ${dmin} min (>90). Fecha: ${dateStr}`);
-      }
-
       renderWindToLayer(windData, layerGroup);
     } catch (e) {
       console.warn(e);
@@ -331,7 +331,7 @@
 
   function wireWindOverlays() {
     for (const wl of WIND_LEVELS) {
-      const lg = L.layerGroup(); // OFF by default
+      const lg = L.layerGroup(); // OFF por defecto
       windLayers[wl.key] = lg;
       layerControl.addOverlay(lg, wl.label);
     }
@@ -355,6 +355,17 @@
     });
   }
 
+  // Redibujar viento al mover/zoom (si está visible)
+  function rerenderVisibleWind() {
+    for (const wl of WIND_LEVELS) {
+      const lg = windLayers[wl.key];
+      if (!lg) continue;
+      if (!map.hasLayer(lg)) continue;
+      refreshWindLayer(wl.key);
+    }
+  }
+
+  // ---------------- Init ----------------
   async function init() {
     try {
       dateInput.value = todayUtcDateString();
@@ -362,41 +373,25 @@
 
       setStatus("Cargando capas…");
 
+      // Chile border
       borderLayer = await loadChileBorder();
       borderLayer.addTo(map);
       layerControl.addOverlay(borderLayer, "Límite fronterizo Chile");
 
-      // Volcanes (OVDAS 44)
-      volcanesOvdasLayer = await loadGeoJson(cfg.data.volcanoesOvdas, (latlng) => volcanoMarker(latlng, true), "Volcán OVDAS");
+      // Volcanes OVDAS
+      volcanesOvdasLayer = await loadGeoJson(cfg.data.volcanoesOvdas, (latlng) => volcanoMarkerOVDAS(latlng), "Volcán OVDAS");
       volcanesOvdasLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
-        const name = volcanoNameFromProps(p);
-        l.bindTooltip(name, {
-          permanent: true,
-          direction: "top",
-          offset: [0, -12],
-          opacity: 0.9,
-          className: "label-volcano"
-        });
+        bindPermanentLabel(l, nameFromProps(p, "Volcán"), "label-volcano", "top", [0, -12]);
       });
       volcanesOvdasLayer.addTo(map);
       layerControl.addOverlay(volcanesOvdasLayer, "Volcanes monitoreados (OVDAS)");
 
-      // Volcanes (otros)
-      volcanesOtrosLayer = await loadGeoJson(cfg.data.volcanoesAll, (latlng, feature) => {
-        const isOvdas = false;
-        return volcanoMarker(latlng, isOvdas);
-      }, "Volcán");
+      // Volcanes otros
+      volcanesOtrosLayer = await loadGeoJson(cfg.data.volcanoesAll, (latlng) => volcanoMarkerOther(latlng), "Volcán");
       volcanesOtrosLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
-        const name = volcanoNameFromProps(p);
-        l.bindTooltip(name, {
-          permanent: true,
-          direction: "top",
-          offset: [0, -10],
-          opacity: 0.9,
-          className: "label-volcano"
-        });
+        bindPermanentLabel(l, nameFromProps(p, "Volcán"), "label-volcano", "top", [0, -10]);
       });
       volcanesOtrosLayer.addTo(map);
       layerControl.addOverlay(volcanesOtrosLayer, "Volcanes no monitoreados");
@@ -406,14 +401,7 @@
       smeltersLayer.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
       smeltersLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
-        const name = smelterNameFromProps(p);
-        l.bindTooltip(name, {
-          permanent: true,
-          direction: "right",
-          offset: [8, 0],
-          opacity: 0.9,
-          className: "label-smelter"
-        });
+        bindPermanentLabel(l, nameFromProps(p, "Fundición"), "label-smelter", "right", [8, 0]);
       });
       smeltersLayer.addTo(map);
       layerControl.addOverlay(smeltersLayer, "Fundiciones");
@@ -421,22 +409,25 @@
       // Wind overlays (OFF by default)
       wireWindOverlays();
 
-      // label visibility by scale + numeric scale update
-      map.on("zoomend", updateLabels);
-      map.on("moveend", updateLabels);
-      updateLabels();
+      // Labels by zoom
+      map.on("zoomend", updateLabelsByZoom);
+      updateLabelsByZoom();
 
-      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar TIME del WMS.`);
+      // Re-render wind on zoom/pan (solo si visible)
+      map.on("zoomend", rerenderVisibleWind);
+      map.on("moveend", rerenderVisibleWind);
+
+      setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
     } catch (err) {
       console.error(err);
       setStatus(`Error: ${err.message}`);
     }
   }
 
+  // ---------------- UI events ----------------
   dateInput.addEventListener("change", () => {
     addSo2Layer(dateInput.value);
-    // si alguna capa de viento está activada, refrescarla
-    for (const wl of WIND_LEVELS) refreshWindLayer(wl.key);
+    rerenderVisibleWind();
   });
 
   opacityInput.addEventListener("input", () => {
@@ -446,7 +437,7 @@
   todayBtn.addEventListener("click", () => {
     dateInput.value = todayUtcDateString();
     addSo2Layer(dateInput.value);
-    for (const wl of WIND_LEVELS) refreshWindLayer(wl.key);
+    rerenderVisibleWind();
   });
 
   init();
