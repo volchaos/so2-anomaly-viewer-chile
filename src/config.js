@@ -28,8 +28,8 @@ window.APP_CONFIG = {
   },
 
   zoomLabels: {
-    smelter: 5,
-    ovdas: 7,
+    smelter: 9,
+    ovdas: 6,
     other: 9
   },
 
