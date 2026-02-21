@@ -74,15 +74,15 @@ main { position:relative; height: calc(100% - 58px); }
 /* ---------------- SO₂ Legend (DU) ---------------- */
 .so2-legend {
   position: absolute;
-  right: 12px;
+  left: 12px;
   top: 72px; /* bajo la topbar */
   background: rgba(255,255,255,0.92);
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 10px 10px 8px 10px;
   box-shadow: 0 1px 10px rgba(0,0,0,0.10);
-  z-index: 800; /* sobre el mapa */
-  width: 120px;
+  z-index: 850; /* sobre el mapa */
+  width: 140px;
   user-select: none;
 }
 
