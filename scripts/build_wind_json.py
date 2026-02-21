@@ -13,6 +13,7 @@ import cfgrib  # noqa: F401
 
 NOMADS_FILTER = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"
 
+
 @dataclass
 class GfsPick:
     run_date: str
@@ -21,8 +22,10 @@ class GfsPick:
     valid_dt: datetime
     delta_minutes: float
 
+
 def _iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
 
 def _candidate_runs(target_dt: datetime):
     d0 = target_dt.date()
@@ -31,6 +34,7 @@ def _candidate_runs(target_dt: datetime):
         ymd = d.strftime("%Y%m%d")
         for cyc in [18, 12, 6, 0]:
             yield ymd, cyc
+
 
 def _best_gfs_pick(target_dt: datetime, tol_min: int) -> GfsPick:
     best = None
@@ -56,8 +60,11 @@ def _best_gfs_pick(target_dt: datetime, tol_min: int) -> GfsPick:
                     best = pick
     return best
 
-def _download_gfs_grib(pick: GfsPick, bbox: Dict[str, float], level_spec: Dict[str, str], out_path: Path) -> None:
-    # Download a GRIB2 subset containing UGRD/VGRD for the requested level.
+
+def _download_gfs_grib(pick: GfsPick, bbox: Dict[str, float], level_mb: int, out_path: Path) -> None:
+    """
+    Download a GRIB2 subset containing UGRD/VGRD for the requested isobaric level (mb).
+    """
     ymd = pick.run_date
     cyc = f"{pick.cycle:02d}"
     fhr = f"{pick.fhr:03d}"
@@ -73,15 +80,17 @@ def _download_gfs_grib(pick: GfsPick, bbox: Dict[str, float], level_spec: Dict[s
         "rightlon": str(bbox["rightlon"]),
         "toplat": str(bbox["toplat"]),
         "bottomlat": str(bbox["bottomlat"]),
+        # Wind components
         "var_UGRD": "on",
         "var_VGRD": "on",
+        # Level
+        f"lev_{level_mb}_mb": "on",
     }
-
-    params[f"lev_{level_spec['level']}"] = "on"
 
     r = requests.get(NOMADS_FILTER, params=params, timeout=180)
     r.raise_for_status()
     out_path.write_bytes(r.content)
+
 
 def _open_grib_any(path: Path) -> xr.Dataset:
     try:
@@ -93,9 +102,11 @@ def _open_grib_any(path: Path) -> xr.Dataset:
                 return ds
         raise
 
+
 def _has_uv(ds: xr.Dataset) -> bool:
     keys = set(ds.data_vars.keys())
-    return ("u10" in keys and "v10" in keys) or ("u" in keys and "v" in keys) or ("UGRD" in keys and "VGRD" in keys)
+    return ("u" in keys and "v" in keys) or ("UGRD" in keys and "VGRD" in keys)
+
 
 def _extract_uv(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     lat_name = "latitude" if "latitude" in ds.coords else ("lat" if "lat" in ds.coords else None)
@@ -103,23 +114,14 @@ def _extract_uv(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.
     if lat_name is None or lon_name is None:
         raise ValueError("No se encontraron coords lat/lon en el GRIB decodificado.")
 
-    if "u10" in ds.data_vars and "v10" in ds.data_vars:
-        u = ds["u10"]; v = ds["v10"]
-    elif "u" in ds.data_vars and "v" in ds.data_vars:
+    if "u" in ds.data_vars and "v" in ds.data_vars:
         u = ds["u"]; v = ds["v"]
     elif "UGRD" in ds.data_vars and "VGRD" in ds.data_vars:
         u = ds["UGRD"]; v = ds["VGRD"]
     else:
-        u = v = None
-        for name, da in ds.data_vars.items():
-            sn = da.attrs.get("GRIB_shortName")
-            if sn in ("10u", "u", "ugrd"):
-                u = da
-            if sn in ("10v", "v", "vgrd"):
-                v = da
-        if u is None or v is None:
-            raise ValueError("Missing u/v in decoded GRIB.")
+        raise ValueError("Missing u/v in decoded GRIB.")
 
+    # Drop extra dims
     for dim in list(u.dims):
         if dim not in (lat_name, lon_name):
             u = u.isel({dim: 0})
@@ -129,6 +131,7 @@ def _extract_uv(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.
 
     lats = ds[lat_name].values
     lons = ds[lon_name].values
+
     if lats.ndim == 1 and lons.ndim == 1:
         lat2d, lon2d = np.meshgrid(lats, lons, indexing="ij")
     else:
@@ -140,16 +143,16 @@ def _extract_uv(ds: xr.Dataset) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.
     lon2d = ((lon2d + 180) % 360) - 180
     return lat2d.astype(float), lon2d.astype(float), u2d, v2d
 
-def build_level(run_date: str, target_dt: datetime, cfg: Dict, out_dir: Path, level_key: str) -> None:
+
+def build_level(run_date: str, target_dt: datetime, cfg: Dict, out_dir: Path, level_key: str, level_mb: int) -> None:
     bbox = cfg["roi_bbox"]
-    levels = cfg["levels"]
     tol = int(cfg.get("tolerance_minutes", 90))
     step = int(cfg.get("sampling_step_grid", 2))
 
     pick = _best_gfs_pick(target_dt, tol)
     grib_path = out_dir / f"_tmp_{level_key}.grib2"
 
-    _download_gfs_grib(pick, bbox, levels[level_key], grib_path)
+    _download_gfs_grib(pick, bbox, level_mb, grib_path)
 
     ds = _open_grib_any(grib_path)
     lat2d, lon2d, u2d, v2d = _extract_uv(ds)
@@ -177,7 +180,8 @@ def build_level(run_date: str, target_dt: datetime, cfg: Dict, out_dir: Path, le
             "t_target_utc": _iso(target_dt),
             "t_gfs_valid_utc": _iso(pick.valid_dt),
             "delta_minutes": float(pick.delta_minutes),
-            "level_key": level_key
+            "level_key": level_key,
+            "level_mb": level_mb
         },
         "points": points
     }
@@ -189,16 +193,28 @@ def build_level(run_date: str, target_dt: datetime, cfg: Dict, out_dir: Path, le
     except Exception:
         pass
 
+
 def build_all_levels(run_date: str, target_dt: datetime, cfg: Dict, out_dir: Path) -> None:
-    for level_key in ["10m", "900hPa", "400hPa", "150hPa"]:
+    """
+    ✅ CAMBIO: generamos solo 900/500/250/150 (sin 10m y sin 400).
+    """
+    levels = [
+        ("900hPa", 900),
+        ("500hPa", 500),
+        ("250hPa", 250),
+        ("150hPa", 150),
+    ]
+
+    for level_key, level_mb in levels:
         try:
-            build_level(run_date, target_dt, cfg, out_dir, level_key)
+            build_level(run_date, target_dt, cfg, out_dir, level_key, level_mb)
         except Exception as e:
             out = {
                 "meta": {
                     "source": "GFS 0.25 (NOMADS)",
                     "t_target_utc": _iso(target_dt),
                     "level_key": level_key,
+                    "level_mb": level_mb,
                     "error": str(e)
                 },
                 "points": []
