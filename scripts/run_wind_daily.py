@@ -22,7 +22,7 @@ def main():
     with cfg_path.open("r", encoding="utf-8") as f:
         cfg = json.load(f)
 
-    lookback_days = int(cfg.get("lookback_days", 14))
+    lookback_days = int(cfg.get("lookback_days", 30))
     target_time = cfg.get("target_time_utc", "06:00:00Z")
 
     # Genera overlays para run_date y los N-1 días anteriores
