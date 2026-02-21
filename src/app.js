@@ -25,6 +25,32 @@
     return `${dateStr}T05:00:00Z`;
   }
 
+  // ---------------- SO₂ Legend (DU) from WMS GetLegendGraphic ----------------
+  function buildSo2LegendUrl() {
+    const base = cfg.wms.url;
+
+    const params = new URLSearchParams();
+    params.set("service", "WMS");
+    params.set("version", cfg.wms.version || "1.3.0");
+    params.set("request", "GetLegendGraphic");
+    params.set("format", "image/png");
+    params.set("layer", cfg.wms.layers);
+
+    // style opcional
+    if (cfg.wms.styles && String(cfg.wms.styles).trim() !== "") {
+      params.set("style", cfg.wms.styles);
+    }
+
+    params.set("transparent", "true");
+    return `${base}?${params.toString()}`;
+  }
+
+  function initSo2Legend() {
+    const img = document.getElementById("so2LegendImg");
+    if (!img) return;
+    img.src = buildSo2LegendUrl();
+  }
+
   // ---------------- Map ----------------
   const map = L.map("map", { worldCopyJump: true }).setView(cfg.map.center, cfg.map.zoom);
 
@@ -301,7 +327,6 @@
     }
   }
 
-  // ✅ FUNCIÓN COMPLETA (antes estaba cortada)
   async function refreshWindLayer(levelKey) {
     const layerGroup = windLayers[levelKey];
     if (!layerGroup) return;
@@ -397,6 +422,9 @@
 
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
+
+      // ✅ Initialize SO₂ legend (DU)
+      initSo2Legend();
 
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
     } catch (err) {
