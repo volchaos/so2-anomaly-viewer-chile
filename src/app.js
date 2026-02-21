@@ -202,7 +202,6 @@
   // ---------------- Wind overlays (NOAA/GFS JSON) ----------------
   const windLayers = {};
 
-  // ✅ CAMBIO: quitamos 10m y usamos 900/500/250/150
   const WIND_LEVELS = [
     { key: "900hPa", label: "Viento (~1 km, 900 hPa)" },
     { key: "500hPa", label: "Viento (~5 km, 500 hPa)" },
@@ -302,7 +301,22 @@
     }
   }
 
-async function refreshWindLayer(levelKey)
+  // ✅ FUNCIÓN COMPLETA (antes estaba cortada)
+  async function refreshWindLayer(levelKey) {
+    const layerGroup = windLayers[levelKey];
+    if (!layerGroup) return;
+    if (!map.hasLayer(layerGroup)) return;
+
+    try {
+      const dateStr = dateInput.value;
+      const windData = await loadWindFor(dateStr, levelKey);
+      renderWindToLayer(windData, layerGroup);
+    } catch (e) {
+      console.warn(e);
+      layerGroup.clearLayers();
+      setStatus(`(Sin viento ${levelKey} para ${dateInput.value})`);
+    }
+  }
 
   function wireWindOverlays() {
     for (const wl of WIND_LEVELS) {
