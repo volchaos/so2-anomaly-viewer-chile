@@ -346,15 +346,12 @@
   function updateRoiOnMap(lat, lon) {
     const sizeKm = parseFloat(gifRoiSelect.value || "200");
     const b = computeRoiBounds(lat, lon, sizeKm);
-
     const bounds = L.latLngBounds([b.south, b.west], [b.north, b.east]);
     if (roiRect) roiRect.remove();
     roiRect = L.rectangle(bounds, { color: "#111", weight: 1, fillOpacity: 0.0, dashArray: "4,4" }).addTo(map);
   }
 
-  function centerMapOnVolcano(lat, lon) {
-    map.setView([lat, lon], 7);
-  }
+  function centerMapOnVolcano(lat, lon) { map.setView([lat, lon], 7); }
 
   function fillVolcanoSelect(list) {
     if (!gifVolcanoSelect) return;
@@ -388,7 +385,7 @@
   }
 
   function buildGetMapUrl(dateStr, bbox, sizePx) {
-    // WMS 1.3.0 + EPSG:4326 uses axis order lat,lon -> BBOX=minLat,minLon,maxLat,maxLon
+    // WMS 1.3.0 + EPSG:4326 axis order lat,lon -> BBOX=minLat,minLon,maxLat,maxLon
     const params = new URLSearchParams();
     params.set("service", "WMS");
     params.set("version", cfg.wms.version || "1.3.0");
@@ -406,7 +403,6 @@
   }
 
   async function fetchFrameBitmap(url) {
-    // Fetch as blob; if CORS blocked, this will throw.
     const r = await fetch(url, { cache: "no-store" });
     if (!r.ok) throw new Error(`Frame fetch failed: ${r.status}`);
     const blob = await r.blob();
@@ -441,10 +437,7 @@
   }
 
   async function generateGifForSelection() {
-    if (!gifVolcanoSelect.value) {
-      setGifProgress("Selecciona un volcán.");
-      return;
-    }
+    if (!gifVolcanoSelect.value) { setGifProgress("Selecciona un volcán."); return; }
 
     const [latStr, lonStr] = gifVolcanoSelect.value.split(",");
     const lat = parseFloat(latStr), lon = parseFloat(lonStr);
@@ -460,7 +453,7 @@
     const mode = getGifMode();
     let dates = [];
     if (mode === "lastN") {
-      const n = Math.max(2, Math.min(60, parseInt(gifLastN.value || "14", 10)));
+      const n = Math.max(2, Math.min(40, parseInt(gifLastN.value || "14", 10))); // cap to 40
       const end = dateInput.value || todayUtcDateString();
       const endD = new Date(end + "T00:00:00Z");
       const startD = new Date(endD);
@@ -470,19 +463,15 @@
       const dd = String(startD.getUTCDate()).padStart(2, "0");
       dates = datesBetween(`${yyyy}-${mm}-${dd}`, end);
     } else {
-      if (!gifFrom.value || !gifTo.value) {
-        setGifProgress("Define Desde / Hasta.");
-        return;
-      }
+      if (!gifFrom.value || !gifTo.value) { setGifProgress("Define Desde / Hasta."); return; }
       dates = datesBetween(gifFrom.value, gifTo.value);
     }
 
-    if (!dates.length) {
-      setGifProgress("Rango inválido.");
-      return;
-    }
-    if (dates.length > 60) {
-      setGifProgress(`Demasiados días (${dates.length}). Máximo 60.`);
+    if (!dates.length) { setGifProgress("Rango inválido."); return; }
+
+    // ✅ Limitar frames por rendimiento (codificación más rápida)
+    if (dates.length > 40) {
+      setGifProgress(`Demasiados días (${dates.length}). Máximo 40.`);
       return;
     }
 
@@ -496,18 +485,24 @@
     canvas.width = sizePx;
     canvas.height = sizePx;
 
-    // GIF encoder
+    // ✅ Encoder optimizado: más workers + sin dithering + quality más rápido
+    const workers = Math.min(4, (navigator.hardwareConcurrency || 4));
     const gif = new GIF({
-      workers: 2,
-      quality: 10,
+      workers,
+      quality: 20,
+      dither: false,
       workerScript: "https://unpkg.com/gif.js.optimized/dist/gif.worker.js"
+    });
+
+    // ✅ Progreso real de codificación
+    gif.on("progress", (p) => {
+      setGifProgress(`Codificando GIF… ${Math.round(p * 100)}%`);
     });
 
     try {
       for (let i = 0; i < dates.length; i++) {
         const d = dates[i];
         const url = buildGetMapUrl(d, bbox, sizePx);
-
         setGifProgress(`Frame ${i + 1}/${dates.length}…`);
         const bmp = await fetchFrameBitmap(url);
         drawFrame(canvas, bmp, d, volcanoName);
@@ -574,9 +569,7 @@
       updateRoiOnMap(parseFloat(latStr), parseFloat(lonStr));
     });
 
-    gifGenerateBtn.addEventListener("click", () => {
-      generateGifForSelection();
-    });
+    gifGenerateBtn.addEventListener("click", () => { generateGifForSelection(); });
   }
 
   // ---------------- Init ----------------
@@ -596,7 +589,6 @@
         const name = nameFromProps(p, "Volcán");
         bindPermanentLabel(l, name, "label-volcano", "top", [0, -12]);
 
-        // Collect for GIF module
         const ll = l.getLatLng();
         ovdasVolcanoList.push({ name, lat: ll.lat, lon: ll.lng });
       });
