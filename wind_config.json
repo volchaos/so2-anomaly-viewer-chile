@@ -26,5 +26,5 @@
   "tolerance_minutes": 90,
   "target_time_utc": "06:00:00Z",
   "sampling_step_grid": 2,
-  "lookback_days": 14
+  "lookback_days": 30
 }
