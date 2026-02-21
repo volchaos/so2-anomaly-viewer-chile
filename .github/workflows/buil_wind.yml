@@ -10,6 +10,10 @@ on:
         description: "YYYY-MM-DD (UTC). Vacío = hoy UTC"
         required: false
         default: ""
+      lookback_days:
+        description: "Cuántos días hacia atrás (ej: 10 diario, 30 mensual)"
+        required: false
+        default: "30"
 
 permissions:
   contents: write
@@ -30,17 +34,28 @@ jobs:
           cache-environment: false
           init-shell: bash
 
-      - name: Generate wind JSON (10m, 900, 400, 150)
+      - name: Generate wind JSON
         shell: bash -l {0}
         run: |
           set -euo pipefail
+
           RUN_DATE="${{ github.event.inputs.run_date }}"
           if [ -z "$RUN_DATE" ]; then
             RUN_DATE="$(python -c "import datetime as d; print(d.datetime.utcnow().date().isoformat())")"
           fi
+
+          # Diario: 10 días. Manual: usa input (default 30).
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            LOOKBACK_DAYS="10"
+          else
+            LOOKBACK_DAYS="${{ github.event.inputs.lookback_days }}"
+            if [ -z "$LOOKBACK_DAYS" ]; then LOOKBACK_DAYS="30"; fi
+          fi
+
           echo "RUN_DATE=$RUN_DATE"
-          echo "Lookback days (wind_config.json): $(python -c "import json; print(json.load(open('wind_config.json')).get('lookback_days','?'))")"
-          micromamba run -n so2-wind python scripts/run_wind_daily.py "$RUN_DATE"
+          echo "LOOKBACK_DAYS=$LOOKBACK_DAYS"
+
+          micromamba run -n so2-wind python scripts/run_wind_daily.py "$RUN_DATE" "$LOOKBACK_DAYS"
 
       - name: Commit and push if changed
         shell: bash -l {0}
