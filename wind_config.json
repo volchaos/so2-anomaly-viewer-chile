@@ -5,27 +5,8 @@
     "bottomlat": -60.0,
     "toplat": 15.0
   },
-  "levels": {
-    "10m": {
-      "type": "height",
-      "level": "10_m_above_ground"
-    },
-    "900hPa": {
-      "type": "isobaric",
-      "level": "900_mb"
-    },
-    "400hPa": {
-      "type": "isobaric",
-      "level": "400_mb"
-    },
-    "150hPa": {
-      "type": "isobaric",
-      "level": "150_mb"
-    }
-  },
   "tolerance_minutes": 90,
   "target_time_utc": "06:00:00Z",
-  "sampling_step_grid": 4,
+  "sampling_step_grid": 2,
   "lookback_days": 30
-  "nomads_max_days": 9
 }
