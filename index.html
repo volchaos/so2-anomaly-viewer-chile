@@ -29,7 +29,9 @@
 
   <main>
     <div id="map"></div>
+
     <div id="status" class="status"></div>
+
     <div class="legend">
       <div class="legend-title">Capas</div>
       <div class="legend-item"><span class="swatch volcano"></span> Volcanes</div>
@@ -37,9 +39,15 @@
       <div class="legend-item"><span class="swatch border"></span> Límite Chile</div>
       <div class="legend-item"><span class="swatch so2"></span> SO₂ (WMS)</div>
       <div class="legend-item"><span class="swatch wind"></span>Viento (capas opcionales)</div>
-        <div class="legend-foot">
+      <div class="legend-foot">
         <a id="openEoc" href="#" target="_blank" rel="noopener">Abrir en Geoservice</a>
       </div>
+    </div>
+
+    <!-- SO₂ Legend (DU) - from WMS GetLegendGraphic -->
+    <div class="so2-legend" id="so2Legend">
+      <div class="so2-legend-title">SO₂ (DU)</div>
+      <img id="so2LegendImg" alt="SO₂ legend (DU)" />
     </div>
   </main>
 
