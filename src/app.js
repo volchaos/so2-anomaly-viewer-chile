@@ -21,7 +21,6 @@
   }
 
   function toWmsTime(dateStr) {
-    // Tu WMS usa isoZ y ya acordamos usar 05:00:00Z para calzar el "día"
     if (cfg.wms.timeFormat === "date") return dateStr;
     return `${dateStr}T05:00:00Z`;
   }
@@ -87,12 +86,10 @@
   }
 
   function volcanoMarkerOVDAS(latlng) {
-    // Triángulo grande, borde rojo, relleno negro
     return L.marker(latlng, { icon: volcanoDivIcon(18, "red") });
   }
 
   function volcanoMarkerOther(latlng) {
-    // Triángulo mitad de tamaño, sin borde
     return L.marker(latlng, { icon: volcanoDivIcon(9, null) });
   }
 
@@ -115,7 +112,6 @@
   }
 
   async function loadGeoJson(url, pointToLayerFn, label) {
-    // Importante: resolver relativo a baseURI para GitHub Pages
     const absUrl = new URL(url, document.baseURI).toString();
     const r = await fetch(absUrl, { cache: "no-store" });
     if (!r.ok) throw new Error(`No se pudo cargar ${label}: ${r.status}`);
@@ -156,7 +152,6 @@
   let volcanesOtrosLayer = null;
   let smeltersLayer = null;
 
-  // ---------------- Labels by zoom (uses cfg.zoomLabels) ----------------
   function bindPermanentLabel(layer, text, className, direction, offset) {
     layer.bindTooltip(text, {
       permanent: true,
@@ -176,7 +171,6 @@
     if (smeltersLayer) {
       const show = z >= zSmelter;
       smeltersLayer.eachLayer(l => {
-        if (!l.getTooltip) return;
         const t = l.getTooltip?.();
         if (!t) return;
         if (show) l.openTooltip();
@@ -205,17 +199,18 @@
     }
   }
 
-  // ---------------- Wind overlays ----------------
+  // ---------------- Wind overlays (NOAA/GFS JSON) ----------------
   const windLayers = {};
+
+  // ✅ CAMBIO: quitamos 10m y usamos 900/500/250/150
   const WIND_LEVELS = [
-    { key: "10m", label: "Viento (10 m)" },
     { key: "900hPa", label: "Viento (~1 km, 900 hPa)" },
-    { key: "400hPa", label: "Viento (~7 km, 400 hPa)" },
+    { key: "500hPa", label: "Viento (~5 km, 500 hPa)" },
+    { key: "250hPa", label: "Viento (~10 km, 250 hPa)" },
     { key: "150hPa", label: "Viento (~15 km, 150 hPa)" }
   ];
 
   function windJsonUrl(dateStr, levelKey) {
-    // ✅ FIX crítico: resolver con baseURI para Project Pages (/REPO/)
     const rel = `data/wind/${dateStr}/${levelKey}.json`;
     return new URL(rel, document.baseURI).toString();
   }
@@ -223,10 +218,7 @@
   async function loadWindFor(dateStr, levelKey) {
     const url = windJsonUrl(dateStr, levelKey);
     const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) {
-      // Debug útil en status
-      throw new Error(`No hay viento (${levelKey}) para ${dateStr} (${r.status}) | ${url}`);
-    }
+    if (!r.ok) throw new Error(`No hay viento (${levelKey}) para ${dateStr} (${r.status}) | ${url}`);
     return await r.json();
   }
 
@@ -265,22 +257,20 @@
     const pts = windData.points || [];
     if (!pts.length) return;
 
-    // Flechas tipo "windy-ish"
-    const refSpeed = 10;     // m/s
-    const baseLenKm = 120;   // más corto que antes para que no se vea gigante
+    const refSpeed = 10;
+    const baseLenKm = 120;
     const minLenKm = 30;
     const maxLenKm = 220;
     const headKm = 10;
-    const color = "#555";    // gris un poco más oscuro que windy
+
+    const color = "#555";
     const weight = 1.4;
     const opacity = 0.75;
 
-    // Para no saturar: sample por zoom (suave)
+    const bounds = map.getBounds();
+
     const z = map.getZoom();
     const stride = (z <= 3) ? 40 : (z === 4) ? 25 : (z === 5) ? 14 : (z === 6) ? 9 : (z === 7) ? 6 : 3;
-
-    // Solo dentro del viewport (clave para performance + “se ve”)
-    const bounds = map.getBounds();
 
     let drawn = 0;
     for (let i = 0; i < pts.length; i += stride) {
@@ -303,7 +293,6 @@
       drawn++;
     }
 
-    // Debug útil
     const lvl = windData?.meta?.level_key || "";
     const dmin = windData?.meta?.delta_minutes;
     if (typeof dmin === "number") {
@@ -331,7 +320,7 @@
 
   function wireWindOverlays() {
     for (const wl of WIND_LEVELS) {
-      const lg = L.layerGroup(); // OFF por defecto
+      const lg = L.layerGroup();
       windLayers[wl.key] = lg;
       layerControl.addOverlay(lg, wl.label);
     }
@@ -355,7 +344,6 @@
     });
   }
 
-  // Redibujar viento al mover/zoom (si está visible)
   function rerenderVisibleWind() {
     for (const wl of WIND_LEVELS) {
       const lg = windLayers[wl.key];
@@ -373,12 +361,10 @@
 
       setStatus("Cargando capas…");
 
-      // Chile border
       borderLayer = await loadChileBorder();
       borderLayer.addTo(map);
       layerControl.addOverlay(borderLayer, "Límite fronterizo Chile");
 
-      // Volcanes OVDAS
       volcanesOvdasLayer = await loadGeoJson(cfg.data.volcanoesOvdas, (latlng) => volcanoMarkerOVDAS(latlng), "Volcán OVDAS");
       volcanesOvdasLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
@@ -387,7 +373,6 @@
       volcanesOvdasLayer.addTo(map);
       layerControl.addOverlay(volcanesOvdasLayer, "Volcanes monitoreados (OVDAS)");
 
-      // Volcanes otros
       volcanesOtrosLayer = await loadGeoJson(cfg.data.volcanoesAll, (latlng) => volcanoMarkerOther(latlng), "Volcán");
       volcanesOtrosLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
@@ -396,7 +381,6 @@
       volcanesOtrosLayer.addTo(map);
       layerControl.addOverlay(volcanesOtrosLayer, "Volcanes no monitoreados");
 
-      // Fundiciones
       smeltersLayer = await loadGeoJson(cfg.data.smelters, (latlng) => smelterMarker(latlng), "Fundición");
       smeltersLayer.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
       smeltersLayer.eachLayer(l => {
@@ -406,14 +390,11 @@
       smeltersLayer.addTo(map);
       layerControl.addOverlay(smeltersLayer, "Fundiciones");
 
-      // Wind overlays (OFF by default)
       wireWindOverlays();
 
-      // Labels by zoom
       map.on("zoomend", updateLabelsByZoom);
       updateLabelsByZoom();
 
-      // Re-render wind on zoom/pan (solo si visible)
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
 
