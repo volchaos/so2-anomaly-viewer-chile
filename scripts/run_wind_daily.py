@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 import sys
 import json
+import os
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
 from build_wind_json import build_all_levels
 
+
 def _today_utc():
     return datetime.now(timezone.utc).date()
 
+
 def _parse_date(s: str):
     return datetime.strptime(s, "%Y-%m-%d").date()
+
 
 def main():
     run_date = _parse_date(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] else _today_utc()
@@ -22,10 +26,19 @@ def main():
     with cfg_path.open("r", encoding="utf-8") as f:
         cfg = json.load(f)
 
+    # Lookback por defecto desde config
     lookback_days = int(cfg.get("lookback_days", 30))
+
+    # Override por env (prioridad) o por arg2
+    env_lb = os.getenv("LOOKBACK_DAYS")
+    if env_lb:
+        lookback_days = int(env_lb)
+
+    if len(sys.argv) > 2 and sys.argv[2]:
+        lookback_days = int(sys.argv[2])
+
     target_time = cfg.get("target_time_utc", "06:00:00Z")
 
-    # Genera overlays para run_date y los N-1 días anteriores
     for i in range(lookback_days):
         d = run_date - timedelta(days=i)
         date_str = d.isoformat()
@@ -37,6 +50,7 @@ def main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
         build_all_levels(run_date=date_str, target_dt=target_dt, cfg=cfg, out_dir=out_dir)
+
 
 if __name__ == "__main__":
     main()
