@@ -302,21 +302,7 @@
     }
   }
 
-  async function refreshWindLayer(levelKey) {
-    const layerGroup = windLayers[levelKey];
-    if (!layerGroup) return;
-    if (!map.hasLayer(layerGroup)) return;
-
-    try {
-      const dateStr = dateInput.value;
-      const windData = await loadWindFor(dateStr, levelKey);
-      renderWindToLayer(windData, layerGroup);
-    } catch (e) {
-      console.warn(e);
-      layerGroup.clearLayers();
-      setStatus(`(Sin viento ${levelKey} para ${dateInput.value})`);
-    }
-  }
+async function refreshWindLayer(levelKey)
 
   function wireWindOverlays() {
     for (const wl of WIND_LEVELS) {
