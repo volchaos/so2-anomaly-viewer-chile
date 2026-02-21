@@ -25,7 +25,7 @@
     return `${dateStr}T05:00:00Z`;
   }
 
-  // ---------------- SO₂ Legend (DU) from WMS GetLegendGraphic ----------------
+  // ---------------- SO₂ Legend (DU) ----------------
   function buildSo2LegendUrl() {
     const base = cfg.wms.url;
 
@@ -45,10 +45,72 @@
     return `${base}?${params.toString()}`;
   }
 
+  // Fallback simple: barra vertical continua con ticks DU (indicativo)
+  function buildFallbackLegendDataUri() {
+    // Rango indicativo (solo fallback). Si GetLegendGraphic funciona, este no se usa.
+    const ticks = [
+      { y: 10, label: "10" },
+      { y: 45, label: "5" },
+      { y: 80, label: "2" },
+      { y: 105, label: "1" },
+      { y: 125, label: "0.5" },
+      { y: 145, label: "0" }
+    ];
+
+    const tickLines = ticks.map(t => `
+      <line x1="70" y1="${t.y}" x2="78" y2="${t.y}" stroke="#111" stroke-width="1"/>
+      <text x="82" y="${t.y + 4}" font-size="10" fill="#111" font-family="Arial">${t.label}</text>
+    `).join("");
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="140" height="190" viewBox="0 0 140 190">
+        <rect x="0" y="0" width="140" height="190" fill="white"/>
+        <text x="10" y="16" font-size="12" font-weight="700" fill="#111" font-family="Arial">SO₂ (DU)</text>
+
+        <!-- gradient bar -->
+        <defs>
+          <linearGradient id="g" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%"  stop-color="#2c7bb6"/>
+            <stop offset="20%" stop-color="#abd9e9"/>
+            <stop offset="40%" stop-color="#ffffbf"/>
+            <stop offset="60%" stop-color="#fdae61"/>
+            <stop offset="80%" stop-color="#f46d43"/>
+            <stop offset="100%" stop-color="#a50026"/>
+          </linearGradient>
+        </defs>
+
+        <rect x="18" y="28" width="42" height="140" fill="url(#g)" stroke="#111" stroke-width="1"/>
+
+        <!-- ticks -->
+        ${tickLines}
+
+        <text x="10" y="185" font-size="9" fill="#444" font-family="Arial">(fallback)</text>
+      </svg>
+    `;
+
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
   function initSo2Legend() {
     const img = document.getElementById("so2LegendImg");
     if (!img) return;
-    img.src = buildSo2LegendUrl();
+
+    const url = buildSo2LegendUrl();
+
+    // Si falla, usamos fallback para que siempre haya barra visible
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = buildFallbackLegendDataUri();
+    };
+
+    img.src = url;
+
+    // Si el servidor devuelve una imagen 1x1 o vacía, también caemos a fallback
+    img.onload = () => {
+      if (img.naturalWidth <= 2 || img.naturalHeight <= 2) {
+        img.src = buildFallbackLegendDataUri();
+      }
+    };
   }
 
   // ---------------- Map ----------------
