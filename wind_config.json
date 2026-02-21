@@ -27,4 +27,5 @@
   "target_time_utc": "06:00:00Z",
   "sampling_step_grid": 4,
   "lookback_days": 30
+  "nomads_max_days": 9
 }
