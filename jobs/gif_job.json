@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "Láscar",
-  "volcano_lat": -23.36299999931245,
-  "volcano_lon": -67.731,
+  "volcano_name": "Copahue",
+  "volcano_lat": -37.84999999908562,
+  "volcano_lon": -71.17,
   "roi_km": 500,
   "roi_bbox": {
-    "west": -70.17735214513951,
-    "south": -25.60877793678999,
-    "east": -65.28464785486048,
-    "north": -21.11722206183491
+    "west": -74.0141254858595,
+    "south": -40.09577793656316,
+    "east": -68.32587451414051,
+    "north": -35.60422206160808
   },
   "date_from": "2026-02-01",
   "date_to": "2026-02-21",
   "size_px": 768,
   "fps": 1,
   "max_frames": 30,
-  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260201-20260221_500km_768px.gif",
+  "output_relpath": "data/gifs/Copahue/SO2_Copahue_20260201-20260221_500km_768px.gif",
   "overlays": {
     "chile_border": true
   },
