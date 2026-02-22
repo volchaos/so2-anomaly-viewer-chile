@@ -1,4 +1,4 @@
-/* global L, APP_CONFIG, GIF */
+/* global L, APP_CONFIG */
 (function () {
   const cfg = window.APP_CONFIG;
 
@@ -62,7 +62,6 @@
       <line x1="70" y1="${t.y}" x2="78" y2="${t.y}" stroke="#111" stroke-width="1"/>
       <text x="82" y="${t.y + 4}" font-size="10" fill="#111" font-family="Arial">${t.label}</text>
     `).join("");
-
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="160" height="190" viewBox="0 0 160 190">
         <rect x="0" y="0" width="160" height="190" fill="white"/>
@@ -198,9 +197,7 @@
     const zSmelter = cfg.zoomLabels?.smelter ?? 5;
     const zOvdas = cfg.zoomLabels?.ovdas ?? 7;
     const zOther = cfg.zoomLabels?.other ?? 9;
-
     const toggle = (layer, show) => layer.eachLayer(l => { const t = l.getTooltip?.(); if (!t) return; show ? l.openTooltip() : l.closeTooltip(); });
-
     if (smeltersLayer) toggle(smeltersLayer, z >= zSmelter);
     if (volcanesOvdasLayer) toggle(volcanesOvdasLayer, z >= zOvdas);
     if (volcanesOtrosLayer) toggle(volcanesOtrosLayer, z >= zOther);
@@ -327,7 +324,7 @@
     }
   }
 
-  // ---------------- GIF module (optimized) ----------------
+  // ---------------- GIF job module (server-side) ----------------
   let ovdasVolcanoList = [];
   let roiRect = null;
 
@@ -381,83 +378,46 @@
     return el ? el.value : "range";
   }
 
-  function buildGetMapUrl(dateStr, bbox, sizePx) {
-    const params = new URLSearchParams();
-    params.set("service", "WMS");
-    params.set("version", cfg.wms.version || "1.3.0");
-    params.set("request", "GetMap");
-    params.set("layers", cfg.wms.layers);
-    params.set("styles", cfg.wms.styles || "");
-    params.set("format", "image/png");
-    params.set("transparent", "true");
-    params.set("crs", "EPSG:4326");
-    // axis order for EPSG:4326 in WMS 1.3.0: lat,lon
-    params.set("bbox", `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`);
-    params.set("width", String(sizePx));
-    params.set("height", String(sizePx));
-    params.set("time", toWmsTime(dateStr));
-    return `${cfg.wms.url}?${params.toString()}`;
+  function safeName(s) {
+    return (s || "volcano").replace(/[^\w\-\.]+/g, "_").replace(/^_+|_+$/g, "") || "volcano";
   }
 
-  async function fetchFrameBitmap(url) {
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error(`Frame fetch failed: ${r.status}`);
-    const blob = await r.blob();
-    return await createImageBitmap(blob);
+  function downloadTextFile(filename, content, mime) {
+    const blob = new Blob([content], { type: mime || "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
-  function drawFrame(canvas, bmp, dateStr, volcanoName) {
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-
-    // Stamp text
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillRect(8, 8, 260, 46);
-    ctx.fillStyle = "#111";
-    ctx.font = "bold 14px Arial";
-    ctx.fillText(volcanoName, 16, 28);
-    ctx.font = "12px Arial";
-    ctx.fillText(`${dateStr} (UTC)`, 16, 46);
-
-    // Marker at center
-    ctx.fillStyle = "rgba(0,0,0,0.9)";
-    ctx.beginPath();
-    ctx.moveTo(canvas.width / 2, canvas.height / 2 - 10);
-    ctx.lineTo(canvas.width / 2 - 8, canvas.height / 2 + 8);
-    ctx.lineTo(canvas.width / 2 + 8, canvas.height / 2 + 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,0,0,0.9)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    return ctx;
+  function expectedGifPath(volcanoName, dates, roiKm, sizePx) {
+    const safeVol = safeName(volcanoName);
+    const d0 = dates[0].replaceAll("-", "");
+    const d1 = dates[dates.length - 1].replaceAll("-", "");
+    const name = `SO2_${safeVol}_${d0}-${d1}_${roiKm}km_${sizePx}px.gif`;
+    return `data/gifs/${safeVol}/${name}`;
   }
 
-  function sampleDates(dates, maxFrames) {
-    if (dates.length <= maxFrames) return dates;
-    const stride = Math.ceil(dates.length / maxFrames);
-    const sampled = [];
-    for (let i = 0; i < dates.length; i += stride) sampled.push(dates[i]);
-    // asegurar último día
-    if (sampled[sampled.length - 1] !== dates[dates.length - 1]) sampled.push(dates[dates.length - 1]);
-    return sampled;
+  function updatePreviewFromPath(path) {
+    if (!gifPreview) return;
+    // Try to load; if 404, browser will show broken image — acceptable.
+    gifPreview.src = path;
   }
 
-  async function generateGifForSelection() {
+  function prepareGifJob() {
     if (!gifVolcanoSelect.value) { setGifProgress("Selecciona un volcán."); return; }
 
     const [latStr, lonStr] = gifVolcanoSelect.value.split(",");
     const lat = parseFloat(latStr), lon = parseFloat(lonStr);
     const volcanoName = gifVolcanoSelect.options[gifVolcanoSelect.selectedIndex].textContent || "Volcán";
 
-    const roiKm = parseFloat(gifRoiSelect.value || "200");
-    const bbox = computeRoiBounds(lat, lon, roiKm);
-
+    const roiKm = parseInt(gifRoiSelect.value || "200", 10);
     const sizePx = parseInt(gifSize.value || "512", 10);
     const fps = parseInt(gifFps.value || "2", 10);
-    const delay = Math.max(120, Math.round(1000 / fps)); // floor for stability
 
     const mode = getGifMode();
     let dates = [];
@@ -478,80 +438,55 @@
 
     if (!dates.length) { setGifProgress("Rango inválido."); return; }
 
-    // ✅ Rendimiento: máximo 20 frames, submuestreo automático
-    const MAX_FRAMES = 20;
-    const origLen = dates.length;
-    dates = sampleDates(dates, MAX_FRAMES);
+    const roiBBox = computeRoiBounds(lat, lon, roiKm);
 
-    gifDownloadLink.style.display = "none";
-    gifPreview.removeAttribute("src");
+    const gifRelPath = expectedGifPath(volcanoName, dates, roiKm, sizePx);
 
-    if (origLen !== dates.length) {
-      setGifProgress(`Submuestreo: ${origLen} → ${dates.length} frames (máx ${MAX_FRAMES})…`);
-    } else {
-      setGifProgress(`Generando GIF (${dates.length} frames)…`);
-    }
-
-    // Canvas for composing frames
-    const canvas = document.createElement("canvas");
-    canvas.width = sizePx;
-    canvas.height = sizePx;
-
-    // ✅ Encoder ultra-rápido
-    const workers = Math.min(4, (navigator.hardwareConcurrency || 4));
-    const gif = new GIF({
-      workers,
-      quality: 30,
-      dither: false,
-      workerScript: "https://unpkg.com/gif.js.optimized/dist/gif.worker.js"
-    });
-
-    gif.on("progress", (p) => {
-      setGifProgress(`Codificando GIF… ${Math.round(p * 100)}%`);
-    });
-
-    gif.on("finished", (blob) => {
-      const url = URL.createObjectURL(blob);
-      gifPreview.src = url;
-
-      const safeName = volcanoName.replace(/[^\w\-]+/g, "_");
-      const name = `SO2_${safeName}_${dates[0].replaceAll("-","")}-${dates[dates.length - 1].replaceAll("-","")}_${roiKm}km_${sizePx}px.gif`;
-
-      gifDownloadLink.href = url;
-      gifDownloadLink.download = name;
-      gifDownloadLink.style.display = "inline-flex";
-      setGifProgress("Listo ✅ (vista previa + descarga)");
-    });
-
-    try {
-      for (let i = 0; i < dates.length; i++) {
-        const d = dates[i];
-        const url = buildGetMapUrl(d, bbox, sizePx);
-
-        setGifProgress(`Frame ${i + 1}/${dates.length}…`);
-        const bmp = await fetchFrameBitmap(url);
-
-        const ctx = drawFrame(canvas, bmp, d, volcanoName);
-
-        // ✅ Preview inmediato (último frame) para que siempre se vea algo
-        if (gifPreview) {
-          gifPreview.src = canvas.toDataURL("image/png");
-        }
-
-        // ✅ Añadir frame desde el contexto (menos overhead que canvas completo)
-        gif.addFrame(ctx, { copy: true, delay });
+    const job = {
+      version: 1,
+      volcano_name: volcanoName,
+      volcano_lat: lat,
+      volcano_lon: lon,
+      roi_km: roiKm,
+      roi_bbox: roiBBox,
+      date_from: dates[0],
+      date_to: dates[dates.length - 1],
+      // (server can also use explicit dates if you want later)
+      // dates: dates,
+      size_px: sizePx,
+      fps: fps,
+      max_frames: 30,
+      output_relpath: gifRelPath,
+      wms: {
+        url: cfg.wms.url,
+        layers: cfg.wms.layers,
+        styles: cfg.wms.styles || "",
+        version: cfg.wms.version || "1.3.0",
+        timeFormat: cfg.wms.timeFormat || "isoZ",
+        legend: true
       }
-    } catch (err) {
-      console.error(err);
-      setGifProgress("No se pudo descargar/armar frames (posible bloqueo CORS).");
-      return;
-    }
+    };
 
-    setGifProgress("Codificando GIF…");
-    gif.render();
+    const jobText = JSON.stringify(job, null, 2);
+    downloadTextFile("gif_job.json", jobText, "application/json");
+
+    // Update UI with instructions + expected preview
+    gifDownloadLink.style.display = "none";
+    updatePreviewFromPath(gifRelPath);
+
+    setGifProgress(
+      "Job descargado ✅\n" +
+      "1) Sube gif_job.json al repo en: jobs/gif_job.json\n" +
+      "2) Actions → Build SO₂ GIF → Run workflow\n" +
+      "3) Luego el GIF estará en: " + gifRelPath
+    );
   }
 
   function wireGifUi() {
+    // Make button label clearer
+    if (gifGenerateBtn) gifGenerateBtn.textContent = "Preparar GIF (job)";
+
+    // Default range: last 14 days
     const today = todayUtcDateString();
     if (gifFrom && gifTo) {
       const endD = new Date(today + "T00:00:00Z");
@@ -578,7 +513,7 @@
       const lat = parseFloat(latStr), lon = parseFloat(lonStr);
       centerMapOnVolcano(lat, lon);
       updateRoiOnMap(lat, lon);
-      setGifProgress("ROI actualizado. Define fechas y genera el GIF.");
+      setGifProgress("ROI actualizado. Define fechas y prepara el job.");
     });
 
     gifRoiSelect.addEventListener("change", () => {
@@ -587,7 +522,7 @@
       updateRoiOnMap(parseFloat(latStr), parseFloat(lonStr));
     });
 
-    gifGenerateBtn.addEventListener("click", () => generateGifForSelection());
+    gifGenerateBtn.addEventListener("click", () => prepareGifJob());
   }
 
   // ---------------- Init ----------------
