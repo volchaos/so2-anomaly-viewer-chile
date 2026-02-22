@@ -77,6 +77,7 @@
             <select id="gifRoiSelect">
               <option value="100">100 × 100 km</option>
               <option value="200" selected>200 × 200 km</option>
+              <option value="500">500 × 500 km</option>
             </select>
           </label>
         </div>
@@ -107,7 +108,7 @@
           <div id="gifLastNBlock" class="lastn-row" style="display:none;">
             <label class="field">
               <span>N días</span>
-              <input id="gifLastN" type="number" min="2" max="60" value="14" />
+              <input id="gifLastN" type="number" min="2" max="120" value="14" />
             </label>
           </div>
 
@@ -132,7 +133,7 @@
         </div>
 
         <div class="panel-actions">
-          <button id="gifGenerateBtn" class="btn primary">Generar GIF</button>
+          <button id="gifGenerateBtn" class="btn primary">Preparar GIF (job)</button>
           <a id="gifDownloadLink" class="btn" href="#" download style="display:none;">Descargar GIF</a>
         </div>
 
@@ -145,7 +146,7 @@
         </div>
 
         <div class="panel-footnote">
-          Nota: si el servidor WMS bloquea la descarga de frames (CORS), el módulo lo indicará y podemos activar un fallback vía Actions.
+          Nota: el GIF se genera vía GitHub Actions (evita bloqueo CORS). El visor crea un <code>gif_job.json</code>.
         </div>
       </div>
     </section>
@@ -153,9 +154,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-  <!-- GIF encoder (browser) -->
-  <script src="https://unpkg.com/gif.js.optimized/dist/gif.js"></script>
 
   <script src="src/config.js"></script>
   <script src="src/app.js"></script>
