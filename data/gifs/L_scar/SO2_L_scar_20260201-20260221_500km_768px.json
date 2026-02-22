@@ -58,8 +58,11 @@
   "size_px": 768,
   "fps": 1,
   "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260201-20260221_500km_768px.gif",
-  "created_utc": "2026-02-22T01:17:05.722497Z",
+  "created_utc": "2026-02-22T02:46:53.475577Z",
   "skip_empty_frames": {
     "enabled": true
+  },
+  "overlays": {
+    "chile_border": true
   }
 }
