@@ -12,10 +12,10 @@
   },
   "date_from": "2026-02-08",
   "date_to": "2026-02-21",
-  "size_px": 512,
-  "fps": 4,
+  "size_px": 768,
+  "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260208-20260221_200km_512px.gif",
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260208-20260221_200km_768px.gif",
   "wms": {
     "url": "https://geoservice.dlr.de/eoc/atmosphere/wms",
     "layers": "S5P_TROPOMI_L3_P1D_SO2_v2",
