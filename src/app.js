@@ -22,6 +22,7 @@
   const gifProgress = document.getElementById("gifProgress");
   const gifSize = document.getElementById("gifSize");
   const gifFps = document.getElementById("gifFps");
+  const gifOverlayChile = document.getElementById("gifOverlayChile"); // NEW
 
   function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
   function setGifProgress(msg) { if (gifProgress) gifProgress.textContent = msg; }
@@ -404,7 +405,6 @@
 
   function updatePreviewFromPath(path) {
     if (!gifPreview) return;
-    // Try to load; if 404, browser will show broken image — acceptable.
     gifPreview.src = path;
   }
 
@@ -439,8 +439,9 @@
     if (!dates.length) { setGifProgress("Rango inválido."); return; }
 
     const roiBBox = computeRoiBounds(lat, lon, roiKm);
-
     const gifRelPath = expectedGifPath(volcanoName, dates, roiKm, sizePx);
+
+    const includeChileBorder = gifOverlayChile ? !!gifOverlayChile.checked : true;
 
     const job = {
       version: 1,
@@ -451,12 +452,19 @@
       roi_bbox: roiBBox,
       date_from: dates[0],
       date_to: dates[dates.length - 1],
-      // (server can also use explicit dates if you want later)
-      // dates: dates,
       size_px: sizePx,
       fps: fps,
       max_frames: 30,
       output_relpath: gifRelPath,
+
+      // NEW overlays
+      overlays: {
+        chile_border: includeChileBorder
+      },
+
+      // auto skip black/empty frames
+      skip_empty_frames: { enabled: true },
+
       wms: {
         url: cfg.wms.url,
         layers: cfg.wms.layers,
@@ -467,10 +475,8 @@
       }
     };
 
-    const jobText = JSON.stringify(job, null, 2);
-    downloadTextFile("gif_job.json", jobText, "application/json");
+    downloadTextFile("gif_job.json", JSON.stringify(job, null, 2), "application/json");
 
-    // Update UI with instructions + expected preview
     gifDownloadLink.style.display = "none";
     updatePreviewFromPath(gifRelPath);
 
@@ -483,10 +489,8 @@
   }
 
   function wireGifUi() {
-    // Make button label clearer
     if (gifGenerateBtn) gifGenerateBtn.textContent = "Preparar GIF (job)";
 
-    // Default range: last 14 days
     const today = todayUtcDateString();
     if (gifFrom && gifTo) {
       const endD = new Date(today + "T00:00:00Z");
