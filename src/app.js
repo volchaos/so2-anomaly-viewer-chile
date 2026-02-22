@@ -327,8 +327,8 @@
     }
   }
 
-  // ---------------- GIF module ----------------
-  let ovdasVolcanoList = []; // {name, lat, lon}
+  // ---------------- GIF module (optimized) ----------------
+  let ovdasVolcanoList = [];
   let roiRect = null;
 
   function kmToDegLat(km) { return km / 111.32; }
@@ -338,9 +338,7 @@
     const half = sizeKm / 2;
     const dLat = kmToDegLat(half);
     const dLon = kmToDegLon(half, lat);
-    const south = lat - dLat, north = lat + dLat;
-    const west = lon - dLon, east = lon + dLon;
-    return { west, south, east, north };
+    return { west: lon - dLon, south: lat - dLat, east: lon + dLon, north: lat + dLat };
   }
 
   function updateRoiOnMap(lat, lon) {
@@ -354,7 +352,6 @@
   function centerMapOnVolcano(lat, lon) { map.setView([lat, lon], 7); }
 
   function fillVolcanoSelect(list) {
-    if (!gifVolcanoSelect) return;
     gifVolcanoSelect.innerHTML = `<option value="">Selecciona un volcán…</option>`;
     const sorted = [...list].sort((a, b) => a.name.localeCompare(b.name, "es"));
     for (const v of sorted) {
@@ -385,7 +382,6 @@
   }
 
   function buildGetMapUrl(dateStr, bbox, sizePx) {
-    // WMS 1.3.0 + EPSG:4326 axis order lat,lon -> BBOX=minLat,minLon,maxLat,maxLon
     const params = new URLSearchParams();
     params.set("service", "WMS");
     params.set("version", cfg.wms.version || "1.3.0");
@@ -395,6 +391,7 @@
     params.set("format", "image/png");
     params.set("transparent", "true");
     params.set("crs", "EPSG:4326");
+    // axis order for EPSG:4326 in WMS 1.3.0: lat,lon
     params.set("bbox", `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`);
     params.set("width", String(sizePx));
     params.set("height", String(sizePx));
@@ -416,24 +413,36 @@
 
     // Stamp text
     ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillRect(8, 8, 230, 44);
+    ctx.fillRect(8, 8, 260, 46);
     ctx.fillStyle = "#111";
     ctx.font = "bold 14px Arial";
     ctx.fillText(volcanoName, 16, 28);
     ctx.font = "12px Arial";
-    ctx.fillText(dateStr + " (UTC)", 16, 46);
+    ctx.fillText(`${dateStr} (UTC)`, 16, 46);
 
-    // Small marker at center
+    // Marker at center
     ctx.fillStyle = "rgba(0,0,0,0.9)";
     ctx.beginPath();
-    ctx.moveTo(canvas.width/2, canvas.height/2 - 10);
-    ctx.lineTo(canvas.width/2 - 8, canvas.height/2 + 8);
-    ctx.lineTo(canvas.width/2 + 8, canvas.height/2 + 8);
+    ctx.moveTo(canvas.width / 2, canvas.height / 2 - 10);
+    ctx.lineTo(canvas.width / 2 - 8, canvas.height / 2 + 8);
+    ctx.lineTo(canvas.width / 2 + 8, canvas.height / 2 + 8);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "rgba(255,0,0,0.9)";
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    return ctx;
+  }
+
+  function sampleDates(dates, maxFrames) {
+    if (dates.length <= maxFrames) return dates;
+    const stride = Math.ceil(dates.length / maxFrames);
+    const sampled = [];
+    for (let i = 0; i < dates.length; i += stride) sampled.push(dates[i]);
+    // asegurar último día
+    if (sampled[sampled.length - 1] !== dates[dates.length - 1]) sampled.push(dates[dates.length - 1]);
+    return sampled;
   }
 
   async function generateGifForSelection() {
@@ -448,12 +457,12 @@
 
     const sizePx = parseInt(gifSize.value || "512", 10);
     const fps = parseInt(gifFps.value || "2", 10);
-    const delay = Math.max(100, Math.round(1000 / fps));
+    const delay = Math.max(120, Math.round(1000 / fps)); // floor for stability
 
     const mode = getGifMode();
     let dates = [];
     if (mode === "lastN") {
-      const n = Math.max(2, Math.min(40, parseInt(gifLastN.value || "14", 10))); // cap to 40
+      const n = Math.max(2, Math.min(120, parseInt(gifLastN.value || "14", 10)));
       const end = dateInput.value || todayUtcDateString();
       const endD = new Date(end + "T00:00:00Z");
       const startD = new Date(endD);
@@ -469,44 +478,68 @@
 
     if (!dates.length) { setGifProgress("Rango inválido."); return; }
 
-    // ✅ Limitar frames por rendimiento (codificación más rápida)
-    if (dates.length > 40) {
-      setGifProgress(`Demasiados días (${dates.length}). Máximo 40.`);
-      return;
-    }
+    // ✅ Rendimiento: máximo 20 frames, submuestreo automático
+    const MAX_FRAMES = 20;
+    const origLen = dates.length;
+    dates = sampleDates(dates, MAX_FRAMES);
 
-    // Prep UI
     gifDownloadLink.style.display = "none";
     gifPreview.removeAttribute("src");
-    setGifProgress(`Generando GIF (${dates.length} frames)…`);
+
+    if (origLen !== dates.length) {
+      setGifProgress(`Submuestreo: ${origLen} → ${dates.length} frames (máx ${MAX_FRAMES})…`);
+    } else {
+      setGifProgress(`Generando GIF (${dates.length} frames)…`);
+    }
 
     // Canvas for composing frames
     const canvas = document.createElement("canvas");
     canvas.width = sizePx;
     canvas.height = sizePx;
 
-    // ✅ Encoder optimizado: más workers + sin dithering + quality más rápido
+    // ✅ Encoder ultra-rápido
     const workers = Math.min(4, (navigator.hardwareConcurrency || 4));
     const gif = new GIF({
       workers,
-      quality: 20,
+      quality: 30,
       dither: false,
       workerScript: "https://unpkg.com/gif.js.optimized/dist/gif.worker.js"
     });
 
-    // ✅ Progreso real de codificación
     gif.on("progress", (p) => {
       setGifProgress(`Codificando GIF… ${Math.round(p * 100)}%`);
+    });
+
+    gif.on("finished", (blob) => {
+      const url = URL.createObjectURL(blob);
+      gifPreview.src = url;
+
+      const safeName = volcanoName.replace(/[^\w\-]+/g, "_");
+      const name = `SO2_${safeName}_${dates[0].replaceAll("-","")}-${dates[dates.length - 1].replaceAll("-","")}_${roiKm}km_${sizePx}px.gif`;
+
+      gifDownloadLink.href = url;
+      gifDownloadLink.download = name;
+      gifDownloadLink.style.display = "inline-flex";
+      setGifProgress("Listo ✅ (vista previa + descarga)");
     });
 
     try {
       for (let i = 0; i < dates.length; i++) {
         const d = dates[i];
         const url = buildGetMapUrl(d, bbox, sizePx);
+
         setGifProgress(`Frame ${i + 1}/${dates.length}…`);
         const bmp = await fetchFrameBitmap(url);
-        drawFrame(canvas, bmp, d, volcanoName);
-        gif.addFrame(canvas, { copy: true, delay });
+
+        const ctx = drawFrame(canvas, bmp, d, volcanoName);
+
+        // ✅ Preview inmediato (último frame) para que siempre se vea algo
+        if (gifPreview) {
+          gifPreview.src = canvas.toDataURL("image/png");
+        }
+
+        // ✅ Añadir frame desde el contexto (menos overhead que canvas completo)
+        gif.addFrame(ctx, { copy: true, delay });
       }
     } catch (err) {
       console.error(err);
@@ -515,25 +548,10 @@
     }
 
     setGifProgress("Codificando GIF…");
-
-    gif.on("finished", (blob) => {
-      const url = URL.createObjectURL(blob);
-      gifPreview.src = url;
-
-      const safeName = volcanoName.replace(/[^\w\-]+/g, "_");
-      const name = `SO2_${safeName}_${dates[0].replaceAll("-","")}-${dates[dates.length-1].replaceAll("-","")}_${roiKm}km.gif`;
-
-      gifDownloadLink.href = url;
-      gifDownloadLink.download = name;
-      gifDownloadLink.style.display = "inline-flex";
-      setGifProgress("Listo ✅ (vista previa + descarga)");
-    });
-
     gif.render();
   }
 
   function wireGifUi() {
-    // Default range: last 14 days ending today (UTC)
     const today = todayUtcDateString();
     if (gifFrom && gifTo) {
       const endD = new Date(today + "T00:00:00Z");
@@ -569,7 +587,7 @@
       updateRoiOnMap(parseFloat(latStr), parseFloat(lonStr));
     });
 
-    gifGenerateBtn.addEventListener("click", () => { generateGifForSelection(); });
+    gifGenerateBtn.addEventListener("click", () => generateGifForSelection());
   }
 
   // ---------------- Init ----------------
@@ -620,10 +638,8 @@
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
 
-      // Legend DU
       initSo2Legend();
 
-      // GIF UI
       fillVolcanoSelect(ovdasVolcanoList);
       wireGifUi();
 
