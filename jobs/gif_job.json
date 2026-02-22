@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "volcano_name": "Láscar",
+  "volcano_lat": -23.36299999931245,
+  "volcano_lon": -67.731,
+  "roi_km": 200,
+  "roi_bbox": {
+    "west": -68.7095408580558,
+    "south": -24.26131117430347,
+    "east": -66.75245914194419,
+    "north": -22.46468882432143
+  },
+  "date_from": "2026-02-08",
+  "date_to": "2026-02-21",
+  "size_px": 512,
+  "fps": 4,
+  "max_frames": 30,
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260208-20260221_200km_512px.gif",
+  "wms": {
+    "url": "https://geoservice.dlr.de/eoc/atmosphere/wms",
+    "layers": "S5P_TROPOMI_L3_P1D_SO2_v2",
+    "styles": "",
+    "version": "1.3.0",
+    "timeFormat": "isoZ",
+    "legend": true
+  }
+}
