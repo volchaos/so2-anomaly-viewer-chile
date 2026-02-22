@@ -16,6 +16,12 @@
   "fps": 1,
   "max_frames": 30,
   "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260201-20260221_500km_768px.gif",
+  "overlays": {
+    "chile_border": true
+  },
+  "skip_empty_frames": {
+    "enabled": true
+  },
   "wms": {
     "url": "https://geoservice.dlr.de/eoc/atmosphere/wms",
     "layers": "S5P_TROPOMI_L3_P1D_SO2_v2",
