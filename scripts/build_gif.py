@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import requests
-from PIL import Image, ImageDraw, ImageFont, ImageStat
+from PIL import Image, ImageDraw, ImageFont
+
+
+COUNTRIES_GEOJSON_URL_DEFAULT = "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+CHILE_NAME_KEYS_DEFAULT = ["ADMIN", "name", "NAME", "COUNTRY", "SOVEREIGNT"]
 
 
 def _safe_name(s: str) -> str:
@@ -48,7 +52,6 @@ def _to_wms_time(date_str: str, time_format: str) -> str:
 
 
 def _wms_bbox_epsg4326_axis_order_latlon(b: Dict[str, float]) -> str:
-    # WMS 1.3.0 EPSG:4326 expects minLat,minLon,maxLat,maxLon
     return f"{b['south']},{b['west']},{b['north']},{b['east']}"
 
 
@@ -148,14 +151,8 @@ def _paste_legend(frame: Image.Image, legend: Image.Image):
     frame.alpha_composite(leg, dest=(x, y))
 
 
-# ---------------- Auto-skip logic (NEW) ----------------
+# ---------------- Auto-skip logic ----------------
 def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float, float, float]:
-    """
-    Returns:
-      alpha_frac: fraction of sampled pixels with alpha > 0
-      mean_luma: mean brightness (0..255) on sampled opaque pixels (approx)
-      std_luma: std brightness on sampled opaque pixels (approx)
-    """
     if img.mode != "RGBA":
         img = img.convert("RGBA")
 
@@ -166,14 +163,12 @@ def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float
     n_opaque = 0
     lumas = []
 
-    # sample grid to be fast
     for y in range(0, h, sample_step):
         for x in range(0, w, sample_step):
             r, g, b, a = px[x, y]
             n += 1
             if a > 0:
                 n_opaque += 1
-                # simple luma
                 l = 0.2126 * r + 0.7152 * g + 0.0722 * b
                 lumas.append(l)
 
@@ -181,7 +176,6 @@ def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float
     if not lumas:
         return alpha_frac, 0.0, 0.0
 
-    # compute mean/std
     mean = sum(lumas) / len(lumas)
     var = sum((v - mean) ** 2 for v in lumas) / max(1, (len(lumas) - 1))
     std = math.sqrt(var)
@@ -189,43 +183,101 @@ def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float
 
 
 def _is_frame_valid(img: Image.Image, cfg: Dict) -> Tuple[bool, str]:
-    """
-    Decide if a frame contains meaningful data.
-    Heuristics:
-      - if almost all pixels are transparent -> invalid
-      - if opaque but almost uniform / very dark -> invalid (common 'no-data' appearance)
-    """
     sample_step = int(cfg.get("skip_sample_step", 6))
-    min_alpha_frac = float(cfg.get("min_alpha_frac", 0.015))  # 1.5% opaque pixels
-    min_std_luma = float(cfg.get("min_std_luma", 2.0))         # variability threshold
-    max_dark_mean = float(cfg.get("max_dark_mean", 12.0))      # "mostly black" cutoff
+    min_alpha_frac = float(cfg.get("min_alpha_frac", 0.015))
+    min_std_luma = float(cfg.get("min_std_luma", 2.0))
+    max_dark_mean = float(cfg.get("max_dark_mean", 12.0))
 
     alpha_frac, mean_luma, std_luma = _frame_coverage_stats(img, sample_step=sample_step)
 
     if alpha_frac < min_alpha_frac:
         return False, f"skip: low alpha coverage (alpha_frac={alpha_frac:.4f})"
 
-    # If it's very dark AND very uniform, it's probably an empty/invalid frame
     if mean_luma <= max_dark_mean and std_luma < min_std_luma:
         return False, f"skip: dark+uniform (mean={mean_luma:.1f}, std={std_luma:.1f}, alpha={alpha_frac:.3f})"
 
-    # Also skip near-uniform (even if not dark) – often a blank tile
     if std_luma < (min_std_luma * 0.75):
         return False, f"skip: near-uniform (std={std_luma:.1f}, alpha={alpha_frac:.3f})"
 
     return True, f"ok (alpha={alpha_frac:.3f}, mean={mean_luma:.1f}, std={std_luma:.1f})"
 
 
+# ---------------- Chile border overlay (NEW) ----------------
+def _fetch_chile_border_geojson(url: str, name_keys: List[str]) -> Dict:
+    r = requests.get(url, timeout=180)
+    r.raise_for_status()
+    gj = r.json()
+
+    feats = gj.get("features", [])
+    out_feats = []
+
+    for f in feats:
+        props = f.get("properties") or {}
+        is_chile = False
+        for k in name_keys:
+            v = props.get(k)
+            if v and str(v).strip().lower() == "chile":
+                is_chile = True
+                break
+        if is_chile:
+            out_feats.append(f)
+
+    return {"type": "FeatureCollection", "features": out_feats}
+
+
+def _lonlat_to_px(lon: float, lat: float, bbox: Dict[str, float], size: int) -> Tuple[float, float]:
+    west, east = bbox["west"], bbox["east"]
+    south, north = bbox["south"], bbox["north"]
+
+    x = (lon - west) / (east - west) * (size - 1)
+    y = (north - lat) / (north - south) * (size - 1)
+    return x, y
+
+
+def _draw_linestring(draw: ImageDraw.ImageDraw, coords: List[List[float]], bbox: Dict[str, float], size: int, color: Tuple[int,int,int,int], width: int):
+    # coords: [[lon,lat], ...]
+    pts = []
+    for lon, lat in coords:
+        x, y = _lonlat_to_px(lon, lat, bbox, size)
+        pts.append((x, y))
+    if len(pts) >= 2:
+        draw.line(pts, fill=color, width=width, joint="curve")
+
+
+def _draw_polygon(draw: ImageDraw.ImageDraw, rings: List[List[List[float]]], bbox: Dict[str, float], size: int, color: Tuple[int,int,int,int], width: int):
+    # rings: [outer, hole1, hole2...] – we only stroke
+    for ring in rings:
+        if len(ring) < 2:
+            continue
+        _draw_linestring(draw, ring, bbox, size, color, width)
+
+
+def _draw_chile_border(frame: Image.Image, chile_fc: Dict, bbox: Dict[str, float], color=(0,0,0,220), width=2):
+    draw = ImageDraw.Draw(frame)
+    size = frame.size[0]
+
+    for f in chile_fc.get("features", []):
+        geom = (f.get("geometry") or {})
+        gtype = geom.get("type")
+        coords = geom.get("coordinates")
+        if not coords:
+            continue
+
+        if gtype == "Polygon":
+            _draw_polygon(draw, coords, bbox, size, color, width)
+        elif gtype == "MultiPolygon":
+            for poly in coords:
+                _draw_polygon(draw, poly, bbox, size, color, width)
+
+
 def build_gif_from_job(job_path: Path) -> Path:
     job = json.loads(job_path.read_text(encoding="utf-8"))
 
-    # Resolve dates
     if "dates" in job and isinstance(job["dates"], list) and job["dates"]:
         dates = job["dates"]
     else:
         dates = _daterange_inclusive(job["date_from"], job["date_to"])
 
-    # Optional sampling to cap frames (server-side safety)
     max_frames = int(job.get("max_frames", 30))
     if len(dates) > max_frames:
         stride = math.ceil(len(dates) / max_frames)
@@ -244,13 +296,11 @@ def build_gif_from_job(job_path: Path) -> Path:
     fps = int(job.get("fps", 2))
     duration_ms = max(120, int(1000 / max(1, fps)))
 
-    # ROI bbox
     roi_bbox = job.get("roi_bbox")
     if not roi_bbox:
         roi_bbox = _compute_roi_bbox(lat, lon, roi_km)
         job["roi_bbox"] = roi_bbox
 
-    # Output path
     out_rel = job.get("output_relpath")
     if out_rel:
         out_path = Path(out_rel)
@@ -262,7 +312,6 @@ def build_gif_from_job(job_path: Path) -> Path:
 
     _ensure_dir(out_path.parent)
 
-    # Legend (optional)
     legend_img = None
     legend_url = _build_legend_url(job)
     if legend_url:
@@ -271,13 +320,26 @@ def build_gif_from_job(job_path: Path) -> Path:
         except Exception:
             legend_img = None
 
-    # Auto-skip config
     skip_cfg = job.get("skip_empty_frames", {})
     if skip_cfg is True:
         skip_cfg = {}
     if skip_cfg is False:
         skip_cfg = {"enabled": False}
-    enabled = bool(skip_cfg.get("enabled", True))
+    enabled_skip = bool(skip_cfg.get("enabled", True))
+
+    # NEW overlays
+    overlays = job.get("overlays") or {}
+    draw_border = bool(overlays.get("chile_border", False))
+
+    chile_fc = None
+    if draw_border:
+        try:
+            url = overlays.get("countries_url", COUNTRIES_GEOJSON_URL_DEFAULT)
+            keys = overlays.get("chile_name_keys", CHILE_NAME_KEYS_DEFAULT)
+            chile_fc = _fetch_chile_border_geojson(url, keys)
+        except Exception as e:
+            chile_fc = None
+            print(f"WARNING: failed to fetch Chile border: {e}")
 
     frames: List[Image.Image] = []
     skipped: List[Dict] = []
@@ -293,7 +355,7 @@ def build_gif_from_job(job_path: Path) -> Path:
             if frame.size != (size_px, size_px):
                 frame = frame.resize((size_px, size_px), Image.Resampling.BILINEAR)
 
-            if enabled:
+            if enabled_skip:
                 ok, reason = _is_frame_valid(frame, skip_cfg)
                 if not ok:
                     skipped.append({"date": d, "reason": reason})
@@ -302,7 +364,12 @@ def build_gif_from_job(job_path: Path) -> Path:
                 else:
                     print(f"  -> {reason}")
 
+            # Overlay: Chile border on top of SO2
+            if chile_fc is not None:
+                _draw_chile_border(frame, chile_fc, roi_bbox, color=(0, 0, 0, 220), width=2)
+
             _stamp(frame, volcano_name, d)
+
             if legend_img is not None:
                 _paste_legend(frame, legend_img)
 
@@ -317,7 +384,6 @@ def build_gif_from_job(job_path: Path) -> Path:
     if not frames:
         raise RuntimeError("No frames produced (all skipped or failed). Consider relaxing skip thresholds.")
 
-    # Save GIF (adaptive palette)
     first = frames[0].convert("P", palette=Image.Palette.ADAPTIVE)
     rest = [f.convert("P", palette=Image.Palette.ADAPTIVE) for f in frames[1:]]
 
@@ -341,7 +407,8 @@ def build_gif_from_job(job_path: Path) -> Path:
         "fps": fps,
         "output_relpath": str(out_path).replace("\\", "/"),
         "created_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "skip_empty_frames": {"enabled": enabled, **skip_cfg} if isinstance(skip_cfg, dict) else {"enabled": enabled},
+        "skip_empty_frames": {"enabled": enabled_skip, **skip_cfg} if isinstance(skip_cfg, dict) else {"enabled": enabled_skip},
+        "overlays": overlays,
     }
     pointer_path = out_path.with_suffix(".json")
     pointer_path.write_text(json.dumps(pointer, ensure_ascii=False, indent=2), encoding="utf-8")
