@@ -10,6 +10,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 
+# ---------------- Utils ----------------
 def _safe_name(s: str) -> str:
     out = []
     for ch in s:
@@ -48,6 +49,7 @@ def _to_wms_time(date_str: str, time_format: str) -> str:
 
 
 def _wms_bbox_epsg4326_axis_order_latlon(b: Dict[str, float]) -> str:
+    # WMS 1.3.0 EPSG:4326 expects minLat,minLon,maxLat,maxLon
     return f"{b['south']},{b['west']},{b['north']},{b['east']}"
 
 
@@ -119,6 +121,7 @@ def _load_font(size: int) -> ImageFont.ImageFont:
         return ImageFont.load_default()
 
 
+# ---------------- Stamp & legend ----------------
 def _draw_marker_center(draw: ImageDraw.ImageDraw, size: int):
     cx, cy = size // 2, size // 2
     tri = [(cx, cy - 10), (cx - 8, cy + 8), (cx + 8, cy + 8)]
@@ -153,18 +156,16 @@ def _paste_legend(frame: Image.Image, legend: Image.Image):
     frame.alpha_composite(leg, dest=(x, y))
 
 
-# ---------------- Auto-skip logic ----------------
+# ---------------- Auto-skip frames without data ----------------
 def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float, float, float]:
     if img.mode != "RGBA":
         img = img.convert("RGBA")
-
     w, h = img.size
     px = img.load()
 
     n = 0
     n_opaque = 0
     lumas: List[float] = []
-
     for y in range(0, h, sample_step):
         for x in range(0, w, sample_step):
             r, g, b, a = px[x, y]
@@ -177,7 +178,6 @@ def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float
     alpha_frac = (n_opaque / n) if n else 0.0
     if not lumas:
         return alpha_frac, 0.0, 0.0
-
     mean = sum(lumas) / len(lumas)
     var = sum((v - mean) ** 2 for v in lumas) / max(1, (len(lumas) - 1))
     std = math.sqrt(var)
@@ -194,18 +194,16 @@ def _is_frame_valid(img: Image.Image, cfg: Dict) -> Tuple[bool, str]:
 
     if alpha_frac < min_alpha_frac:
         return False, f"skip: low alpha coverage (alpha_frac={alpha_frac:.4f})"
-
     if mean_luma <= max_dark_mean and std_luma < min_std_luma:
         return False, f"skip: dark+uniform (mean={mean_luma:.1f}, std={std_luma:.1f}, alpha={alpha_frac:.3f})"
-
     if std_luma < (min_std_luma * 0.75):
         return False, f"skip: near-uniform (std={std_luma:.1f}, alpha={alpha_frac:.3f})"
-
     return True, f"ok (alpha={alpha_frac:.3f}, mean={mean_luma:.1f}, std={std_luma:.1f})"
 
 
-# ---------------- Overlay helpers ----------------
+# ---------------- Overlays: Chile border + Points + Wind ----------------
 _COUNTRIES_CACHE: Optional[Dict] = None
+_GEOJSON_CACHE: Dict[str, Dict] = {}
 
 
 def _find_chile_feature(fc: Dict) -> Optional[Dict]:
@@ -216,14 +214,6 @@ def _find_chile_feature(fc: Dict) -> Optional[Dict]:
             if k in props and str(props[k]).strip().lower() == "chile":
                 return f
     return None
-
-
-def _lonlat_to_xy(lon: float, lat: float, bbox: Dict[str, float], W: int, H: int) -> Tuple[float, float]:
-    west, east = bbox["west"], bbox["east"]
-    south, north = bbox["south"], bbox["north"]
-    x = (lon - west) / (east - west) * W
-    y = (north - lat) / (north - south) * H
-    return x, y
 
 
 def _iter_rings(geom: Dict) -> List[List[Tuple[float, float]]]:
@@ -240,9 +230,17 @@ def _iter_rings(geom: Dict) -> List[List[Tuple[float, float]]]:
     return rings
 
 
+def _lonlat_to_xy(lon: float, lat: float, bbox: Dict[str, float], W: int, H: int) -> Tuple[float, float]:
+    west, east = bbox["west"], bbox["east"]
+    south, north = bbox["south"], bbox["north"]
+    x = (lon - west) / (east - west) * W
+    y = (north - lat) / (north - south) * H
+    return x, y
+
+
 def _draw_border_chile(frame: Image.Image, bbox: Dict[str, float], overlay_cfg: Dict):
     global _COUNTRIES_CACHE
-    url = overlay_cfg.get("countries_url", "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson")
+    url = overlay_cfg.get("countries_url") or "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
     stroke = tuple(overlay_cfg.get("stroke_rgba", [0, 0, 0, 220]))
     width = int(overlay_cfg.get("stroke_width", 2))
 
@@ -268,18 +266,11 @@ def _draw_border_chile(frame: Image.Image, bbox: Dict[str, float], overlay_cfg: 
         lats = [p[1] for p in ring]
         if max(lons) < west or min(lons) > east or max(lats) < south or min(lats) > north:
             continue
-
         xy = [_lonlat_to_xy(lon, lat, bbox, W, H) for lon, lat in ring]
         draw.line(xy, fill=stroke, width=width, joint="curve")
 
 
-_GEOJSON_CACHE: Dict[str, Dict] = {}
-
-
 def _load_local_geojson(path_str: str) -> Dict:
-    """
-    Reads GeoJSON from repo path (relative). Cached.
-    """
     key = path_str.replace("\\", "/")
     if key in _GEOJSON_CACHE:
         return _GEOJSON_CACHE[key]
@@ -292,9 +283,6 @@ def _load_local_geojson(path_str: str) -> Dict:
 
 
 def _extract_points_from_geojson(gj: Dict) -> List[Tuple[float, float]]:
-    """
-    Returns list of (lon,lat) for Point features.
-    """
     pts: List[Tuple[float, float]] = []
     for f in gj.get("features", []):
         g = f.get("geometry", {}) or {}
@@ -306,10 +294,8 @@ def _extract_points_from_geojson(gj: Dict) -> List[Tuple[float, float]]:
     return pts
 
 
-def _draw_triangle(draw: ImageDraw.ImageDraw, x: float, y: float, size: int, fill_rgba, outline_rgba, outline_w: int):
-    """
-    Draws a triangle marker centered at (x,y) pointing up.
-    """
+def _draw_triangle(draw: ImageDraw.ImageDraw, x: float, y: float, size: int,
+                   fill_rgba, outline_rgba, outline_w: int):
     h = int(size * 1.1)
     pts = [(x, y - h/2), (x - size/2, y + h/2), (x + size/2, y + h/2)]
     draw.polygon(pts, fill=fill_rgba)
@@ -317,21 +303,22 @@ def _draw_triangle(draw: ImageDraw.ImageDraw, x: float, y: float, size: int, fil
         draw.line([pts[0], pts[1], pts[2], pts[0]], fill=outline_rgba, width=outline_w)
 
 
-def _draw_circle(draw: ImageDraw.ImageDraw, x: float, y: float, r: int, fill_rgba, outline_rgba=None, outline_w: int = 0):
-    bbox = [x - r, y - r, x + r, y + r]
-    draw.ellipse(bbox, fill=fill_rgba)
+def _draw_circle(draw: ImageDraw.ImageDraw, x: float, y: float, r: int,
+                 fill_rgba, outline_rgba=None, outline_w: int = 0):
+    bb = [x - r, y - r, x + r, y + r]
+    draw.ellipse(bb, fill=fill_rgba)
     if outline_w > 0 and outline_rgba is not None:
-        draw.ellipse(bbox, outline=outline_rgba, width=outline_w)
+        draw.ellipse(bb, outline=outline_rgba, width=outline_w)
 
 
-def _draw_points_overlay(frame: Image.Image, bbox: Dict[str, float], pts_lonlat: List[Tuple[float, float]], style: Dict):
+def _draw_points_overlay(frame: Image.Image, bbox: Dict[str, float],
+                         pts_lonlat: List[Tuple[float, float]], style: Dict):
     draw = ImageDraw.Draw(frame)
     W, H = frame.size
     west, east = bbox["west"], bbox["east"]
     south, north = bbox["south"], bbox["north"]
 
-    # style
-    kind = style.get("kind", "circle")  # circle|triangle
+    kind = style.get("kind", "circle")
     size = int(style.get("size", 10))
     fill = tuple(style.get("fill_rgba", [0, 0, 0, 230]))
     outline = tuple(style.get("outline_rgba", [255, 0, 0, 230]))
@@ -342,21 +329,99 @@ def _draw_points_overlay(frame: Image.Image, bbox: Dict[str, float], pts_lonlat:
             continue
         x, y = _lonlat_to_xy(lon, lat, bbox, W, H)
         if kind == "triangle":
-            _draw_triangle(draw, x, y, size=size, fill_rgba=fill, outline_rgba=outline, outline_w=outline_w)
+            _draw_triangle(draw, x, y, size=size, fill_rgba=fill,
+                           outline_rgba=outline, outline_w=outline_w)
         else:
-            _draw_circle(draw, x, y, r=max(2, size // 2), fill_rgba=fill, outline_rgba=outline, outline_w=outline_w)
+            _draw_circle(draw, x, y, r=max(2, size // 2), fill_rgba=fill,
+                         outline_rgba=outline, outline_w=outline_w)
 
 
+def _wind_json_path(date_str: str, level_key: str) -> Path:
+    return Path("data") / "wind" / date_str / f"{level_key}.json"
+
+
+def _load_wind_points(date_str: str, level_key: str) -> List[Dict]:
+    p = _wind_json_path(date_str, level_key)
+    if not p.exists():
+        return []
+    try:
+        obj = json.loads(p.read_text(encoding="utf-8"))
+        pts = obj.get("points", []) or []
+        return pts
+    except Exception:
+        return []
+
+
+def _draw_wind_arrows(frame: Image.Image, bbox: Dict[str, float],
+                      wind_points: List[Dict], style: Dict):
+    if not wind_points:
+        return
+
+    draw = ImageDraw.Draw(frame)
+    W, H = frame.size
+    west, east = bbox["west"], bbox["east"]
+    south, north = bbox["south"], bbox["north"]
+
+    color_rgba = tuple(style.get("color_rgba", [85, 85, 85, 200]))
+    width = int(style.get("width", 2))
+    head_px = float(style.get("head_px", 10))
+    base_len_px = float(style.get("base_len_px", 60))
+    min_len_px = float(style.get("min_len_px", 20))
+    max_len_px = float(style.get("max_len_px", 90))
+    ref_speed = float(style.get("ref_speed", 10.0))
+    stride = max(1, int(style.get("stride", 1)))
+
+    pts = []
+    for p in wind_points:
+        lat = p.get("lat"); lon = p.get("lon")
+        u = p.get("u"); v = p.get("v")
+        if lat is None or lon is None or u is None or v is None:
+            continue
+        lat = float(lat); lon = float(lon)
+        if lon < west or lon > east or lat < south or lat > north:
+            continue
+        pts.append((lon, lat, float(u), float(v)))
+
+    if not pts:
+        return
+    pts = pts[::stride]
+
+    def dest_xy(x, y, bearing_deg, length_px):
+        ang = math.radians(bearing_deg)
+        dx = math.sin(ang) * length_px
+        dy = -math.cos(ang) * length_px
+        return x + dx, y + dy
+
+    for lon, lat, u, v in pts:
+        speed = math.sqrt(u*u + v*v)
+        if not math.isfinite(speed):
+            continue
+
+        # Same bearing convention as your viewer JS:
+        bearing = (math.degrees(math.atan2(u, v)) + 360.0) % 360.0
+
+        length_px = base_len_px * (speed / ref_speed)
+        length_px = max(min_len_px, min(max_len_px, length_px))
+
+        x0, y0 = _lonlat_to_xy(lon, lat, bbox, W, H)
+        x1, y1 = dest_xy(x0, y0, bearing, length_px)
+
+        xl, yl = dest_xy(x1, y1, bearing + 150.0, head_px)
+        xr, yr = dest_xy(x1, y1, bearing - 150.0, head_px)
+
+        draw.line([(x0, y0), (x1, y1)], fill=color_rgba, width=width)
+        draw.line([(xl, yl), (x1, y1), (xr, yr)], fill=color_rgba, width=width)
+
+
+# ---------------- Main builder ----------------
 def build_gif_from_job(job_path: Path) -> Path:
     job = json.loads(job_path.read_text(encoding="utf-8"))
 
-    # Resolve dates
     if "dates" in job and isinstance(job["dates"], list) and job["dates"]:
         dates = job["dates"]
     else:
         dates = _daterange_inclusive(job["date_from"], job["date_to"])
 
-    # cap
     max_frames = int(job.get("max_frames", 30))
     if len(dates) > max_frames:
         stride = math.ceil(len(dates) / max_frames)
@@ -375,13 +440,11 @@ def build_gif_from_job(job_path: Path) -> Path:
     fps = int(job.get("fps", 2))
     duration_ms = max(120, int(1000 / max(1, fps)))
 
-    # ROI bbox
     roi_bbox = job.get("roi_bbox")
     if not roi_bbox:
         roi_bbox = _compute_roi_bbox(lat, lon, roi_km)
         job["roi_bbox"] = roi_bbox
 
-    # Output
     out_rel = job.get("output_relpath")
     if out_rel:
         out_path = Path(out_rel)
@@ -392,7 +455,7 @@ def build_gif_from_job(job_path: Path) -> Path:
         out_path = out_dir / out_name
     _ensure_dir(out_path.parent)
 
-    # Legend (optional)
+    # Legend
     legend_img = None
     legend_url = _build_legend_url(job)
     if legend_url:
@@ -401,7 +464,7 @@ def build_gif_from_job(job_path: Path) -> Path:
         except Exception:
             legend_img = None
 
-    # Auto-skip config
+    # Skip empty frames config
     skip_cfg = job.get("skip_empty_frames", {})
     if skip_cfg is True:
         skip_cfg = {}
@@ -409,7 +472,6 @@ def build_gif_from_job(job_path: Path) -> Path:
         skip_cfg = {"enabled": False}
     enabled_skip = bool(skip_cfg.get("enabled", True))
 
-    # Overlays config
     overlays = job.get("overlays", {}) or {}
 
     draw_chile_border = bool(overlays.get("chile_border", False))
@@ -421,21 +483,25 @@ def build_gif_from_job(job_path: Path) -> Path:
     draw_smelters = bool(overlays.get("smelters", False))
     smelters_path = overlays.get("smelters_path")
 
-    # Load point layers once
-    ovdas_pts = []
-    smelter_pts = []
+    wind_style = overlays.get("wind_style", {}) or {}
+    wind_900 = bool(overlays.get("wind_900hPa", False))
+    wind_500 = bool(overlays.get("wind_500hPa", False))
+    wind_250 = bool(overlays.get("wind_250hPa", False))
+    wind_150 = bool(overlays.get("wind_150hPa", False))
+
+    # load point overlays once
+    ovdas_pts: List[Tuple[float, float]] = []
+    smelter_pts: List[Tuple[float, float]] = []
     if draw_volcanoes_ovdas and volcanoes_ovdas_path:
         try:
             ovdas_pts = _extract_points_from_geojson(_load_local_geojson(volcanoes_ovdas_path))
         except Exception as e:
             print(f"⚠ No se pudo cargar volcanes_ovdas_path={volcanoes_ovdas_path}: {e}")
-            ovdas_pts = []
     if draw_smelters and smelters_path:
         try:
             smelter_pts = _extract_points_from_geojson(_load_local_geojson(smelters_path))
         except Exception as e:
             print(f"⚠ No se pudo cargar smelters_path={smelters_path}: {e}")
-            smelter_pts = []
 
     frames: List[Image.Image] = []
     skipped: List[Dict] = []
@@ -459,7 +525,7 @@ def build_gif_from_job(job_path: Path) -> Path:
                 else:
                     print(f"  -> {reason}")
 
-            # ---- Overlays BEFORE stamp/legend ----
+            # --- overlays before stamp/legend ---
             if draw_chile_border:
                 try:
                     _draw_border_chile(frame, roi_bbox, chile_border_cfg)
@@ -467,14 +533,38 @@ def build_gif_from_job(job_path: Path) -> Path:
                     print(f"  -> border overlay failed: {e}")
 
             if draw_volcanoes_ovdas and ovdas_pts:
-                # triangle black with red outline
-                style = {"kind": "triangle", "size": 14, "fill_rgba": [0, 0, 0, 230], "outline_rgba": [255, 0, 0, 230], "outline_width": 2}
+                style = {
+                    "kind": "triangle",
+                    "size": 14,
+                    "fill_rgba": [0, 0, 0, 230],
+                    "outline_rgba": [255, 0, 0, 230],
+                    "outline_width": 2
+                }
                 _draw_points_overlay(frame, roi_bbox, ovdas_pts, style)
 
             if draw_smelters and smelter_pts:
-                # black circles
-                style = {"kind": "circle", "size": 10, "fill_rgba": [0, 0, 0, 230], "outline_rgba": [0, 0, 0, 230], "outline_width": 0}
+                style = {
+                    "kind": "circle",
+                    "size": 10,
+                    "fill_rgba": [0, 0, 0, 230],
+                    "outline_rgba": [0, 0, 0, 230],
+                    "outline_width": 0
+                }
                 _draw_points_overlay(frame, roi_bbox, smelter_pts, style)
+
+            # Wind overlays (each level independently)
+            if wind_900:
+                pts = _load_wind_points(d, "900hPa")
+                _draw_wind_arrows(frame, roi_bbox, pts, wind_style)
+            if wind_500:
+                pts = _load_wind_points(d, "500hPa")
+                _draw_wind_arrows(frame, roi_bbox, pts, wind_style)
+            if wind_250:
+                pts = _load_wind_points(d, "250hPa")
+                _draw_wind_arrows(frame, roi_bbox, pts, wind_style)
+            if wind_150:
+                pts = _load_wind_points(d, "150hPa")
+                _draw_wind_arrows(frame, roi_bbox, pts, wind_style)
 
             _stamp(frame, volcano_name, d)
             if legend_img is not None:
