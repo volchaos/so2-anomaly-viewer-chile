@@ -80,15 +80,6 @@
               <option value="500">500 × 500 km</option>
             </select>
           </label>
-
-          <!-- NEW: overlays -->
-          <div class="field" style="margin-top:12px;">
-            <span>Overlays en el GIF</span>
-            <label class="field-inline" style="margin-top:6px;">
-              <input id="gifOverlayChile" type="checkbox" checked />
-              <span>Límite fronterizo Chile</span>
-            </label>
-          </div>
         </div>
 
         <div class="panel-block">
@@ -138,6 +129,31 @@
               <option value="3">3 fps</option>
               <option value="4">4 fps</option>
             </select>
+          </label>
+        </div>
+
+        <!-- ✅ NUEVO: selección de capas incluidas en el GIF -->
+        <div class="panel-block">
+          <div class="panel-subtitle" style="margin:0 0 8px 0;">Capas en el GIF</div>
+
+          <label class="field-inline">
+            <input id="gifChkChileBorder" type="checkbox" checked />
+            <span>Límite fronterizo Chile</span>
+          </label>
+
+          <label class="field-inline">
+            <input id="gifChkVolcanoesOvdas" type="checkbox" checked />
+            <span>Volcanes monitoreados (OVDAS)</span>
+          </label>
+
+          <label class="field-inline">
+            <input id="gifChkSmelters" type="checkbox" checked />
+            <span>Fundiciones</span>
+          </label>
+
+          <label class="field-inline">
+            <input id="gifChkLegend" type="checkbox" checked />
+            <span>Leyenda SO₂ (DU)</span>
           </label>
         </div>
 
