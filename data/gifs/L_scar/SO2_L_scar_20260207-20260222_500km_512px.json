@@ -48,7 +48,7 @@
   "size_px": 512,
   "fps": 1,
   "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260222_500km_512px.gif",
-  "created_utc": "2026-02-23T19:32:53.366332Z",
+  "created_utc": "2026-02-23T19:48:48.646217Z",
   "skip_empty_frames": {
     "enabled": true
   },
@@ -56,7 +56,6 @@
     "chile_border": true,
     "volcanoes_ovdas": true,
     "smelters": true,
-    "wind_500hPa":true,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
     "chile_border_cfg": {
