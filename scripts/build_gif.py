@@ -10,10 +10,6 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 
-COUNTRIES_GEOJSON_URL_DEFAULT = "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
-CHILE_NAME_KEYS_DEFAULT = ["ADMIN", "name", "NAME", "COUNTRY", "SOVEREIGNT"]
-
-
 def _safe_name(s: str) -> str:
     out = []
     for ch in s:
@@ -103,6 +99,12 @@ def _download_png(url: str, timeout: int = 180) -> Image.Image:
     return Image.open(BytesIO(r.content)).convert("RGBA")
 
 
+def _download_json_url(url: str, timeout: int = 180) -> Dict:
+    r = requests.get(url, timeout=timeout)
+    r.raise_for_status()
+    return r.json()
+
+
 def _compute_roi_bbox(lat: float, lon: float, roi_km: float) -> Dict[str, float]:
     half = roi_km / 2.0
     dlat = half / 111.32
@@ -161,7 +163,7 @@ def _frame_coverage_stats(img: Image.Image, sample_step: int = 6) -> Tuple[float
 
     n = 0
     n_opaque = 0
-    lumas = []
+    lumas: List[float] = []
 
     for y in range(0, h, sample_step):
         for x in range(0, w, sample_step):
@@ -202,82 +204,159 @@ def _is_frame_valid(img: Image.Image, cfg: Dict) -> Tuple[bool, str]:
     return True, f"ok (alpha={alpha_frac:.3f}, mean={mean_luma:.1f}, std={std_luma:.1f})"
 
 
-# ---------------- Chile border overlay (NEW) ----------------
-def _fetch_chile_border_geojson(url: str, name_keys: List[str]) -> Dict:
-    r = requests.get(url, timeout=180)
-    r.raise_for_status()
-    gj = r.json()
-
-    feats = gj.get("features", [])
-    out_feats = []
-
-    for f in feats:
-        props = f.get("properties") or {}
-        is_chile = False
-        for k in name_keys:
-            v = props.get(k)
-            if v and str(v).strip().lower() == "chile":
-                is_chile = True
-                break
-        if is_chile:
-            out_feats.append(f)
-
-    return {"type": "FeatureCollection", "features": out_feats}
+# ---------------- Overlay helpers ----------------
+_COUNTRIES_CACHE: Optional[Dict] = None
 
 
-def _lonlat_to_px(lon: float, lat: float, bbox: Dict[str, float], size: int) -> Tuple[float, float]:
+def _find_chile_feature(fc: Dict) -> Optional[Dict]:
+    candidates = ["ADMIN", "name", "NAME", "COUNTRY", "SOVEREIGNT"]
+    for f in fc.get("features", []):
+        props = f.get("properties", {}) or {}
+        for k in candidates:
+            if k in props and str(props[k]).strip().lower() == "chile":
+                return f
+    return None
+
+
+def _lonlat_to_xy(lon: float, lat: float, bbox: Dict[str, float], W: int, H: int) -> Tuple[float, float]:
     west, east = bbox["west"], bbox["east"]
     south, north = bbox["south"], bbox["north"]
-
-    x = (lon - west) / (east - west) * (size - 1)
-    y = (north - lat) / (north - south) * (size - 1)
+    x = (lon - west) / (east - west) * W
+    y = (north - lat) / (north - south) * H
     return x, y
 
 
-def _draw_linestring(draw: ImageDraw.ImageDraw, coords: List[List[float]], bbox: Dict[str, float], size: int, color: Tuple[int,int,int,int], width: int):
-    # coords: [[lon,lat], ...]
-    pts = []
-    for lon, lat in coords:
-        x, y = _lonlat_to_px(lon, lat, bbox, size)
-        pts.append((x, y))
-    if len(pts) >= 2:
-        draw.line(pts, fill=color, width=width, joint="curve")
+def _iter_rings(geom: Dict) -> List[List[Tuple[float, float]]]:
+    gtype = geom.get("type")
+    coords = geom.get("coordinates")
+    rings: List[List[Tuple[float, float]]] = []
+    if gtype == "Polygon":
+        for ring in coords:
+            rings.append([(pt[0], pt[1]) for pt in ring])
+    elif gtype == "MultiPolygon":
+        for poly in coords:
+            for ring in poly:
+                rings.append([(pt[0], pt[1]) for pt in ring])
+    return rings
 
 
-def _draw_polygon(draw: ImageDraw.ImageDraw, rings: List[List[List[float]]], bbox: Dict[str, float], size: int, color: Tuple[int,int,int,int], width: int):
-    # rings: [outer, hole1, hole2...] – we only stroke
-    for ring in rings:
-        if len(ring) < 2:
-            continue
-        _draw_linestring(draw, ring, bbox, size, color, width)
+def _draw_border_chile(frame: Image.Image, bbox: Dict[str, float], overlay_cfg: Dict):
+    global _COUNTRIES_CACHE
+    url = overlay_cfg.get("countries_url", "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson")
+    stroke = tuple(overlay_cfg.get("stroke_rgba", [0, 0, 0, 220]))
+    width = int(overlay_cfg.get("stroke_width", 2))
 
+    if _COUNTRIES_CACHE is None:
+        _COUNTRIES_CACHE = _download_json_url(url, timeout=180)
 
-def _draw_chile_border(frame: Image.Image, chile_fc: Dict, bbox: Dict[str, float], color=(0,0,0,220), width=2):
+    chile = _find_chile_feature(_COUNTRIES_CACHE)
+    if not chile:
+        return
+
+    geom = chile.get("geometry", {}) or {}
+    rings = _iter_rings(geom)
+    if not rings:
+        return
+
     draw = ImageDraw.Draw(frame)
-    size = frame.size[0]
+    W, H = frame.size
+    west, east = bbox["west"], bbox["east"]
+    south, north = bbox["south"], bbox["north"]
 
-    for f in chile_fc.get("features", []):
-        geom = (f.get("geometry") or {})
-        gtype = geom.get("type")
-        coords = geom.get("coordinates")
-        if not coords:
+    for ring in rings:
+        lons = [p[0] for p in ring]
+        lats = [p[1] for p in ring]
+        if max(lons) < west or min(lons) > east or max(lats) < south or min(lats) > north:
             continue
 
-        if gtype == "Polygon":
-            _draw_polygon(draw, coords, bbox, size, color, width)
-        elif gtype == "MultiPolygon":
-            for poly in coords:
-                _draw_polygon(draw, poly, bbox, size, color, width)
+        xy = [_lonlat_to_xy(lon, lat, bbox, W, H) for lon, lat in ring]
+        draw.line(xy, fill=stroke, width=width, joint="curve")
+
+
+_GEOJSON_CACHE: Dict[str, Dict] = {}
+
+
+def _load_local_geojson(path_str: str) -> Dict:
+    """
+    Reads GeoJSON from repo path (relative). Cached.
+    """
+    key = path_str.replace("\\", "/")
+    if key in _GEOJSON_CACHE:
+        return _GEOJSON_CACHE[key]
+    p = Path(key)
+    if not p.exists():
+        raise FileNotFoundError(f"GeoJSON no existe: {key}")
+    obj = json.loads(p.read_text(encoding="utf-8"))
+    _GEOJSON_CACHE[key] = obj
+    return obj
+
+
+def _extract_points_from_geojson(gj: Dict) -> List[Tuple[float, float]]:
+    """
+    Returns list of (lon,lat) for Point features.
+    """
+    pts: List[Tuple[float, float]] = []
+    for f in gj.get("features", []):
+        g = f.get("geometry", {}) or {}
+        if g.get("type") == "Point":
+            lon, lat = g.get("coordinates", [None, None])
+            if lon is None or lat is None:
+                continue
+            pts.append((float(lon), float(lat)))
+    return pts
+
+
+def _draw_triangle(draw: ImageDraw.ImageDraw, x: float, y: float, size: int, fill_rgba, outline_rgba, outline_w: int):
+    """
+    Draws a triangle marker centered at (x,y) pointing up.
+    """
+    h = int(size * 1.1)
+    pts = [(x, y - h/2), (x - size/2, y + h/2), (x + size/2, y + h/2)]
+    draw.polygon(pts, fill=fill_rgba)
+    if outline_w > 0:
+        draw.line([pts[0], pts[1], pts[2], pts[0]], fill=outline_rgba, width=outline_w)
+
+
+def _draw_circle(draw: ImageDraw.ImageDraw, x: float, y: float, r: int, fill_rgba, outline_rgba=None, outline_w: int = 0):
+    bbox = [x - r, y - r, x + r, y + r]
+    draw.ellipse(bbox, fill=fill_rgba)
+    if outline_w > 0 and outline_rgba is not None:
+        draw.ellipse(bbox, outline=outline_rgba, width=outline_w)
+
+
+def _draw_points_overlay(frame: Image.Image, bbox: Dict[str, float], pts_lonlat: List[Tuple[float, float]], style: Dict):
+    draw = ImageDraw.Draw(frame)
+    W, H = frame.size
+    west, east = bbox["west"], bbox["east"]
+    south, north = bbox["south"], bbox["north"]
+
+    # style
+    kind = style.get("kind", "circle")  # circle|triangle
+    size = int(style.get("size", 10))
+    fill = tuple(style.get("fill_rgba", [0, 0, 0, 230]))
+    outline = tuple(style.get("outline_rgba", [255, 0, 0, 230]))
+    outline_w = int(style.get("outline_width", 2))
+
+    for lon, lat in pts_lonlat:
+        if lon < west or lon > east or lat < south or lat > north:
+            continue
+        x, y = _lonlat_to_xy(lon, lat, bbox, W, H)
+        if kind == "triangle":
+            _draw_triangle(draw, x, y, size=size, fill_rgba=fill, outline_rgba=outline, outline_w=outline_w)
+        else:
+            _draw_circle(draw, x, y, r=max(2, size // 2), fill_rgba=fill, outline_rgba=outline, outline_w=outline_w)
 
 
 def build_gif_from_job(job_path: Path) -> Path:
     job = json.loads(job_path.read_text(encoding="utf-8"))
 
+    # Resolve dates
     if "dates" in job and isinstance(job["dates"], list) and job["dates"]:
         dates = job["dates"]
     else:
         dates = _daterange_inclusive(job["date_from"], job["date_to"])
 
+    # cap
     max_frames = int(job.get("max_frames", 30))
     if len(dates) > max_frames:
         stride = math.ceil(len(dates) / max_frames)
@@ -296,11 +375,13 @@ def build_gif_from_job(job_path: Path) -> Path:
     fps = int(job.get("fps", 2))
     duration_ms = max(120, int(1000 / max(1, fps)))
 
+    # ROI bbox
     roi_bbox = job.get("roi_bbox")
     if not roi_bbox:
         roi_bbox = _compute_roi_bbox(lat, lon, roi_km)
         job["roi_bbox"] = roi_bbox
 
+    # Output
     out_rel = job.get("output_relpath")
     if out_rel:
         out_path = Path(out_rel)
@@ -309,9 +390,9 @@ def build_gif_from_job(job_path: Path) -> Path:
         _ensure_dir(out_dir)
         out_name = f"SO2_{safe_volcano}_{dates[0].replace('-','')}-{dates[-1].replace('-','')}_{int(roi_km)}km_{size_px}px.gif"
         out_path = out_dir / out_name
-
     _ensure_dir(out_path.parent)
 
+    # Legend (optional)
     legend_img = None
     legend_url = _build_legend_url(job)
     if legend_url:
@@ -320,6 +401,7 @@ def build_gif_from_job(job_path: Path) -> Path:
         except Exception:
             legend_img = None
 
+    # Auto-skip config
     skip_cfg = job.get("skip_empty_frames", {})
     if skip_cfg is True:
         skip_cfg = {}
@@ -327,19 +409,33 @@ def build_gif_from_job(job_path: Path) -> Path:
         skip_cfg = {"enabled": False}
     enabled_skip = bool(skip_cfg.get("enabled", True))
 
-    # NEW overlays
-    overlays = job.get("overlays") or {}
-    draw_border = bool(overlays.get("chile_border", False))
+    # Overlays config
+    overlays = job.get("overlays", {}) or {}
 
-    chile_fc = None
-    if draw_border:
+    draw_chile_border = bool(overlays.get("chile_border", False))
+    chile_border_cfg = overlays.get("chile_border_cfg", {}) or {}
+
+    draw_volcanoes_ovdas = bool(overlays.get("volcanoes_ovdas", False))
+    volcanoes_ovdas_path = overlays.get("volcanoes_ovdas_path")
+
+    draw_smelters = bool(overlays.get("smelters", False))
+    smelters_path = overlays.get("smelters_path")
+
+    # Load point layers once
+    ovdas_pts = []
+    smelter_pts = []
+    if draw_volcanoes_ovdas and volcanoes_ovdas_path:
         try:
-            url = overlays.get("countries_url", COUNTRIES_GEOJSON_URL_DEFAULT)
-            keys = overlays.get("chile_name_keys", CHILE_NAME_KEYS_DEFAULT)
-            chile_fc = _fetch_chile_border_geojson(url, keys)
+            ovdas_pts = _extract_points_from_geojson(_load_local_geojson(volcanoes_ovdas_path))
         except Exception as e:
-            chile_fc = None
-            print(f"WARNING: failed to fetch Chile border: {e}")
+            print(f"⚠ No se pudo cargar volcanes_ovdas_path={volcanoes_ovdas_path}: {e}")
+            ovdas_pts = []
+    if draw_smelters and smelters_path:
+        try:
+            smelter_pts = _extract_points_from_geojson(_load_local_geojson(smelters_path))
+        except Exception as e:
+            print(f"⚠ No se pudo cargar smelters_path={smelters_path}: {e}")
+            smelter_pts = []
 
     frames: List[Image.Image] = []
     skipped: List[Dict] = []
@@ -351,7 +447,6 @@ def build_gif_from_job(job_path: Path) -> Path:
 
         try:
             frame = _download_png(url, timeout=240)
-
             if frame.size != (size_px, size_px):
                 frame = frame.resize((size_px, size_px), Image.Resampling.BILINEAR)
 
@@ -364,12 +459,24 @@ def build_gif_from_job(job_path: Path) -> Path:
                 else:
                     print(f"  -> {reason}")
 
-            # Overlay: Chile border on top of SO2
-            if chile_fc is not None:
-                _draw_chile_border(frame, chile_fc, roi_bbox, color=(0, 0, 0, 220), width=2)
+            # ---- Overlays BEFORE stamp/legend ----
+            if draw_chile_border:
+                try:
+                    _draw_border_chile(frame, roi_bbox, chile_border_cfg)
+                except Exception as e:
+                    print(f"  -> border overlay failed: {e}")
+
+            if draw_volcanoes_ovdas and ovdas_pts:
+                # triangle black with red outline
+                style = {"kind": "triangle", "size": 14, "fill_rgba": [0, 0, 0, 230], "outline_rgba": [255, 0, 0, 230], "outline_width": 2}
+                _draw_points_overlay(frame, roi_bbox, ovdas_pts, style)
+
+            if draw_smelters and smelter_pts:
+                # black circles
+                style = {"kind": "circle", "size": 10, "fill_rgba": [0, 0, 0, 230], "outline_rgba": [0, 0, 0, 230], "outline_width": 0}
+                _draw_points_overlay(frame, roi_bbox, smelter_pts, style)
 
             _stamp(frame, volcano_name, d)
-
             if legend_img is not None:
                 _paste_legend(frame, legend_img)
 
