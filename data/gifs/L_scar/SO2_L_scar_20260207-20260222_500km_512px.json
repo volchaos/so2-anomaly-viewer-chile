@@ -56,6 +56,7 @@
     "chile_border": true,
     "volcanoes_ovdas": true,
     "smelters": true,
+    "wind_500hPa":true,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
     "chile_border_cfg": {
