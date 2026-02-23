@@ -7,7 +7,6 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -16,7 +15,6 @@
       <div class="title">SO2 Anomaly Check (Chile)</div>
       <div class="subtitle">EOC Geoservice WMS (live) + volcanes + fundiciones + borde de Chile</div>
     </div>
-
     <div class="controls">
       <label class="ctrl">
         <span>Fecha (UTC)</span>
@@ -35,7 +33,6 @@
     <section class="left">
       <div class="mapwrap">
         <div id="map"></div>
-
         <div id="status" class="status"></div>
 
         <div class="legend">
@@ -132,7 +129,7 @@
           </label>
         </div>
 
-        <!-- ✅ NUEVO: selección de capas incluidas en el GIF -->
+        <!-- ✅ Capas para el GIF -->
         <div class="panel-block">
           <div class="panel-subtitle" style="margin:0 0 8px 0;">Capas en el GIF</div>
 
@@ -154,6 +151,29 @@
           <label class="field-inline">
             <input id="gifChkLegend" type="checkbox" checked />
             <span>Leyenda SO₂ (DU)</span>
+          </label>
+
+          <div style="height:10px"></div>
+          <div class="panel-subtitle" style="margin:0 0 8px 0;">Viento en el GIF</div>
+
+          <label class="field-inline">
+            <input id="gifChkWind900" type="checkbox" />
+            <span>Viento (~1 km, 900 hPa)</span>
+          </label>
+
+          <label class="field-inline">
+            <input id="gifChkWind500" type="checkbox" />
+            <span>Viento (~5 km, 500 hPa)</span>
+          </label>
+
+          <label class="field-inline">
+            <input id="gifChkWind250" type="checkbox" />
+            <span>Viento (~10 km, 250 hPa)</span>
+          </label>
+
+          <label class="field-inline">
+            <input id="gifChkWind150" type="checkbox" />
+            <span>Viento (~15 km, 150 hPa)</span>
           </label>
         </div>
 
@@ -179,7 +199,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
   <script src="src/config.js"></script>
   <script src="src/app.js"></script>
 </body>
