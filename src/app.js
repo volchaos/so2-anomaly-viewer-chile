@@ -23,11 +23,17 @@
   const gifSize = document.getElementById("gifSize");
   const gifFps = document.getElementById("gifFps");
 
-  // ✅ NEW GIF overlay toggles
+  // GIF overlay toggles
   const gifChkChileBorder = document.getElementById("gifChkChileBorder");
   const gifChkVolcanoesOvdas = document.getElementById("gifChkVolcanoesOvdas");
   const gifChkSmelters = document.getElementById("gifChkSmelters");
   const gifChkLegend = document.getElementById("gifChkLegend");
+
+  // Wind toggles (per level)
+  const gifChkWind900 = document.getElementById("gifChkWind900");
+  const gifChkWind500 = document.getElementById("gifChkWind500");
+  const gifChkWind250 = document.getElementById("gifChkWind250");
+  const gifChkWind150 = document.getElementById("gifChkWind150");
 
   function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
   function setGifProgress(msg) { if (gifProgress) gifProgress.textContent = msg; }
@@ -45,7 +51,7 @@
     return `${dateStr}T05:00:00Z`;
   }
 
-  // ---------------- SO₂ Legend (DU) ----------------
+  // Legend init (unchanged)
   function buildSo2LegendUrl() {
     const base = cfg.wms.url;
     const params = new URLSearchParams();
@@ -58,7 +64,6 @@
     params.set("transparent", "true");
     return `${base}?${params.toString()}`;
   }
-
   function buildFallbackLegendDataUri() {
     const ticks = [
       { y: 10, label: "10" }, { y: 45, label: "5" }, { y: 80, label: "2" },
@@ -89,7 +94,6 @@
     `;
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
-
   function initSo2Legend() {
     const img = document.getElementById("so2LegendImg");
     if (!img) return;
@@ -151,7 +155,6 @@
   function nameFromProps(props, fallback) {
     return (props && (props.name || props.Name || props.NOMBRE)) || fallback || "Sin nombre";
   }
-
   function bindPopup(layer, props, fallbackTitle) {
     const name = nameFromProps(props, fallbackTitle);
     const extra = [];
@@ -160,7 +163,6 @@
     const html = `<b>${name}</b>${extra.length ? `<br/>${extra.join("<br/>")}` : ""}`;
     layer.bindPopup(html);
   }
-
   async function loadGeoJson(url, pointToLayerFn, label) {
     const absUrl = new URL(url, document.baseURI).toString();
     const r = await fetch(absUrl, { cache: "no-store" });
@@ -171,7 +173,6 @@
       onEachFeature: (feature, lyr) => bindPopup(lyr, feature.properties, label)
     });
   }
-
   async function loadChileBorder() {
     const r = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
     if (!r.ok) throw new Error(`No se pudo cargar países: ${r.status}`);
@@ -209,7 +210,7 @@
     if (volcanesOtrosLayer) toggle(volcanesOtrosLayer, z >= zOther);
   }
 
-  // ---------------- Wind overlays ----------------
+  // ---------------- Wind overlays (viewer) ----------------
   const windLayers = {};
   const WIND_LEVELS = [
     { key: "900hPa", label: "Viento (~1 km, 900 hPa)" },
@@ -217,7 +218,6 @@
     { key: "250hPa", label: "Viento (~10 km, 250 hPa)" },
     { key: "150hPa", label: "Viento (~15 km, 150 hPa)" }
   ];
-
   function windJsonUrl(dateStr, levelKey) {
     const rel = `data/wind/${dateStr}/${levelKey}.json`;
     return new URL(rel, document.baseURI).toString();
@@ -228,7 +228,6 @@
     if (!r.ok) throw new Error(`No hay viento (${levelKey}) para ${dateStr} (${r.status}) | ${url}`);
     return await r.json();
   }
-
   function toRad(deg) { return (deg * Math.PI) / 180; }
   function destinationPoint(lat, lon, bearingDeg, distanceKm) {
     const R = 6371.0088;
@@ -254,7 +253,6 @@
     const right = destinationPoint(tip[0], tip[1], bearingDeg - 150, headKm);
     return { tail, tip, left, right };
   }
-
   function renderWindToLayer(windData, layerGroup) {
     layerGroup.clearLayers();
     const pts = windData.points || [];
@@ -284,7 +282,6 @@
       L.polyline([a.left, a.tip, a.right], { color, weight, opacity, interactive: false }).addTo(layerGroup);
     }
   }
-
   async function refreshWindLayer(levelKey) {
     const layerGroup = windLayers[levelKey];
     if (!layerGroup) return;
@@ -300,27 +297,23 @@
       setStatus(`(Sin viento ${levelKey} para ${dateInput.value})`);
     }
   }
-
   function wireWindOverlays() {
     for (const wl of WIND_LEVELS) {
       const lg = L.layerGroup();
       windLayers[wl.key] = lg;
       layerControl.addOverlay(lg, wl.label);
     }
-
     map.on("overlayadd", (ev) => {
       for (const wl of WIND_LEVELS) {
         if (ev.layer === windLayers[wl.key]) { refreshWindLayer(wl.key); break; }
       }
     });
-
     map.on("overlayremove", (ev) => {
       for (const wl of WIND_LEVELS) {
         if (ev.layer === windLayers[wl.key]) { windLayers[wl.key].clearLayers(); break; }
       }
     });
   }
-
   function rerenderVisibleWind() {
     for (const wl of WIND_LEVELS) {
       const lg = windLayers[wl.key];
@@ -330,7 +323,7 @@
     }
   }
 
-  // ---------------- GIF job module (server-side) ----------------
+  // ---------------- GIF job module ----------------
   let ovdasVolcanoList = [];
   let roiRect = null;
 
@@ -446,11 +439,17 @@
     const roiBBox = computeRoiBounds(lat, lon, roiKm);
     const gifRelPath = expectedGifPath(volcanoName, dates, roiKm, sizePx);
 
-    // Read toggles (default true if element missing)
+    // Base overlays
     const includeChile = gifChkChileBorder ? gifChkChileBorder.checked : true;
     const includeVolcanoes = gifChkVolcanoesOvdas ? gifChkVolcanoesOvdas.checked : true;
     const includeSmelters = gifChkSmelters ? gifChkSmelters.checked : true;
     const includeLegend = gifChkLegend ? gifChkLegend.checked : true;
+
+    // Wind overlays per level
+    const wind900 = gifChkWind900 ? gifChkWind900.checked : false;
+    const wind500 = gifChkWind500 ? gifChkWind500.checked : false;
+    const wind250 = gifChkWind250 ? gifChkWind250.checked : false;
+    const wind150 = gifChkWind150 ? gifChkWind150.checked : false;
 
     const job = {
       version: 1,
@@ -466,18 +465,33 @@
       max_frames: 30,
       output_relpath: gifRelPath,
 
-      // auto-skip frames sin datos
       skip_empty_frames: { enabled: true },
 
-      // ✅ overlays elegibles
       overlays: {
         chile_border: includeChile,
         volcanoes_ovdas: includeVolcanoes,
         smelters: includeSmelters,
 
-        // paths locales (repo) para que el Action dibuje puntos sin CORS
         volcanoes_ovdas_path: cfg.data.volcanoesOvdas,
         smelters_path: cfg.data.smelters,
+
+        // ✅ wind layers (read from data/wind/YYYY-MM-DD/*.json)
+        wind_900hPa: wind900,
+        wind_500hPa: wind500,
+        wind_250hPa: wind250,
+        wind_150hPa: wind150,
+        wind_style: {
+          color_rgba: [85, 85, 85, 200],
+          width: 2,
+          opacity: 0.8,
+          head_px: 10,
+          base_len_px: 60,
+          min_len_px: 20,
+          max_len_px: 90,
+          ref_speed: 10.0,
+          # draw fewer arrows for big ROI
+          stride: 2
+        },
 
         chile_border_cfg: {
           stroke_rgba: [0, 0, 0, 220],
@@ -598,7 +612,6 @@
       map.on("moveend", rerenderVisibleWind);
 
       initSo2Legend();
-
       fillVolcanoSelect(ovdasVolcanoList);
       wireGifUi();
 
