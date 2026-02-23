@@ -22,7 +22,12 @@
   const gifProgress = document.getElementById("gifProgress");
   const gifSize = document.getElementById("gifSize");
   const gifFps = document.getElementById("gifFps");
-  const gifOverlayChile = document.getElementById("gifOverlayChile"); // NEW
+
+  // ✅ NEW GIF overlay toggles
+  const gifChkChileBorder = document.getElementById("gifChkChileBorder");
+  const gifChkVolcanoesOvdas = document.getElementById("gifChkVolcanoesOvdas");
+  const gifChkSmelters = document.getElementById("gifChkSmelters");
+  const gifChkLegend = document.getElementById("gifChkLegend");
 
   function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
   function setGifProgress(msg) { if (gifProgress) gifProgress.textContent = msg; }
@@ -441,7 +446,11 @@
     const roiBBox = computeRoiBounds(lat, lon, roiKm);
     const gifRelPath = expectedGifPath(volcanoName, dates, roiKm, sizePx);
 
-    const includeChileBorder = gifOverlayChile ? !!gifOverlayChile.checked : true;
+    // Read toggles (default true if element missing)
+    const includeChile = gifChkChileBorder ? gifChkChileBorder.checked : true;
+    const includeVolcanoes = gifChkVolcanoesOvdas ? gifChkVolcanoesOvdas.checked : true;
+    const includeSmelters = gifChkSmelters ? gifChkSmelters.checked : true;
+    const includeLegend = gifChkLegend ? gifChkLegend.checked : true;
 
     const job = {
       version: 1,
@@ -457,13 +466,25 @@
       max_frames: 30,
       output_relpath: gifRelPath,
 
-      // NEW overlays
-      overlays: {
-        chile_border: includeChileBorder
-      },
-
-      // auto skip black/empty frames
+      // auto-skip frames sin datos
       skip_empty_frames: { enabled: true },
+
+      // ✅ overlays elegibles
+      overlays: {
+        chile_border: includeChile,
+        volcanoes_ovdas: includeVolcanoes,
+        smelters: includeSmelters,
+
+        // paths locales (repo) para que el Action dibuje puntos sin CORS
+        volcanoes_ovdas_path: cfg.data.volcanoesOvdas,
+        smelters_path: cfg.data.smelters,
+
+        chile_border_cfg: {
+          stroke_rgba: [0, 0, 0, 220],
+          stroke_width: 2,
+          countries_url: cfg.data.countriesUrl
+        }
+      },
 
       wms: {
         url: cfg.wms.url,
@@ -471,7 +492,7 @@
         styles: cfg.wms.styles || "",
         version: cfg.wms.version || "1.3.0",
         timeFormat: cfg.wms.timeFormat || "isoZ",
-        legend: true
+        legend: includeLegend
       }
     };
 
@@ -545,7 +566,6 @@
         const p = l.feature?.properties || {};
         const name = nameFromProps(p, "Volcán");
         bindPermanentLabel(l, name, "label-volcano", "top", [0, -12]);
-
         const ll = l.getLatLng();
         ovdasVolcanoList.push({ name, lat: ll.lat, lon: ll.lng });
       });
@@ -591,7 +611,6 @@
     }
   }
 
-  // ---------------- UI events ----------------
   dateInput.addEventListener("change", () => {
     addSo2Layer(dateInput.value);
     rerenderVisibleWind();
