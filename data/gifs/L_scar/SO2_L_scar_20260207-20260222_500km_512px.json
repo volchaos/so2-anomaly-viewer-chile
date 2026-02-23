@@ -1,0 +1,72 @@
+{
+  "volcano_name": "Láscar",
+  "requested_dates": [
+    "2026-02-07",
+    "2026-02-08",
+    "2026-02-09",
+    "2026-02-10",
+    "2026-02-11",
+    "2026-02-12",
+    "2026-02-13",
+    "2026-02-14",
+    "2026-02-15",
+    "2026-02-16",
+    "2026-02-17",
+    "2026-02-18",
+    "2026-02-19",
+    "2026-02-20",
+    "2026-02-21",
+    "2026-02-22"
+  ],
+  "kept_dates": [
+    "2026-02-07",
+    "2026-02-08",
+    "2026-02-09",
+    "2026-02-10",
+    "2026-02-11",
+    "2026-02-12",
+    "2026-02-13",
+    "2026-02-14",
+    "2026-02-16",
+    "2026-02-17",
+    "2026-02-18",
+    "2026-02-19",
+    "2026-02-21",
+    "2026-02-22"
+  ],
+  "skipped": [
+    {
+      "date": "2026-02-15",
+      "reason": "skip: low alpha coverage (alpha_frac=0.0000)"
+    },
+    {
+      "date": "2026-02-20",
+      "reason": "skip: low alpha coverage (alpha_frac=0.0000)"
+    }
+  ],
+  "roi_km": 500.0,
+  "size_px": 512,
+  "fps": 1,
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260222_500km_512px.gif",
+  "created_utc": "2026-02-23T19:32:53.366332Z",
+  "skip_empty_frames": {
+    "enabled": true
+  },
+  "overlays": {
+    "chile_border": true,
+    "volcanoes_ovdas": true,
+    "smelters": true,
+    "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
+    "smelters_path": "data/smelters_13.geojson",
+    "chile_border_cfg": {
+      "stroke_rgba": [
+        0,
+        0,
+        0,
+        220
+      ],
+      "stroke_width": 2,
+      "countries_url": "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+    }
+  }
+}
