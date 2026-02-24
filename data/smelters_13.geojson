@@ -1,0 +1,499 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -70.40064515,
+        "Norte": -23.66252259,
+        "ID": 360,
+        "RUT EMPRE": "96.508.670-6",
+        "NOMBRE EM": "MINERA MERIDIAN LIMITADA",
+        "REGION FA": 2,
+        "PROVINCIA": "ANTOFAGASTA",
+        "COMUNA F": "ANTOFAGASTA",
+        "NOMBRE F": "EL PEÑON  (II REGIÓN)",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 2,
+        "PROVINCI": "ANTOFAGASTA",
+        "COMUNA IN": "ANTOFAGASTA",
+        "NOMBRE IN": "REFINACIÓN",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "ORO - PLATA",
+        "RECURSO P": "ORO",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 7300644,
+        "UTM ESTE": 450106,
+        "COTA": 1829,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "EL PEÑON  (II REGIÓN)",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.49413488972849,
+          -24.409945972646874
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -69.55148469,
+        "Norte": -26.25591712,
+        "ID": 3068,
+        "RUT EMPRE": "61.704.000-K",
+        "NOMBRE EM": "CORPORACION NACIONAL DEL COBRE (CODELCO)",
+        "REGION FA": 3,
+        "PROVINCIA": "CHAÑARAL",
+        "COMUNA F": "DIEGO DE ALMAGRO",
+        "NOMBRE F": "CODELCO CHILE DIVISION SALVADOR",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 3,
+        "PROVINCI": "CHAÑARAL",
+        "COMUNA IN": "DIEGO DE ALMAGRO",
+        "NOMBRE IN": "PLANTA SECADO POTRERILLOS",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "COBRE - ORO - PLATA",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 7076238,
+        "UTM ESTE": 452578,
+        "COTA": 2737,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "CODELCO CHILE DIVISION SALVADOR",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.47922675937714,
+          -26.436952058074812
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -71.48177083,
+        "Norte": -32.76078045,
+        "ID": 4355,
+        "RUT EMPRE": "61.704.000-K",
+        "NOMBRE EM": "CORPORACION NACIONAL DEL COBRE (CODELCO)",
+        "REGION FA": 5,
+        "PROVINCIA": "VALPARAISO",
+        "COMUNA F": "PUCHUNCAVI",
+        "NOMBRE F": "CODELCO CHILE DIVISION VENTANAS",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 5,
+        "PROVINCI": "VALPARAISO",
+        "COMUNA IN": "PUCHUNCAVI",
+        "NOMBRE IN": "CONVERTIDOR TENIENTE",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "SULFUROS DE COBRE",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 6372608,
+        "UTM ESTE": 267630,
+        "COTA": 30,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "CODELCO CHILE DIVISION VENTANAS",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.48187876661162,
+          -32.76236227656086
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -69.36494487,
+        "Norte": -26.86881899,
+        "ID": 1968,
+        "RUT EMPRE": "96.623.630-2",
+        "NOMBRE EM": "CIA. MINERA CAN CAN S. A.",
+        "REGION FA": 3,
+        "PROVINCIA": "COPIAPO",
+        "COMUNA F": "COPIAPO",
+        "NOMBRE F": "PLANTA CAN CAN",
+        "CATEGORIA": "Categoría C",
+        "REGION IN": 3,
+        "PROVINCI": "COPIAPO",
+        "COMUNA IN": "COPIAPO",
+        "NOMBRE IN": "REFINERIA",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "COBRE - ORO - PLATA",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 7028250,
+        "UTM ESTE": 464111,
+        "COTA": 3231,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "PLANTA CAN CAN",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.36337825818555,
+          -26.87002380368215
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -70.95341386,
+        "Norte": -32.80385431,
+        "ID": 5392,
+        "RUT EMPRE": "77.762.940-9",
+        "NOMBRE EM": "ANGLO AMERICAN SUR S.A.",
+        "REGION FA": 5,
+        "PROVINCIA": "SAN FELIPE",
+        "COMUNA F": "CATEMU",
+        "NOMBRE F": "DIVISIÓN FUNDICIÓN CHAGRES",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 5,
+        "PROVINCI": "SAN FELIPE",
+        "COMUNA IN": "CATEMU",
+        "NOMBRE IN": "RUEDA DE MOLDEO",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "SULFUROS DE COBRE",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 6369076,
+        "UTM ESTE": 317263,
+        "COTA": 432,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "DIVISIÓN FUNDICIÓN CHAGRES",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.95558765588945,
+          -32.80510771611346
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -70.31653513,
+        "Norte": -23.82267999,
+        "ID": 391,
+        "RUT EMPRE": "88.325.800-2",
+        "NOMBRE EM": "COMPLEJO METALÚRGICO ALTO NORTE S.A",
+        "REGION FA": 2,
+        "PROVINCIA": "ANTOFAGASTA",
+        "COMUNA F": "ANTOFAGASTA",
+        "NOMBRE F": "FAENA ALTONORTE",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 2,
+        "PROVINCI": "ANTOFAGASTA",
+        "COMUNA IN": "ANTOFAGASTA",
+        "NOMBRE IN": "FUNDICION ALTONORTE",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "OXIDOS DE COBRE",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 7364564,
+        "UTM ESTE": 365816,
+        "COTA": 562,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "FAENA ALTONORTE",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.31878448934191,
+          -23.826218845334466
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -68.89008089,
+        "Norte": -22.31540716,
+        "ID": 1387,
+        "RUT EMPRE": "61.704.000-K",
+        "NOMBRE EM": "CORPORACION NACIONAL DEL COBRE (CODELCO)",
+        "REGION FA": 2,
+        "PROVINCIA": "EL LOA",
+        "COMUNA F": "CALAMA",
+        "NOMBRE F": "CODELCO CHILE DIVISION CHUQUICAMATA",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 2,
+        "PROVINCI": "EL LOA",
+        "COMUNA IN": "CALAMA",
+        "NOMBRE IN": "FUNDICION",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "SULFUROS Y ÓXIDOS DE COBRE",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 7532822,
+        "UTM ESTE": 511935,
+        "COTA": 2659,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "CODELCO CHILE DIVISION CHUQUICAMATA",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.88615515690746,
+          -22.315296046141487
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -69.52867738,
+        "Norte": -25.10486695,
+        "ID": 873,
+        "RUT EMPRE": "78.097.950-K",
+        "NOMBRE EM": "GUANACO COMPAÑÍA MINERA LIMITADA",
+        "REGION FA": 2,
+        "PROVINCIA": "ANTOFAGASTA",
+        "COMUNA F": "TALTAL",
+        "NOMBRE F": "MINA GUANACO",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 2,
+        "PROVINCI": "ANTOFAGASTA",
+        "COMUNA IN": "TALTAL",
+        "NOMBRE IN": "FUNDICION ADR",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "ORO - PLATA",
+        "RECURSO P": "ORO",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 7223980,
+        "UTM ESTE": 446014,
+        "COTA": 2735,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "MINA GUANACO",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.53746254396047,
+          -25.102144292156115
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -69.32325793,
+        "Norte": -20.18261557,
+        "ID": 6411,
+        "RUT EMPRE": "96.955.560-3",
+        "NOMBRE EM": "HALDEMAN MINING COMPANY S. A.",
+        "REGION FA": 1,
+        "PROVINCIA": "TAMARUGAL",
+        "COMUNA F": "POZO ALMONTE",
+        "NOMBRE F": "SAGASCA",
+        "CATEGORIA": "Categoría B",
+        "REGION IN": 1,
+        "PROVINCI": "TAMARUGAL",
+        "COMUNA IN": "POZO ALMONTE",
+        "NOMBRE IN": "FABRICA FUNCION DE AZUFRE Y ACIDO",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "AZUFRE",
+        "RECURSO P": "AZUFRE",
+        "TIPO RECU": "ROCAS Y MINERALES INDUSTRIALES",
+        "UTM NORTE": 7767796,
+        "UTM ESTE": 465442,
+        "COTA": 1716,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "NO ACTIVA",
+        "name": "SAGASCA",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.33272967236692,
+          -20.190179291730768
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -70.2525055,
+        "Norte": -27.41145867,
+        "ID": 2040,
+        "RUT EMPRE": "61.703.000-4",
+        "NOMBRE EM": "EMPRESA NACIONAL DE MINERIA (ENAMI)",
+        "REGION FA": 3,
+        "PROVINCIA": "COPIAPO",
+        "COMUNA F": "COPIAPO",
+        "NOMBRE F": "FUNDICION HERNAN VIDELA LIRA",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 3,
+        "PROVINCI": "COPIAPO",
+        "COMUNA IN": "COPIAPO",
+        "NOMBRE IN": "PLANTA PICS Y TOLVA CAMADA",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "COBRE - ORO - PLATA",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 6966751,
+        "UTM ESTE": 375870,
+        "COTA": 495,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "FUNDICION HERNAN VIDELA LIRA",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.25862327749023,
+          -27.41861429886663
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -69.28346733,
+        "Norte": -27.54557517,
+        "ID": 2536,
+        "RUT EMPRE": "78.095.890-1",
+        "NOMBRE EM": "CIA MINERA MARICUNGA",
+        "REGION FA": 3,
+        "PROVINCIA": "COPIAPO",
+        "COMUNA F": "TIERRA AMARILLA",
+        "NOMBRE F": "REFUGIO",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 3,
+        "PROVINCI": "COPIAPO",
+        "COMUNA IN": "TIERRA AMARILLA",
+        "NOMBRE IN": "SALA DE ORO",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "ORO - COBRE",
+        "RECURSO P": "ORO",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 6953000,
+        "UTM ESTE": 473100,
+        "COTA": 4460,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "REFUGIO",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -69.27454430754732,
+          -27.549583273563368
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -70.20601493,
+        "Norte": -32.48573266,
+        "ID": 4472,
+        "RUT EMPRE": "78.544.320-9",
+        "NOMBRE EM": "COMPAÑIA MINERA PIMENTON",
+        "REGION FA": 5,
+        "PROVINCIA": "LOS ANDES",
+        "COMUNA F": "SAN ESTEBAN",
+        "NOMBRE F": "PLANTA PIMENTON",
+        "CATEGORIA": "Categoría C",
+        "REGION IN": 5,
+        "PROVINCI": "LOS ANDES",
+        "COMUNA IN": "SAN ESTEBAN",
+        "NOMBRE IN": "FUNDICION",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "ORO - PLATA",
+        "RECURSO P": "ORO",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 6405205,
+        "UTM ESTE": 387175,
+        "COTA": 3341,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "PLANTA PIMENTON",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.20299566020907,
+          -32.487565550387586
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Este": -70.50862194,
+        "Norte": -34.0804971,
+        "ID": 5754,
+        "RUT EMPRE": "61.704.000-K",
+        "NOMBRE EM": "CORPORACION NACIONAL DEL COBRE (CODELCO)",
+        "REGION FA": 6,
+        "PROVINCIA": "CACHAPOAL",
+        "COMUNA F": "MACHALI",
+        "NOMBRE F": "CODELCO CHILE DIVISION EL TENIENTE",
+        "CATEGORIA": "Categoría A",
+        "REGION IN": 6,
+        "PROVINCI": "CACHAPOAL",
+        "COMUNA IN": "MACHALI",
+        "NOMBRE IN": "003 CALETONES / 07 PLANTA DE SECADO CONCENTRADO",
+        "TIPO INST": "FUNDICION",
+        "RECURSO M": "COBRE - MOLIBDENO",
+        "RECURSO P": "COBRE",
+        "TIPO RECU": "RECURSOS MINERALES METÁLICOS",
+        "UTM NORTE": 6225655,
+        "UTM ESTE": 366300,
+        "COTA": 1603,
+        "HUSO": 19,
+        "DATUM": "PSAD-56",
+        "ESTADO": "ACTIVA",
+        "name": "CODELCO CHILE DIVISION EL TENIENTE",
+        "type": "smelter"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.45168745936127,
+          -34.10421342109207
+        ]
+      }
+    }
+  ]
+}
