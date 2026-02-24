@@ -489,7 +489,7 @@
           min_len_px: 20,
           max_len_px: 90,
           ref_speed: 10.0,
-          # draw fewer arrows for big ROI
+          // draw fewer arrows for big ROI
           stride: 2
         },
 
