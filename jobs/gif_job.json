@@ -10,12 +10,12 @@
     "east": -65.28464785486048,
     "north": -21.11722206183491
   },
-  "date_from": "2026-02-07",
-  "date_to": "2026-02-22",
+  "date_from": "2026-02-11",
+  "date_to": "2026-02-24",
   "size_px": 512,
-  "fps": 1,
+  "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260222_500km_512px.gif",
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260211-20260224_500km_512px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
@@ -25,6 +25,26 @@
     "smelters": true,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
+    "wind_900hPa": false,
+    "wind_500hPa": true,
+    "wind_250hPa": false,
+    "wind_150hPa": false,
+    "wind_style": {
+      "color_rgba": [
+        85,
+        85,
+        85,
+        200
+      ],
+      "width": 2,
+      "opacity": 0.8,
+      "head_px": 10,
+      "base_len_px": 60,
+      "min_len_px": 20,
+      "max_len_px": 90,
+      "ref_speed": 10,
+      "stride": 2
+    },
     "chile_border_cfg": {
       "stroke_rgba": [
         0,
