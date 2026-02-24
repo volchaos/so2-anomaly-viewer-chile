@@ -10,12 +10,12 @@
     "east": -65.28464785486048,
     "north": -21.11722206183491
   },
-  "date_from": "2026-02-11",
-  "date_to": "2026-02-24",
+  "date_from": "2026-02-07",
+  "date_to": "2026-02-23",
   "size_px": 512,
-  "fps": 2,
+  "fps": 1,
   "max_frames": 30,
-  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260211-20260224_500km_512px.gif",
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260223_500km_512px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
