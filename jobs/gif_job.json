@@ -10,12 +10,12 @@
     "east": -69.39580850285932,
     "north": -35.15968882411087
   },
-  "date_from": "2026-02-17",
-  "date_to": "2026-03-02",
+  "date_from": "2026-02-01",
+  "date_to": "2026-02-28",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Laguna_del_Maule/SO2_Laguna_del_Maule_20260217-20260302_200km_1024px.gif",
+  "output_relpath": "data/gifs/Laguna_del_Maule/SO2_Laguna_del_Maule_20260201-20260228_200km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
