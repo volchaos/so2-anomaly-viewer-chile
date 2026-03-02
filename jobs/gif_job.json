@@ -1,32 +1,32 @@
 {
   "version": 1,
-  "volcano_name": "Láscar",
-  "volcano_lat": -23.36299999931245,
-  "volcano_lon": -67.731,
-  "roi_km": 500,
+  "volcano_name": "Laguna del Maule",
+  "volcano_lat": -36.05799999910189,
+  "volcano_lon": -70.507,
+  "roi_km": 200,
   "roi_bbox": {
-    "west": -70.17735214513951,
-    "south": -25.60877793678999,
-    "east": -65.28464785486048,
-    "north": -21.11722206183491
+    "west": -71.61819149714069,
+    "south": -36.9563111740929,
+    "east": -69.39580850285932,
+    "north": -35.15968882411087
   },
-  "date_from": "2026-02-07",
-  "date_to": "2026-02-23",
-  "size_px": 512,
-  "fps": 1,
+  "date_from": "2026-02-17",
+  "date_to": "2026-03-02",
+  "size_px": 1024,
+  "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260223_500km_512px.gif",
+  "output_relpath": "data/gifs/Laguna_del_Maule/SO2_Laguna_del_Maule_20260217-20260302_200km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
   "overlays": {
     "chile_border": true,
     "volcanoes_ovdas": true,
-    "smelters": true,
+    "smelters": false,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
     "wind_900hPa": false,
-    "wind_500hPa": true,
+    "wind_500hPa": false,
     "wind_250hPa": false,
     "wind_150hPa": false,
     "wind_style": {
