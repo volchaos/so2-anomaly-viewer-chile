@@ -70,9 +70,9 @@
   ],
   "roi_km": 500.0,
   "size_px": 1024,
-  "fps": 1,
+  "fps": 2,
   "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260201-20260228_500km_1024px.gif",
-  "created_utc": "2026-03-03T15:07:58.735076Z",
+  "created_utc": "2026-03-03T15:38:06.443885Z",
   "skip_empty_frames": {
     "enabled": true
   },
