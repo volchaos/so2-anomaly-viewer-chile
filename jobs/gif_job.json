@@ -1,28 +1,28 @@
 {
   "version": 1,
-  "volcano_name": "Laguna del Maule",
-  "volcano_lat": -36.05799999910189,
-  "volcano_lon": -70.507,
+  "volcano_name": "Llaima",
+  "volcano_lat": -38.69399999907918,
+  "volcano_lon": -71.733,
   "roi_km": 200,
   "roi_bbox": {
-    "west": -71.61819149714069,
-    "south": -36.9563111740929,
-    "east": -69.39580850285932,
-    "north": -35.15968882411087
+    "west": -72.88394928741538,
+    "south": -39.5923111740702,
+    "east": -70.58205071258463,
+    "north": -37.79568882408817
   },
   "date_from": "2026-02-01",
   "date_to": "2026-02-28",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Laguna_del_Maule/SO2_Laguna_del_Maule_20260201-20260228_200km_1024px.gif",
+  "output_relpath": "data/gifs/Llaima/SO2_Llaima_20260201-20260228_200km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
   "overlays": {
     "chile_border": true,
     "volcanoes_ovdas": true,
-    "smelters": false,
+    "smelters": true,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
     "wind_900hPa": false,
