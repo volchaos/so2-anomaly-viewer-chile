@@ -1,0 +1,116 @@
+{
+  "volcano_name": "Láscar",
+  "requested_dates": [
+    "2026-02-01",
+    "2026-02-02",
+    "2026-02-03",
+    "2026-02-04",
+    "2026-02-05",
+    "2026-02-06",
+    "2026-02-07",
+    "2026-02-08",
+    "2026-02-09",
+    "2026-02-10",
+    "2026-02-11",
+    "2026-02-12",
+    "2026-02-13",
+    "2026-02-14",
+    "2026-02-15",
+    "2026-02-16",
+    "2026-02-17",
+    "2026-02-18",
+    "2026-02-19",
+    "2026-02-20",
+    "2026-02-21",
+    "2026-02-22",
+    "2026-02-23",
+    "2026-02-24",
+    "2026-02-25",
+    "2026-02-26",
+    "2026-02-27",
+    "2026-02-28"
+  ],
+  "kept_dates": [
+    "2026-02-01",
+    "2026-02-02",
+    "2026-02-03",
+    "2026-02-04",
+    "2026-02-05",
+    "2026-02-06",
+    "2026-02-07",
+    "2026-02-08",
+    "2026-02-09",
+    "2026-02-10",
+    "2026-02-11",
+    "2026-02-12",
+    "2026-02-13",
+    "2026-02-14",
+    "2026-02-16",
+    "2026-02-17",
+    "2026-02-18",
+    "2026-02-19",
+    "2026-02-21",
+    "2026-02-22",
+    "2026-02-23",
+    "2026-02-24",
+    "2026-02-25",
+    "2026-02-26",
+    "2026-02-27",
+    "2026-02-28"
+  ],
+  "skipped": [
+    {
+      "date": "2026-02-15",
+      "reason": "skip: low alpha coverage (alpha_frac=0.0000)"
+    },
+    {
+      "date": "2026-02-20",
+      "reason": "skip: low alpha coverage (alpha_frac=0.0000)"
+    }
+  ],
+  "roi_km": 500.0,
+  "size_px": 1024,
+  "fps": 1,
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260201-20260228_500km_1024px.gif",
+  "created_utc": "2026-03-03T14:57:08.582555Z",
+  "skip_empty_frames": {
+    "enabled": true
+  },
+  "overlays": {
+    "chile_border": true,
+    "volcanoes_ovdas": true,
+    "smelters": true,
+    "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
+    "smelters_path": "data/smelters_13.geojson",
+    "wind_900hPa": false,
+    "wind_500hPa": false,
+    "wind_250hPa": false,
+    "wind_150hPa": false,
+    "wind_style": {
+      "color_rgba": [
+        85,
+        85,
+        85,
+        200
+      ],
+      "width": 2,
+      "opacity": 0.8,
+      "head_px": 10,
+      "base_len_px": 60,
+      "min_len_px": 20,
+      "max_len_px": 90,
+      "ref_speed": 10,
+      "stride": 2
+    },
+    "chile_border_cfg": {
+      "stroke_rgba": [
+        0,
+        0,
+        0,
+        220
+      ],
+      "stroke_width": 2,
+      "countries_url": "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+    }
+  }
+}
