@@ -22,7 +22,7 @@
   "overlays": {
     "chile_border": true,
     "volcanoes_ovdas": true,
-    "smelters": true,
+    "smelters": false,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
     "wind_900hPa": false,
