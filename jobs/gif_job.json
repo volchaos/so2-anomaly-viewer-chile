@@ -3,19 +3,19 @@
   "volcano_name": "Llaima",
   "volcano_lat": -38.69399999907918,
   "volcano_lon": -71.733,
-  "roi_km": 200,
+  "roi_km": 500,
   "roi_bbox": {
-    "west": -72.88394928741538,
-    "south": -39.5923111740702,
-    "east": -70.58205071258463,
-    "north": -37.79568882408817
+    "west": -74.61037321853844,
+    "south": -40.93977793655672,
+    "east": -68.85562678146157,
+    "north": -36.44822206160164
   },
   "date_from": "2026-02-01",
   "date_to": "2026-02-28",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Llaima/SO2_Llaima_20260201-20260228_200km_1024px.gif",
+  "output_relpath": "data/gifs/Llaima/SO2_Llaima_20260201-20260228_500km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
