@@ -74,14 +74,14 @@
     },
     {
       "date": "2026-03-09",
-      "reason": "download/error: cannot identify image file <_io.BytesIO object at 0x7fcf54462200>"
+      "reason": "download/error: cannot identify image file <_io.BytesIO object at 0x7f1f4a1a2570>"
     }
   ],
   "roi_km": 750.0,
   "size_px": 1080,
   "fps": 1,
   "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260309_500km_512px.gif",
-  "created_utc": "2026-03-10T15:44:50.580688Z",
+  "created_utc": "2026-03-10T15:52:40.899945Z",
   "skip_empty_frames": {
     "enabled": true
   },
