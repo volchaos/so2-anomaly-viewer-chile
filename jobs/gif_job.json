@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "Villarrica",
-  "volcano_lat": -39.4199999990743,
-  "volcano_lon": -71.939,
+  "volcano_name": "Láscar",
+  "volcano_lat": -23.36299999931245,
+  "volcano_lon": -67.731,
   "roi_km": 500,
   "roi_bbox": {
-    "west": -74.84611088376644,
-    "south": -41.66577793655184,
-    "east": -69.03188911623354,
-    "north": -37.17422206159676
+    "west": -70.17735214513951,
+    "south": -25.60877793678999,
+    "east": -65.28464785486048,
+    "north": -21.11722206183491
   },
-  "date_from": "2026-02-01",
-  "date_to": "2026-02-28",
-  "size_px": 1024,
-  "fps": 2,
+  "date_from": "2026-02-07",
+  "date_to": "2026-03-09",
+  "size_px": 512,
+  "fps": 1,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Villarrica/SO2_Villarrica_20260201-20260228_500km_1024px.gif",
+  "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260207-20260309_500km_512px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
