@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "Villarrica",
-  "volcano_lat": -39.4199999990743,
-  "volcano_lon": -71.939,
+  "volcano_name": "San Pedro",
+  "volcano_lat": -21.88799999934664,
+  "volcano_lon": -68.391,
   "roi_km": 500,
   "roi_bbox": {
-    "west": -74.84611088376644,
-    "south": -41.66577793655184,
-    "east": -69.03188911623354,
-    "north": -37.17422206159676
+    "west": -70.81124270106733,
+    "south": -24.13377793682418,
+    "east": -65.97075729893268,
+    "north": -19.6422220618691
   },
   "date_from": "2026-03-01",
   "date_to": "2026-03-30",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Villarrica/SO2_Villarrica_20260301-20260330_500km_1024px.gif",
+  "output_relpath": "data/gifs/San_Pedro/SO2_San_Pedro_20260301-20260330_500km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
