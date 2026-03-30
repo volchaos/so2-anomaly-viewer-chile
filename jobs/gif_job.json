@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "Nevados de Chillán",
-  "volcano_lat": -36.87099999909406,
-  "volcano_lon": -71.368,
+  "volcano_name": "Planchón - Peteroa",
+  "volcano_lat": -35.24099999911047,
+  "volcano_lon": -70.574,
   "roi_km": 500,
   "roi_bbox": {
-    "west": -74.17526293052576,
-    "south": -39.1167779365716,
-    "east": -68.56073706947423,
-    "north": -34.62522206161652
+    "west": -73.32371150842515,
+    "south": -37.48677793658801,
+    "east": -67.82428849157485,
+    "north": -32.99522206163293
   },
   "date_from": "2026-03-01",
   "date_to": "2026-03-30",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Nevados_de_Chill_n/SO2_Nevados_de_Chill_n_20260301-20260330_500km_1024px.gif",
+  "output_relpath": "data/gifs/Planch_n_-_Peteroa/SO2_Planch_n_-_Peteroa_20260301-20260330_500km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
