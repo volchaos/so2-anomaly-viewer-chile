@@ -73,14 +73,14 @@
   "size_px": 1024,
   "fps": 2,
   "output_relpath": "data/gifs/Planch_n_-_Peteroa/SO2_Planch_n_-_Peteroa_20260301-20260330_500km_1024px.gif",
-  "created_utc": "2026-03-30T18:24:57.162994Z",
+  "created_utc": "2026-03-30T18:35:20.620609Z",
   "skip_empty_frames": {
     "enabled": true
   },
   "overlays": {
     "chile_border": true,
     "volcanoes_ovdas": true,
-    "smelters": true,
+    "smelters": false,
     "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
     "smelters_path": "data/smelters_13.geojson",
     "wind_900hPa": false,
