@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "San Pedro",
-  "volcano_lat": -21.88799999934664,
-  "volcano_lon": -68.391,
-  "roi_km": 500,
+  "volcano_name": "Tupungatito",
+  "volcano_lat": -33.40099999913246,
+  "volcano_lon": -69.802,
+  "roi_km": 200,
   "roi_bbox": {
-    "west": -70.81124270106733,
-    "south": -24.13377793682418,
-    "east": -65.97075729893268,
-    "north": -19.6422220618691
+    "west": -70.87803020002255,
+    "south": -34.299311174123474,
+    "east": -68.72596979997746,
+    "north": -32.502688824141444
   },
   "date_from": "2026-03-01",
-  "date_to": "2026-03-30",
+  "date_to": "2026-03-31",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/San_Pedro/SO2_San_Pedro_20260301-20260330_500km_1024px.gif",
+  "output_relpath": "data/gifs/Tupungatito/SO2_Tupungatito_20260301-20260331_200km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
