@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "San José",
-  "volcano_lat": -33.7899999991275,
-  "volcano_lon": -69.894,
+  "volcano_name": "Llaima",
+  "volcano_lat": -38.69399999907918,
+  "volcano_lon": -71.733,
   "roi_km": 200,
   "roi_bbox": {
-    "west": -70.97489413918943,
-    "south": -34.68831117411852,
-    "east": -68.81310586081058,
-    "north": -32.89168882413649
+    "west": -72.88394928741538,
+    "south": -39.5923111740702,
+    "east": -70.58205071258463,
+    "north": -37.79568882408817
   },
   "date_from": "2026-03-01",
   "date_to": "2026-03-31",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/San_Jos/SO2_San_Jos_20260301-20260331_200km_1024px.gif",
+  "output_relpath": "data/gifs/Llaima/SO2_Llaima_20260301-20260331_200km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
