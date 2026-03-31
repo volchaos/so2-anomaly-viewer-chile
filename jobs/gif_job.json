@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "volcano_name": "Tupungatito",
-  "volcano_lat": -33.40099999913246,
-  "volcano_lon": -69.802,
+  "volcano_name": "San José",
+  "volcano_lat": -33.7899999991275,
+  "volcano_lon": -69.894,
   "roi_km": 200,
   "roi_bbox": {
-    "west": -70.87803020002255,
-    "south": -34.299311174123474,
-    "east": -68.72596979997746,
-    "north": -32.502688824141444
+    "west": -70.97489413918943,
+    "south": -34.68831117411852,
+    "east": -68.81310586081058,
+    "north": -32.89168882413649
   },
   "date_from": "2026-03-01",
   "date_to": "2026-03-31",
   "size_px": 1024,
   "fps": 2,
   "max_frames": 30,
-  "output_relpath": "data/gifs/Tupungatito/SO2_Tupungatito_20260301-20260331_200km_1024px.gif",
+  "output_relpath": "data/gifs/San_Jos/SO2_San_Jos_20260301-20260331_200km_1024px.gif",
   "skip_empty_frames": {
     "enabled": true
   },
