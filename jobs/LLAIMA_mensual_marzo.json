@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "volcano_name": "Llaima",
+  "volcano_lat": -38.69399999907918,
+  "volcano_lon": -71.733,
+  "roi_km": 500,
+  "roi_bbox": {
+    "west": -74.61037321853844,
+    "south": -40.93977793655672,
+    "east": -68.85562678146157,
+    "north": -36.44822206160164
+  },
+  "date_from": "2026-03-01",
+  "date_to": "2026-04-30",
+  "size_px": 1024,
+  "fps": 2,
+  "max_frames": 30,
+  "output_relpath": "data/gifs/Llaima/SO2_Llaima_20260301-20260430_500km_1024px.gif",
+  "skip_empty_frames": {
+    "enabled": true
+  },
+  "overlays": {
+    "chile_border": true,
+    "volcanoes_ovdas": true,
+    "smelters": false,
+    "volcanoes_ovdas_path": "data/volcanoes_ovdas_44.geojson",
+    "smelters_path": "data/smelters_13.geojson",
+    "wind_900hPa": false,
+    "wind_500hPa": false,
+    "wind_250hPa": false,
+    "wind_150hPa": false,
+    "wind_style": {
+      "color_rgba": [
+        85,
+        85,
+        85,
+        200
+      ],
+      "width": 2,
+      "opacity": 0.8,
+      "head_px": 10,
+      "base_len_px": 60,
+      "min_len_px": 20,
+      "max_len_px": 90,
+      "ref_speed": 10,
+      "stride": 2
+    },
+    "chile_border_cfg": {
+      "stroke_rgba": [
+        0,
+        0,
+        0,
+        220
+      ],
+      "stroke_width": 2,
+      "countries_url": "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+    }
+  },
+  "wms": {
+    "url": "https://geoservice.dlr.de/eoc/atmosphere/wms",
+    "layers": "S5P_TROPOMI_L3_P1D_SO2_v2",
+    "styles": "",
+    "version": "1.3.0",
+    "timeFormat": "isoZ",
+    "legend": true
+  }
+}
