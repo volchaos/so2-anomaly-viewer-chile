@@ -22,6 +22,20 @@ They must be **Point** features (EPSG:4326) with at least a `name` property.
    - Folder: `/ (root)`
 4. Save. Your site will be available at `https://<user>.github.io/<repo>/`.
 
+## PR preview (sin afectar `main`)
+Este repo incluye un workflow: **`.github/workflows/pr_preview.yml`**.
+
+- Se ejecuta en cada `pull_request` (`opened`, `synchronize`, `reopened`).
+- Publica una **preview aislada** en GitHub Pages usando `actions/deploy-pages` con `preview: true`.
+- Actualiza automáticamente la preview cuando el PR recibe nuevos commits.
+- Deja (o actualiza) un comentario en el PR con la URL de preview.
+- No modifica la publicación estable de `main`; esa URL sigue siendo la de producción.
+
+### Configuración manual requerida (una sola vez)
+1. En **Settings → Pages**, asegúrate de usar **GitHub Actions** como source/build method.
+2. Verifica permisos de workflow: `pages: write` e `id-token: write` (ya definidos en el workflow).
+3. (Opcional) Si tu organización restringe Actions, habilita `actions/deploy-pages`, `actions/upload-pages-artifact` y `actions/github-script`.
+
 ## 3) Date selection (TIME)
 The viewer sends a WMS `TIME` parameter using ISO format:
 `YYYY-MM-DDT00:00:00Z`.
