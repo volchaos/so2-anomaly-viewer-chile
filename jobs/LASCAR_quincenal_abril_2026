@@ -13,7 +13,7 @@
   "date_from": "2026-04-01",
   "date_to": "2026-04-16",
   "size_px": 1024,
-  "fps": 2,
+  "fps": 1,
   "max_frames": 30,
   "output_relpath": "data/gifs/L_scar/SO2_L_scar_20260401-20260416_500km_1024px.gif",
   "skip_empty_frames": {
