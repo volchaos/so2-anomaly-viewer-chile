@@ -6,6 +6,8 @@
   const dateInput = document.getElementById("dateInput");
   const opacityInput = document.getElementById("opacityInput");
   const todayBtn = document.getElementById("todayBtn");
+  const prevDayBtn = document.getElementById("prevDayBtn");
+  const nextDayBtn = document.getElementById("nextDayBtn");
   const openEoc = document.getElementById("openEoc");
 
   // GIF UI
@@ -32,6 +34,7 @@
   // Wind toggles (per level)
   const gifChkWind900 = document.getElementById("gifChkWind900");
   const gifChkWind500 = document.getElementById("gifChkWind500");
+  const gifChkWind400 = document.getElementById("gifChkWind400");
   const gifChkWind250 = document.getElementById("gifChkWind250");
   const gifChkWind150 = document.getElementById("gifChkWind150");
 
@@ -215,6 +218,7 @@
   const WIND_LEVELS = [
     { key: "900hPa", label: "Viento (~1 km, 900 hPa)" },
     { key: "500hPa", label: "Viento (~5 km, 500 hPa)" },
+    { key: "400hPa", label: "Viento (~7 km, 400 hPa)" },
     { key: "250hPa", label: "Viento (~10 km, 250 hPa)" },
     { key: "150hPa", label: "Viento (~15 km, 150 hPa)" }
   ];
@@ -448,6 +452,7 @@
     // Wind overlays per level
     const wind900 = gifChkWind900 ? gifChkWind900.checked : false;
     const wind500 = gifChkWind500 ? gifChkWind500.checked : false;
+    const wind400 = gifChkWind400 ? gifChkWind400.checked : false;
     const wind250 = gifChkWind250 ? gifChkWind250.checked : false;
     const wind150 = gifChkWind150 ? gifChkWind150.checked : false;
 
@@ -478,6 +483,7 @@
         // ✅ wind layers (read from data/wind/YYYY-MM-DD/*.json)
         wind_900hPa: wind900,
         wind_500hPa: wind500,
+        wind_400hPa: wind400,
         wind_250hPa: wind250,
         wind_150hPa: wind150,
         wind_style: {
@@ -564,6 +570,74 @@
     gifGenerateBtn.addEventListener("click", () => prepareGifJob());
   }
 
+  // ---------------- Leyenda sincronizada ----------------
+  const LEGEND_LAYERS = [
+    { key: "so2",      label: "SO₂ (WMS)",              cls: "so2",     always: true },
+    { key: "border",   label: "Límite Chile",            cls: "border",  layerRef: () => borderLayer },
+    { key: "ovdas",    label: "Volcanes OVDAS",          cls: "volcano", layerRef: () => volcanesOvdasLayer },
+    { key: "otros",    label: "Volcanes no monitoreados",cls: "volcano", layerRef: () => volcanesOtrosLayer },
+    { key: "smelters", label: "Fundiciones",             cls: "smelter", layerRef: () => smeltersLayer },
+  ];
+
+  function updateLegend() {
+    const container = document.getElementById("legendItems");
+    if (!container) return;
+    container.innerHTML = "";
+
+    for (const item of LEGEND_LAYERS) {
+      const isActive = item.always || (item.layerRef && item.layerRef() && map.hasLayer(item.layerRef()));
+      if (!isActive) continue;
+      const div = document.createElement("div");
+      div.className = "legend-item";
+      div.innerHTML = `<span class="swatch ${item.cls}"></span> ${item.label}`;
+      container.appendChild(div);
+    }
+
+    // Viento: mostrar si algún nivel está activo
+    const anyWind = WIND_LEVELS.some(wl => windLayers[wl.key] && map.hasLayer(windLayers[wl.key]));
+    if (anyWind) {
+      const activeWindLabels = WIND_LEVELS
+        .filter(wl => windLayers[wl.key] && map.hasLayer(windLayers[wl.key]))
+        .map(wl => wl.label.replace("Viento ", ""));
+      const div = document.createElement("div");
+      div.className = "legend-item";
+      div.innerHTML = `<span class="swatch wind"></span> Viento (${activeWindLabels.join(", ")})`;
+      container.appendChild(div);
+    }
+  }
+
+  // ---------------- Panel colapsable ----------------
+  function wireCollapsePanel() {
+    const tab = document.getElementById("panelCollapseTab");
+    const panel = document.getElementById("rightPanel");
+    if (!tab || !panel) return;
+
+    let collapsed = false;
+    tab.addEventListener("click", () => {
+      collapsed = !collapsed;
+      panel.classList.toggle("collapsed", collapsed);
+      tab.classList.toggle("collapsed", collapsed);
+      tab.innerHTML = collapsed ? "&#8249;" : "&#8250;";
+      tab.title = collapsed ? "Mostrar panel" : "Ocultar panel";
+      setTimeout(() => map.invalidateSize(), 260);
+    });
+  }
+
+  // ---------------- Secciones colapsables ----------------
+  function wireCollapsibleSections() {
+    document.querySelectorAll(".section-header").forEach(btn => {
+      const targetId = btn.dataset.target;
+      const body = document.getElementById(targetId);
+      if (!body) return;
+      btn.classList.add("open");
+      body.classList.add("open");
+      btn.addEventListener("click", () => {
+        const isOpen = body.classList.toggle("open");
+        btn.classList.toggle("open", isOpen);
+      });
+    });
+  }
+
   // ---------------- Init ----------------
   async function init() {
     try {
@@ -611,9 +685,14 @@
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
 
+      map.on("overlayadd overlayremove", updateLegend);
+
       initSo2Legend();
       fillVolcanoSelect(ovdasVolcanoList);
       wireGifUi();
+      wireCollapsePanel();
+      wireCollapsibleSections();
+      updateLegend();
 
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
       setGifProgress("Selecciona un volcán para comenzar.");
@@ -624,10 +703,25 @@
     }
   }
 
+  function shiftDate(days) {
+    if (!dateInput.value) return;
+    const d = new Date(dateInput.value + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + days);
+    const yyyy = d.getUTCFullYear();
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+    addSo2Layer(dateInput.value);
+    rerenderVisibleWind();
+  }
+
   dateInput.addEventListener("change", () => {
     addSo2Layer(dateInput.value);
     rerenderVisibleWind();
   });
+
+  if (prevDayBtn) prevDayBtn.addEventListener("click", () => shiftDate(-1));
+  if (nextDayBtn) nextDayBtn.addEventListener("click", () => shiftDate(+1));
 
   opacityInput.addEventListener("input", () => {
     if (so2Layer) so2Layer.setOpacity(parseFloat(opacityInput.value));
