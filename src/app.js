@@ -81,13 +81,13 @@
         <rect x="0" y="0" width="160" height="190" fill="white"/>
         <text x="10" y="16" font-size="12" font-weight="700" fill="#111" font-family="Arial">SO₂ (DU)</text>
         <defs>
-          <linearGradient id="g" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%"  stop-color="#2c7bb6"/>
-            <stop offset="20%" stop-color="#abd9e9"/>
-            <stop offset="40%" stop-color="#ffffbf"/>
-            <stop offset="60%" stop-color="#fdae61"/>
-            <stop offset="80%" stop-color="#f46d43"/>
-            <stop offset="100%" stop-color="#a50026"/>
+          <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stop-color="#a50026"/>
+            <stop offset="20%" stop-color="#f46d43"/>
+            <stop offset="40%" stop-color="#fdae61"/>
+            <stop offset="60%" stop-color="#ffffbf"/>
+            <stop offset="80%" stop-color="#abd9e9"/>
+            <stop offset="100%" stop-color="#2c7bb6"/>
           </linearGradient>
         </defs>
         <rect x="18" y="28" width="42" height="140" fill="url(#g)" stroke="#111" stroke-width="1"/>
@@ -612,15 +612,29 @@
     const panel = document.getElementById("rightPanel");
     if (!tab || !panel) return;
 
+    const PANEL_WIDTH = panel.offsetWidth || 440;
     let collapsed = false;
+
+    function updateTab() {
+      if (collapsed) {
+        tab.style.right = "0px";
+        tab.innerHTML = "&#8249;";
+        tab.title = "Mostrar panel";
+      } else {
+        tab.style.right = (panel.offsetWidth) + "px";
+        tab.innerHTML = "&#8250;";
+        tab.title = "Ocultar panel";
+      }
+    }
+
     tab.addEventListener("click", () => {
       collapsed = !collapsed;
       panel.classList.toggle("collapsed", collapsed);
-      tab.classList.toggle("collapsed", collapsed);
-      tab.innerHTML = collapsed ? "&#8249;" : "&#8250;";
-      tab.title = collapsed ? "Mostrar panel" : "Ocultar panel";
-      setTimeout(() => map.invalidateSize(), 260);
+      updateTab();
+      setTimeout(() => { map.invalidateSize(); updateTab(); }, 260);
     });
+
+    updateTab();
   }
 
   // ---------------- Secciones colapsables ----------------

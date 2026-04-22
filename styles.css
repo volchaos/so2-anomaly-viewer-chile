@@ -80,7 +80,6 @@ html, body {
 /* ===== Layout ===== */
 main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .left      { flex: 1; min-width: 0; height: 100%; }
-.right     { width: 440px; max-width: 42vw; height: 100%; border-left: 1px solid var(--border); background: var(--bg-panel); overflow: auto; }
 
 @media (max-width: 980px) {
   main.split { flex-direction: column; }
@@ -141,19 +140,32 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   cursor: pointer;
   font-size: 18px;
   color: #8fa0c0;
-  transition: background 0.15s, color 0.15s, right 0.25s;
+  transition: background 0.15s, color 0.15s;
   user-select: none;
 }
 .panel-tab:hover { background: #2a3050; color: #e8ecf4; }
-.panel-tab.collapsed { right: 0; border-radius: 8px 0 0 8px; }
 
-.right { transition: width 0.25s, max-width 0.25s; }
-.right.collapsed { width: 0 !important; max-width: 0 !important; overflow: hidden; border-left: none; }
+.right {
+  width: 440px;
+  max-width: 42vw;
+  height: 100%;
+  border-left: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow: auto;
+  transition: width 0.25s, max-width 0.25s, border 0.25s;
+  flex-shrink: 0;
+}
+.right.collapsed {
+  width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden;
+  border-left: none;
+}
 
 @media (max-width: 980px) {
-  .panel-tab { top: auto; bottom: 420px; right: 8px; transform: none; border-radius: 8px 8px 0 0; border-right: 1px solid rgba(120,140,200,0.25); border-bottom: none; width: 52px; height: 20px; }
-  .panel-tab.collapsed { bottom: 0; }
-  .right.collapsed { height: 0 !important; border-top: none; }
+  main.split    { flex-direction: column; }
+  .right        { width: 100%; max-width: none; height: 420px; border-left: none; border-top: 1px solid var(--border); }
+  .panel-tab    { top: auto; bottom: 420px; right: 8px; transform: none; border-radius: 8px 8px 0 0; border-right: 1px solid rgba(120,140,200,0.25); border-bottom: none; width: 52px; height: 20px; }
 }
 
 /* ===== Secciones colapsables del panel ===== */
