@@ -69,8 +69,12 @@
   }
   function buildFallbackLegendDataUri() {
     const ticks = [
-      { y: 10, label: "10" }, { y: 45, label: "5" }, { y: 80, label: "2" },
-      { y: 105, label: "1" }, { y: 125, label: "0.5" }, { y: 145, label: "0" }
+      { y: 10,  label: "10"  },
+      { y: 45,  label: "5"   },
+      { y: 80,  label: "2"   },
+      { y: 105, label: "1"   },
+      { y: 125, label: "0.5" },
+      { y: 145, label: "0"   }
     ];
     const tickLines = ticks.map(t => `
       <line x1="70" y1="${t.y}" x2="78" y2="${t.y}" stroke="#111" stroke-width="1"/>
@@ -82,17 +86,16 @@
         <text x="10" y="16" font-size="12" font-weight="700" fill="#111" font-family="Arial">SO₂ (DU)</text>
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stop-color="#a50026"/>
-            <stop offset="20%" stop-color="#f46d43"/>
-            <stop offset="40%" stop-color="#fdae61"/>
-            <stop offset="60%" stop-color="#ffffbf"/>
-            <stop offset="80%" stop-color="#abd9e9"/>
+            <stop offset="0%"   stop-color="#a50026"/>
+            <stop offset="20%"  stop-color="#f46d43"/>
+            <stop offset="40%"  stop-color="#fdae61"/>
+            <stop offset="60%"  stop-color="#ffffbf"/>
+            <stop offset="80%"  stop-color="#abd9e9"/>
             <stop offset="100%" stop-color="#2c7bb6"/>
           </linearGradient>
         </defs>
         <rect x="18" y="28" width="42" height="140" fill="url(#g)" stroke="#111" stroke-width="1"/>
         ${tickLines}
-        <text x="10" y="185" font-size="9" fill="#444" font-family="Arial">(fallback)</text>
       </svg>
     `;
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;

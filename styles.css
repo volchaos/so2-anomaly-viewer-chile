@@ -208,17 +208,16 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 
 /* ===== Tooltips ===== */
 .label-volcano, .label-smelter {
-  background: var(--tooltip-bg);
-  border: 1px solid var(--border);
+  background: rgba(10, 13, 26, 0.96);
+  border: 1px solid rgba(160,180,255,0.25);
   border-radius: 6px;
   padding: 2px 7px;
   font-size: 11px;
-  color: var(--text-primary);
+  color: #ffffff;
   white-space: nowrap;
-  backdrop-filter: blur(4px);
 }
-.label-volcano { font-weight: 600; }
-.label-smelter { color: var(--text-secondary); }
+.label-volcano { font-weight: 700; }
+.label-smelter { font-weight: 500; color: #c8d4f0; }
 .leaflet-tooltip.label-volcano,
 .leaflet-tooltip.label-smelter { border: none; background: none; box-shadow: none; }
 .leaflet-tooltip.label-volcano::before,
@@ -227,13 +226,14 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 /* ===== Leyenda SO2 ===== */
 .so2-legend {
   position: absolute; left: 12px; top: 72px;
-  background: var(--legend-bg);
-  border: 1px solid var(--border); border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.12); border-radius: 10px;
   padding: 6px 6px 4px 6px; z-index: 750;
   transform: scale(0.33) !important; transform-origin: top left !important;
-  user-select: none; backdrop-filter: blur(4px);
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
-.so2-legend-title { font-weight: 700; font-size: 10px; margin-bottom: 3px; color: var(--text-primary); }
+.so2-legend-title { font-weight: 700; font-size: 10px; margin-bottom: 3px; color: #111; }
 #so2LegendImg     { width: 160px; height: auto; display: block; }
 
 /* ===== Panel derecho ===== */
