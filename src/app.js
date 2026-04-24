@@ -101,12 +101,10 @@
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
   function initSo2Legend() {
-    const img = document.getElementById("so2LegendImg");
-    if (!img) return;
-    const url = buildSo2LegendUrl();
-    img.onerror = () => { img.onerror = null; img.src = buildFallbackLegendDataUri(); };
-    img.src = url;
-    img.onload = () => { if (img.naturalWidth <= 2 || img.naturalHeight <= 2) img.src = buildFallbackLegendDataUri(); };
+        const img = document.getElementById("so2LegendImg");
+            if (!img) return;
+                img.src = buildFallbackLegendDataUri();
+                  }
   }
 
   // ---------------- Map ----------------
