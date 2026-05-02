@@ -311,6 +311,45 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 }
 .leaflet-control-attribution a { color: var(--accent) !important; }
 
+/* ===== Panel de validación ===== */
+.validator-intro p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+.validator-status  { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; }
+.validator-status a { color: var(--accent); }
+.validator-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.validator-user    { font-size: 12px; color: var(--color-text-success, #10b981); font-weight: 500; }
+.validator-empty   { font-size: 12px; color: var(--text-muted); padding: 6px 0; }
+
+.validator-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.validator-list::-webkit-scrollbar { width: 4px; }
+.validator-list::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 2px; }
+
+.val-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-block); border: 1px solid var(--border);
+  border-radius: var(--border-radius-md); padding: 7px 10px;
+  transition: opacity 0.2s;
+}
+.val-row.val-accepted { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06); }
+.val-row.val-rejected { border-color: rgba(239,68,68,0.3);  background: rgba(239,68,68,0.06);  opacity: 0.6; }
+
+.val-info { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1; }
+.val-date    { font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono, monospace); }
+.val-volcano { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+.val-tons    { font-size: 11px; color: var(--accent); }
+.val-du      { font-size: 11px; color: var(--text-muted); }
+
+.val-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.val-btn {
+  width: 28px; height: 28px; border-radius: var(--border-radius-md);
+  border: 1px solid var(--border); background: var(--bg-input);
+  cursor: pointer; font-size: 14px; display: flex; align-items: center;
+  justify-content: center; transition: background 0.15s, border-color 0.15s;
+  color: var(--text-primary);
+}
+.val-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.val-btn.val-ok:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+.val-btn.val-no:hover { background: rgba(239,68,68,0.2);  border-color: rgba(239,68,68,0.4);  }
+
 /* ===== Panel de estadísticas SO₂ ===== */
 .stats-alert {
   margin: 8px 0;

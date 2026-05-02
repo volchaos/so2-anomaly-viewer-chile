@@ -847,6 +847,9 @@
       wireCollapsibleSections();
       updateLegend();
       wireStatsPanel(ovdasVolcanoList);
+      if (window.SO2Validator) {
+        SO2Validator.init(so2StatsData);
+      }
 
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
       setGifProgress("Selecciona un volcán para comenzar.");

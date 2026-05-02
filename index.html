@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <link rel="stylesheet" href="styles.css" />
+  <script src="src/validator.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -60,6 +61,17 @@
     <div id="panelCollapseTab" class="panel-tab" title="Ocultar panel">&#8250;</div>
     <section class="right" id="rightPanel">
       <div class="panel">
+
+        <!-- Sección: Validación de anomalías -->
+        <div class="collapsible-section">
+          <button class="section-header" data-target="secValidator">
+            <span>Validación de anomalías</span>
+            <span class="section-chevron">&#8964;</span>
+          </button>
+          <div class="section-body" id="secValidator">
+            <div id="validatorPanel"></div>
+          </div>
+        </div>
 
         <!-- Sección: Estadísticas SO₂ -->
         <div class="collapsible-section">
