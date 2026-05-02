@@ -391,8 +391,9 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .stat-value { font-size: 16px; font-weight: 500; color: var(--text-primary); }
 .stat-unit  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
-.stats-chart-wrap { margin-top: 10px; }
+.stats-chart-wrap { margin-top: 10px; overflow: hidden; }
 .stats-chart-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+#statsChart { display: block; width: 100% !important; height: 120px !important; max-height: 120px !important; }
 .stats-empty { font-size: 12px; color: var(--text-muted); padding: 8px 0; }
 .right::-webkit-scrollbar       { width: 5px; }
 .right::-webkit-scrollbar-track  { background: var(--bg-panel); }
