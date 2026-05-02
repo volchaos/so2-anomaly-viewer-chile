@@ -208,20 +208,21 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 
 /* ===== Tooltips ===== */
 .label-volcano, .label-smelter {
-  background: rgba(10, 13, 26, 0.96);
-  border: 1px solid rgba(160,180,255,0.25);
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 11px;
-  color: #ffffff;
-  white-space: nowrap;
+  background: rgba(10, 13, 26, 0.96) !important;
+  border: 1px solid rgba(160,180,255,0.25) !important;
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
+  font-size: 11px !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
 }
-.label-volcano { font-weight: 700; }
-.label-smelter { font-weight: 500; color: #c8d4f0; }
+.label-volcano { font-weight: 700 !important; }
+.label-smelter { font-weight: 500 !important; color: #c8d4f0 !important; }
 .leaflet-tooltip.label-volcano,
-.leaflet-tooltip.label-smelter { border: none; background: none; box-shadow: none; }
+.leaflet-tooltip.label-smelter { border: none !important; background: none !important; box-shadow: none !important; }
 .leaflet-tooltip.label-volcano::before,
-.leaflet-tooltip.label-smelter::before { display: none; }
+.leaflet-tooltip.label-smelter::before { display: none !important; }
 
 /* ===== Leyenda SO2 ===== */
 .so2-legend {
@@ -310,7 +311,50 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 }
 .leaflet-control-attribution a { color: var(--accent) !important; }
 
-/* ===== Scrollbar ===== */
+/* ===== Panel de estadísticas SO₂ ===== */
+.stats-alert {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: 12px;
+  font-weight: 500;
+}
+.stats-alert.alert-normal {
+  background: var(--color-background-success, rgba(16,185,129,0.12));
+  color: var(--color-text-success, #10b981);
+  border: 1px solid rgba(16,185,129,0.25);
+}
+.stats-alert.alert-elevated {
+  background: var(--color-background-warning, rgba(245,158,11,0.12));
+  color: var(--color-text-warning, #f59e0b);
+  border: 1px solid rgba(245,158,11,0.25);
+}
+.stats-alert.alert-high {
+  background: var(--color-background-danger, rgba(239,68,68,0.12));
+  color: var(--color-text-danger, #ef4444);
+  border: 1px solid rgba(239,68,68,0.25);
+}
+
+.stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 10px 0 8px;
+}
+.stat-card {
+  background: var(--bg-block);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-md);
+  padding: 8px 10px;
+  text-align: center;
+}
+.stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.stat-value { font-size: 16px; font-weight: 500; color: var(--text-primary); }
+.stat-unit  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.stats-chart-wrap { margin-top: 10px; }
+.stats-chart-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+.stats-empty { font-size: 12px; color: var(--text-muted); padding: 8px 0; }
 .right::-webkit-scrollbar       { width: 5px; }
 .right::-webkit-scrollbar-track  { background: var(--bg-panel); }
 .right::-webkit-scrollbar-thumb  { background: var(--bg-hover); border-radius: 3px; }

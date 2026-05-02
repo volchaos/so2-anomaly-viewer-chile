@@ -68,33 +68,34 @@
     return `${base}?${params.toString()}`;
   }
   function buildFallbackLegendDataUri() {
+    // Gradiente: arriba = rojo (10 DU, alta concentración), abajo = azul (0 DU, baja)
     const ticks = [
-      { y: 10,  label: "10"  },
-      { y: 45,  label: "5"   },
-      { y: 80,  label: "2"   },
-      { y: 105, label: "1"   },
-      { y: 125, label: "0.5" },
-      { y: 145, label: "0"   }
+      { y: 18,  label: "10.0" },
+      { y: 55,  label: "3.3"  },
+      { y: 90,  label: "1.1"  },
+      { y: 118, label: "0.3"  },
+      { y: 140, label: "0.1"  },
+      { y: 158, label: "0"    }
     ];
     const tickLines = ticks.map(t => `
-      <line x1="70" y1="${t.y}" x2="78" y2="${t.y}" stroke="#111" stroke-width="1"/>
-      <text x="82" y="${t.y + 4}" font-size="10" fill="#111" font-family="Arial">${t.label}</text>
+      <line x1="52" y1="${t.y}" x2="58" y2="${t.y}" stroke="#333" stroke-width="1"/>
+      <text x="62" y="${t.y + 4}" font-size="11" fill="#111" font-family="Arial,sans-serif">${t.label}</text>
     `).join("");
     const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="160" height="190" viewBox="0 0 160 190">
-        <rect x="0" y="0" width="160" height="190" fill="white"/>
-        <text x="10" y="16" font-size="12" font-weight="700" fill="#111" font-family="Arial">SO₂ (DU)</text>
+      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="175" viewBox="0 0 120 175">
+        <rect x="0" y="0" width="120" height="175" fill="white"/>
+        <text x="8" y="13" font-size="11" font-weight="700" fill="#111" font-family="Arial,sans-serif">SO₂ (DU)</text>
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stop-color="#a50026"/>
-            <stop offset="20%"  stop-color="#f46d43"/>
-            <stop offset="40%"  stop-color="#fdae61"/>
-            <stop offset="60%"  stop-color="#ffffbf"/>
-            <stop offset="80%"  stop-color="#abd9e9"/>
+            <stop offset="25%"  stop-color="#f46d43"/>
+            <stop offset="45%"  stop-color="#fdae61"/>
+            <stop offset="65%"  stop-color="#ffffbf"/>
+            <stop offset="82%"  stop-color="#abd9e9"/>
             <stop offset="100%" stop-color="#2c7bb6"/>
           </linearGradient>
         </defs>
-        <rect x="18" y="28" width="42" height="140" fill="url(#g)" stroke="#111" stroke-width="1"/>
+        <rect x="10" y="18" width="40" height="145" fill="url(#g)" stroke="#999" stroke-width="0.5"/>
         ${tickLines}
       </svg>
     `;
@@ -103,10 +104,8 @@
   function initSo2Legend() {
     const img = document.getElementById("so2LegendImg");
     if (!img) return;
-    const url = buildSo2LegendUrl();
-    img.onerror = () => { img.onerror = null; img.src = buildFallbackLegendDataUri(); };
-    img.src = url;
-    img.onload = () => { if (img.naturalWidth <= 2 || img.naturalHeight <= 2) img.src = buildFallbackLegendDataUri(); };
+    // Usamos siempre el SVG propio para tener control total sobre la escala
+    img.src = buildFallbackLegendDataUri();
   }
 
   // ---------------- Map ----------------
@@ -655,7 +654,144 @@
     });
   }
 
-  // ---------------- Init ----------------
+  // ---------------- Panel de estadísticas SO₂ ----------------
+  const SO2_STATS_URL = "data/so2_stats.json";
+  let so2StatsData = null;
+  let statsChart = null;
+
+  async function loadSo2Stats() {
+    try {
+      const r = await fetch(SO2_STATS_URL, { cache: "no-store" });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function alertLevel(tons) {
+    if (tons <= 0)   return { cls: "alert-normal",   txt: "Sin anomalía detectada" };
+    if (tons < 500)  return { cls: "alert-elevated",  txt: `⚠ Anomalía elevada: ${tons.toFixed(0)} t` };
+    return             { cls: "alert-high",    txt: `🔴 Anomalía alta: ${tons.toFixed(0)} t` };
+  }
+
+  function renderStatsPanel(volcanoName) {
+    const empty   = document.getElementById("statsEmpty");
+    const metrics = document.getElementById("statsMetrics");
+    const chartWrap = document.getElementById("statsChartWrap");
+    const badge   = document.getElementById("statsAlertBadge");
+
+    if (!so2StatsData || !volcanoName || !so2StatsData.volcanoes[volcanoName]) {
+      if (empty) empty.style.display = "";
+      if (metrics) metrics.style.display = "none";
+      if (chartWrap) chartWrap.style.display = "none";
+      if (badge) badge.style.display = "none";
+      return;
+    }
+
+    const vData  = so2StatsData.volcanoes[volcanoName];
+    const history = vData.history || [];
+    const last30  = history.slice(-30);
+
+    if (empty) empty.style.display = "none";
+    if (metrics) metrics.style.display = "grid";
+    if (chartWrap) chartWrap.style.display = "";
+
+    // Métricas
+    const lastEntry  = last30[last30.length - 1];
+    const lastTons   = lastEntry ? lastEntry.so2_tons : 0;
+    const maxTons    = Math.max(...last30.map(e => e.so2_tons || 0));
+    const activeDays = last30.filter(e => e.so2_tons > 0).length;
+
+    const statLastVal    = document.getElementById("statLastVal");
+    const statMaxVal     = document.getElementById("statMaxVal");
+    const statActiveDays = document.getElementById("statActiveDays");
+    if (statLastVal)    statLastVal.textContent    = lastTons > 0 ? lastTons.toFixed(0) : "0";
+    if (statMaxVal)     statMaxVal.textContent     = maxTons > 0 ? maxTons.toFixed(0) : "0";
+    if (statActiveDays) statActiveDays.textContent = activeDays;
+
+    // Badge de alerta
+    if (badge) {
+      const lvl = alertLevel(lastTons);
+      badge.className = "stats-alert " + lvl.cls;
+      badge.textContent = lvl.txt;
+      badge.style.display = "";
+    }
+
+    // Gráfico
+    const canvas = document.getElementById("statsChart");
+    if (!canvas) return;
+
+    const labels = last30.map(e => e.date.slice(5));
+    const values = last30.map(e => e.so2_tons || 0);
+    const colors = values.map(v =>
+      v <= 0   ? "rgba(120,140,200,0.25)" :
+      v < 500  ? "rgba(245,158,11,0.7)"   :
+                 "rgba(239,68,68,0.8)"
+    );
+
+    if (statsChart) { statsChart.destroy(); statsChart = null; }
+
+    statsChart = new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 3,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.parsed.y.toFixed(0)} t SO₂`
+          }
+        }},
+        scales: {
+          x: {
+            ticks: { color: "#8fa0c0", font: { size: 9 }, maxRotation: 0,
+              callback: (v, i) => i % 5 === 0 ? labels[i] : "" },
+            grid: { color: "rgba(120,140,200,0.08)" }
+          },
+          y: {
+            ticks: { color: "#8fa0c0", font: { size: 9 } },
+            grid: { color: "rgba(120,140,200,0.08)" },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  async function wireStatsPanel(ovdasList) {
+    so2StatsData = await loadSo2Stats();
+
+    const sel = document.getElementById("statsVolcanoSelect");
+    if (!sel) return;
+
+    // Poblar el select con volcanes OVDAS
+    sel.innerHTML = '<option value="">Selecciona un volcán…</option>';
+    for (const v of ovdasList) {
+      const opt = document.createElement("option");
+      opt.value = v.name || v.Name;
+      opt.textContent = v.name || v.Name;
+      sel.appendChild(opt);
+    }
+
+    sel.addEventListener("change", () => {
+      renderStatsPanel(sel.value);
+    });
+
+    // Si no hay datos aún, mostrar mensaje apropiado
+    if (!so2StatsData) {
+      const empty = document.getElementById("statsEmpty");
+      if (empty) empty.textContent = "Datos no disponibles aún. El workflow de extracción está corriendo.";
+    }
+  }
   async function init() {
     try {
       dateInput.value = todayUtcDateString();
@@ -710,6 +846,7 @@
       wireCollapsePanel();
       wireCollapsibleSections();
       updateLegend();
+      wireStatsPanel(ovdasVolcanoList);
 
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
       setGifProgress("Selecciona un volcán para comenzar.");
