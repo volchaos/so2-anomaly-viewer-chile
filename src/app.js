@@ -105,7 +105,7 @@
     if (!img) return;
     const url = buildSo2LegendUrl();
     img.onerror = () => { img.onerror = null; img.src = buildFallbackLegendDataUri(); };
-    img.src = buildFallbackLegendDataUri();
+    img.src = url;
     img.onload = () => { if (img.naturalWidth <= 2 || img.naturalHeight <= 2) img.src = buildFallbackLegendDataUri(); };
   }
 
