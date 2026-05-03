@@ -53,8 +53,19 @@
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, sizePx, sizePx);
 
-    // Imagen WMS
-    ctx.drawImage(wmsFrame, 0, 0, sizePx, sizePx);
+    // Imagen WMS (solo si existe)
+    if (wmsFrame) {
+      ctx.drawImage(wmsFrame, 0, 0, sizePx, sizePx);
+    } else {
+      // Frame vacío — fondo gris claro con mensaje
+      ctx.fillStyle = "#e8e8e8";
+      ctx.fillRect(0, 0, sizePx, sizePx);
+      ctx.fillStyle = "#888";
+      ctx.font = `${Math.round(sizePx * 0.035)}px Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("Sin datos", sizePx / 2, sizePx / 2);
+      ctx.textAlign = "left";
+    }
 
     // Overlays (límite Chile, volcanes) desde canvas pre-renderizado
     if (overlayCanvas) {
