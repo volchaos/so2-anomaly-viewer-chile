@@ -21,24 +21,40 @@
   }
 
   // ── Descargar imagen WMS como HTMLImageElement ──────────────────────────
-  function fetchWmsFrame(wmsUrl, dateStr, bbox, sizePx) {
+  function fetchWmsFrame(wmsUrl, wmsLayers, wmsStyles, wmsVersion, timeFormat, dateStr, bbox, sizePx) {
     const [west, south, east, north] = bbox;
+
+    // Formato de tiempo según config
+    const timeParam = (timeFormat === "date") ? dateStr : dateStr + "T05:00:00Z";
+
     const params = new URLSearchParams({
-      SERVICE: "WMS", VERSION: "1.3.0", REQUEST: "GetMap",
-      LAYERS: "S5P_SO2_NRTI_L3", STYLES: "",
+      SERVICE: "WMS",
+      VERSION: wmsVersion || "1.3.0",
+      REQUEST: "GetMap",
+      LAYERS: wmsLayers,
+      STYLES: wmsStyles || "",
       CRS: "EPSG:4326",
       BBOX: `${south},${west},${north},${east}`,
-      WIDTH: sizePx, HEIGHT: sizePx,
-      FORMAT: "image/png", TRANSPARENT: "true",
-      TIME: dateStr + "T05:00:00Z"
+      WIDTH: sizePx,
+      HEIGHT: sizePx,
+      FORMAT: "image/png",
+      TRANSPARENT: "true",
+      TIME: timeParam
     });
     const url = wmsUrl + "?" + params.toString();
 
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.onload  = () => resolve(img);
-      img.onerror = () => reject(new Error("WMS sin datos para " + dateStr));
+      img.onload = () => {
+        // Verificar que no sea imagen vacía (1x1 transparente)
+        if (img.naturalWidth < 2 || img.naturalHeight < 2) {
+          reject(new Error("Frame vacío para " + dateStr));
+          return;
+        }
+        resolve(img);
+      };
+      img.onerror = () => reject(new Error("WMS error para " + dateStr));
       img.src = url;
     });
   }
@@ -148,7 +164,7 @@
   }
 
   // ── Generar GIF ─────────────────────────────────────────────────────────
-  async function generate({ wmsUrl, dates, bbox, sizePx, fps, volcanoes, borderGeoJson, onProgress }) {
+  async function generate({ wmsUrl, wmsLayers, wmsStyles, wmsVersion, timeFormat, dates, bbox, sizePx, fps, volcanoes, borderGeoJson, onProgress }) {
     const GIF = await loadGifJs();
 
     onProgress("Preparando overlays…", 0);
@@ -179,7 +195,7 @@
 
       let wmsImg = null;
       try {
-        wmsImg = await fetchWmsFrame(wmsUrl, dateStr, bbox, sizePx);
+        wmsImg = await fetchWmsFrame(wmsUrl, wmsLayers, wmsStyles, wmsVersion, timeFormat, dateStr, bbox, sizePx);
         successFrames++;
       } catch (e) {
         console.warn("Frame sin datos:", dateStr, e.message);

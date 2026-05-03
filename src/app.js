@@ -597,14 +597,17 @@
 
     try {
       const blob = await window.SO2GifMaker.generate({
-        wmsUrl: cfg.wms.url,
+        wmsUrl:     cfg.wms.url,
+        wmsLayers:  cfg.wms.layers,
+        wmsStyles:  cfg.wms.styles || "",
+        wmsVersion: cfg.wms.version || "1.3.0",
+        timeFormat: cfg.wms.timeFormat || "isoZ",
         dates,
         bbox,
         sizePx,
         fps,
         volcanoes: volcanoesForOverlay,
         borderGeoJson,
-        cfg,
         onProgress: (msg, pct) => {
           setGifProgress(msg);
         }
