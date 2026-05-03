@@ -794,11 +794,6 @@
       const empty = document.getElementById("statsEmpty");
       if (empty) empty.textContent = "Datos no disponibles aún. El workflow de extracción está corriendo.";
     }
-
-    // Inicializar validador DESPUÉS de cargar so2StatsData
-    if (window.SO2Validator) {
-      SO2Validator.init(so2StatsData);
-    }
   }
   async function init() {
     try {
