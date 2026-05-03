@@ -313,6 +313,16 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 
 /* ===== Panel de validación ===== */
 .validator-intro p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+.validator-intro a { color: var(--accent); }
+.validator-intro code { color: var(--text-secondary); background: var(--bg-block); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+.val-pat-row { display: flex; gap: 6px; }
+.val-pat-row input {
+  flex: 1; padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-input); color: var(--text-primary);
+  font-size: 12px; font-family: var(--font-mono, monospace);
+}
+.val-pat-row input:focus { outline: none; border-color: var(--border-focus); }
 .validator-status  { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; }
 .validator-status a { color: var(--accent); }
 .validator-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
