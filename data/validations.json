@@ -1,1 +1,11 @@
-{"validations":[]}
+{
+  "validations": [
+    {
+      "date": "2026-05-01",
+      "volcano": "Villarrica",
+      "valid": true,
+      "validated_by": "volchaos",
+      "validated_at": "2026-05-03T06:09:18.673Z"
+    }
+  ]
+}
