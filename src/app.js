@@ -722,6 +722,11 @@
     const canvas = document.getElementById("statsChart");
     if (!canvas) return;
 
+    // Fijar dimensiones para evitar crecimiento infinito en contenedor colapsado
+    canvas.style.width  = "100%";
+    canvas.style.height = "120px";
+    canvas.height = 120;
+
     const labels = last30.map(e => e.date.slice(5));
     const values = last30.map(e => e.so2_tons || 0);
     const colors = values.map(v =>
@@ -744,7 +749,7 @@
         }]
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: {
           callbacks: {
@@ -773,7 +778,6 @@
     const sel = document.getElementById("statsVolcanoSelect");
     if (!sel) return;
 
-    // Poblar el select con volcanes OVDAS
     sel.innerHTML = '<option value="">Selecciona un volcán…</option>';
     for (const v of ovdasList) {
       const opt = document.createElement("option");
@@ -786,10 +790,14 @@
       renderStatsPanel(sel.value);
     });
 
-    // Si no hay datos aún, mostrar mensaje apropiado
     if (!so2StatsData) {
       const empty = document.getElementById("statsEmpty");
       if (empty) empty.textContent = "Datos no disponibles aún. El workflow de extracción está corriendo.";
+    }
+
+    // Inicializar validador DESPUÉS de cargar so2StatsData
+    if (window.SO2Validator) {
+      SO2Validator.init(so2StatsData);
     }
   }
   async function init() {
