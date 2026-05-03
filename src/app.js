@@ -531,8 +531,113 @@
     );
   }
 
+  // ── Generación de GIF en el browser ─────────────────────────────────────
+  let _gifGenerating = false;
+
+  async function generateGifInBrowser() {
+    if (_gifGenerating) return;
+
+    if (!gifVolcanoSelect.value) {
+      setGifProgress("Selecciona un volcán.");
+      return;
+    }
+
+    const [latStr, lonStr] = gifVolcanoSelect.value.split(",");
+    const lat = parseFloat(latStr), lon = parseFloat(lonStr);
+    const volcanoName = gifVolcanoSelect.options[gifVolcanoSelect.selectedIndex].textContent;
+    const roiKm = parseInt(gifRoiSelect.value || "200", 10);
+    const sizePx = parseInt(gifSize.value || "512", 10);
+    const fps   = parseInt(gifFps.value || "2", 10);
+    const mode  = getGifMode();
+
+    let dates = [];
+    if (mode === "lastN") {
+      const n = Math.max(2, Math.min(30, parseInt(gifLastN.value || "14", 10)));
+      const end = dateInput.value || todayUtcDateString();
+      const endD = new Date(end + "T00:00:00Z");
+      const startD = new Date(endD);
+      startD.setUTCDate(startD.getUTCDate() - (n - 1));
+      dates = datesBetween(
+        startD.toISOString().slice(0, 10),
+        end
+      );
+    } else {
+      if (!gifFrom.value || !gifTo.value) { setGifProgress("Define Desde / Hasta."); return; }
+      dates = datesBetween(gifFrom.value, gifTo.value);
+    }
+
+    if (!dates.length) { setGifProgress("Rango inválido."); return; }
+    if (dates.length > 30) { setGifProgress("Máximo 30 días por GIF."); return; }
+
+    // BBox del ROI
+    const roiBBox = computeRoiBounds(lat, lon, roiKm);
+    const bbox = [roiBBox.west, roiBBox.south, roiBBox.east, roiBBox.north];
+
+    // Cargar border GeoJSON para overlays
+    let borderGeoJson = null;
+    try {
+      const resp = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
+      const all = await resp.json();
+      borderGeoJson = {
+        type: "FeatureCollection",
+        features: (all.features || []).filter(f => {
+          const p = f.properties || {};
+          return cfg.data.chileNamePropertyCandidates.some(k => p[k] && String(p[k]).toLowerCase() === "chile");
+        })
+      };
+    } catch (e) { console.warn("No se pudo cargar el borde de Chile:", e); }
+
+    // Volcanes para overlay
+    const volcanoesForOverlay = ovdasVolcanoList;
+
+    _gifGenerating = true;
+    gifGenerateBtn.disabled = true;
+    gifGenerateBtn.textContent = "Generando…";
+    if (gifDownloadLink) gifDownloadLink.style.display = "none";
+
+    try {
+      const blob = await window.SO2GifMaker.generate({
+        wmsUrl: cfg.wms.url,
+        dates,
+        bbox,
+        sizePx,
+        fps,
+        volcanoes: volcanoesForOverlay,
+        borderGeoJson,
+        cfg,
+        onProgress: (msg, pct) => {
+          setGifProgress(msg);
+        }
+      });
+
+      // Ofrecer descarga
+      const url = URL.createObjectURL(blob);
+      const fname = `SO2_${safeName(volcanoName)}_${dates[0]}_${dates[dates.length-1]}_${roiKm}km.gif`;
+
+      if (gifDownloadLink) {
+        gifDownloadLink.href = url;
+        gifDownloadLink.download = fname;
+        gifDownloadLink.style.display = "";
+        gifDownloadLink.textContent = "⬇ Descargar GIF";
+      }
+
+      // Preview
+      if (gifPreview) gifPreview.src = url;
+
+      setGifProgress(`✓ GIF listo — ${dates.length} frames, ${(blob.size/1024).toFixed(0)} KB`);
+
+    } catch (e) {
+      setGifProgress("Error al generar GIF: " + e.message);
+      console.error(e);
+    } finally {
+      _gifGenerating = false;
+      gifGenerateBtn.disabled = false;
+      gifGenerateBtn.textContent = "Generar GIF";
+    }
+  }
+
   function wireGifUi() {
-    if (gifGenerateBtn) gifGenerateBtn.textContent = "Preparar GIF (job)";
+    if (gifGenerateBtn) gifGenerateBtn.textContent = "Generar GIF";
 
     const today = todayUtcDateString();
     if (gifFrom && gifTo) {
@@ -540,27 +645,26 @@
       const startD = new Date(endD);
       startD.setUTCDate(startD.getUTCDate() - 13);
       const yyyy = startD.getUTCFullYear();
-      const mm = String(startD.getUTCMonth() + 1).padStart(2, "0");
-      const dd = String(startD.getUTCDate()).padStart(2, "0");
+      const mm   = String(startD.getUTCMonth() + 1).padStart(2, "0");
+      const dd   = String(startD.getUTCDate()).padStart(2, "0");
       gifFrom.value = `${yyyy}-${mm}-${dd}`;
-      gifTo.value = today;
+      gifTo.value   = today;
     }
 
     document.querySelectorAll('input[name="gifMode"]').forEach(r => {
       r.addEventListener("change", () => {
         const mode = getGifMode();
-        gifRangeBlock.style.display = (mode === "range") ? "" : "none";
-        gifLastNBlock.style.display = (mode === "lastN") ? "" : "none";
+        gifRangeBlock.style.display  = (mode === "range")  ? "" : "none";
+        gifLastNBlock.style.display  = (mode === "lastN") ? "" : "none";
       });
     });
 
     gifVolcanoSelect.addEventListener("change", () => {
       if (!gifVolcanoSelect.value) return;
       const [latStr, lonStr] = gifVolcanoSelect.value.split(",");
-      const lat = parseFloat(latStr), lon = parseFloat(lonStr);
-      centerMapOnVolcano(lat, lon);
-      updateRoiOnMap(lat, lon);
-      setGifProgress("ROI actualizado. Define fechas y prepara el job.");
+      centerMapOnVolcano(parseFloat(latStr), parseFloat(lonStr));
+      updateRoiOnMap(parseFloat(latStr), parseFloat(lonStr));
+      setGifProgress("ROI actualizado. Configura fechas y genera el GIF.");
     });
 
     gifRoiSelect.addEventListener("change", () => {
@@ -569,7 +673,7 @@
       updateRoiOnMap(parseFloat(latStr), parseFloat(lonStr));
     });
 
-    gifGenerateBtn.addEventListener("click", () => prepareGifJob());
+    gifGenerateBtn.addEventListener("click", () => generateGifInBrowser());
   }
 
   // ---------------- Leyenda sincronizada ----------------
