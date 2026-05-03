@@ -49,9 +49,19 @@
     return r.json();
   }
 
-  async function pollDeviceFlow(device_code, interval) {
+  async function pollDeviceFlow(device_code, interval, expires_in) {
+    const maxMs = (expires_in || 300) * 1000;  // default 5 min
+    const startTime = Date.now();
+
     return new Promise((resolve, reject) => {
       const iv = setInterval(async () => {
+        // Verificar timeout
+        if (Date.now() - startTime > maxMs) {
+          clearInterval(iv);
+          reject(new Error("Código expirado. Intenta nuevamente."));
+          return;
+        }
+
         try {
           const r = await fetch(
             CORS_PROXY + encodeURIComponent(
@@ -85,15 +95,16 @@
 
     const device = await startDeviceFlow();
 
-    // Mostrar código al usuario
+    // Mostrar código al usuario con instrucciones claras
     showValidatorStatus(
-      `Ingresa el código <strong>${device.user_code}</strong> en ` +
-      `<a href="${device.verification_uri}" target="_blank">${device.verification_uri}</a> ` +
-      `y luego espera aquí.`
+      `<strong>Paso 1:</strong> Copia este código: <strong style="font-size:16px;letter-spacing:2px">${device.user_code}</strong><br>` +
+      `<strong>Paso 2:</strong> Abre <a href="${device.verification_uri}" target="_blank">${device.verification_uri}</a> e ingrésalo.<br>` +
+      `<strong>Paso 3:</strong> Vuelve aquí — la sesión se abrirá automáticamente. ` +
+      `<span style="color:var(--text-muted)">(válido por ${Math.round((device.expires_in||300)/60)} min)</span>`
     );
 
     try {
-      _token = await pollDeviceFlow(device.device_code, device.interval);
+      _token = await pollDeviceFlow(device.device_code, device.interval, device.expires_in);
       sessionStorage.setItem("gh_token", _token);
 
       const user = await ghApi("/user");
