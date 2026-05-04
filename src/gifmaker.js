@@ -292,8 +292,7 @@
         ctx.lineWidth = Math.max(0.5, ts / 12);
         ctx.stroke();
 
-        // Nieve/cráter (triángulo blanco-azulado en la parte superior ~35%)
-        const snowH = ts * 0.38;
+        // Nieve/cráter
         ctx.beginPath();
         ctx.moveTo(cx, cy - ts);
         ctx.lineTo(cx - ts * 0.48, cy - ts + ts * 0.38 * 2);
@@ -304,6 +303,20 @@
         ctx.strokeStyle = "#9aa5b4";
         ctx.lineWidth = Math.max(0.3, ts / 20);
         ctx.stroke();
+
+        // Etiqueta con nombre — texto blanco con buffer negro
+        if (v.name) {
+          const fs = Math.max(8, Math.round(sizePx / 38));
+          ctx.font = `bold ${fs}px Arial, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.lineWidth = Math.max(2, fs / 4);
+          ctx.strokeStyle = "rgba(0,0,0,0.9)";
+          ctx.lineJoin = "round";
+          ctx.strokeText(v.name, cx, cy - ts - 3);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(v.name, cx, cy - ts - 3);
+          ctx.textAlign = "left";
+        }
       }
     }
     return cv;
