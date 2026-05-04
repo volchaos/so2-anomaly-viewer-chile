@@ -217,7 +217,16 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   white-space: nowrap !important;
   box-shadow: none !important;
 }
-.label-volcano { font-weight: 700 !important; }
+.label-volcano {
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0    0   3px #000 !important;
+}
 .label-smelter { font-weight: 500 !important; color: #c8d4f0 !important; }
 .leaflet-tooltip.label-volcano,
 .leaflet-tooltip.label-smelter { border: none !important; background: none !important; box-shadow: none !important; }
