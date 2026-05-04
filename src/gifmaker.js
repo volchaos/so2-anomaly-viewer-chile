@@ -249,7 +249,7 @@
   }
 
   // ── Overlay estático (borde + volcanes) ────────────────────────────────
-  function buildOverlayCanvas(sizePx, bbox, volcanoes, borderGeoJson) {
+  function buildOverlayCanvas(sizePx, bbox, volcanoes, selectedVolcano, borderGeoJson) {
     const [west, south, east, north] = bbox;
     const rx = east - west, ry = north - south;
     const g2c = (lon, lat) => [((lon-west)/rx)*sizePx, ((north-lat)/ry)*sizePx];
@@ -277,10 +277,16 @@
     if (volcanoes && volcanoes.length) {
       for (const v of volcanoes) {
         const [cx, cy] = g2c(v.lon, v.lat);
-        const ts = Math.max(6, Math.round(sizePx / 40));
+        const isSelected = v.name === selectedVolcano;
+        // Volcán seleccionado: grande; otros: pequeños y semitransparentes
+        const ts = isSelected
+          ? Math.max(8, Math.round(sizePx / 38))
+          : Math.max(4, Math.round(sizePx / 70));
         if (cx < -ts*2 || cx > sizePx+ts*2 || cy < -ts*2 || cy > sizePx+ts*2) continue;
 
-        // Cuerpo del volcán (triángulo gris oscuro)
+        ctx.globalAlpha = isSelected ? 1.0 : 0.55;
+
+        // Cuerpo
         ctx.beginPath();
         ctx.moveTo(cx, cy - ts);
         ctx.lineTo(cx - ts, cy + ts);
@@ -292,11 +298,11 @@
         ctx.lineWidth = Math.max(0.5, ts / 12);
         ctx.stroke();
 
-        // Nieve/cráter
+        // Nieve
         ctx.beginPath();
         ctx.moveTo(cx, cy - ts);
-        ctx.lineTo(cx - ts * 0.48, cy - ts + ts * 0.38 * 2);
-        ctx.quadraticCurveTo(cx, cy - ts + ts * 0.28 * 2, cx + ts * 0.48, cy - ts + ts * 0.38 * 2);
+        ctx.lineTo(cx - ts * 0.48, cy - ts + ts * 0.76);
+        ctx.quadraticCurveTo(cx, cy - ts + ts * 0.56, cx + ts * 0.48, cy - ts + ts * 0.76);
         ctx.closePath();
         ctx.fillStyle = "#e8eaf0";
         ctx.fill();
@@ -304,19 +310,23 @@
         ctx.lineWidth = Math.max(0.3, ts / 20);
         ctx.stroke();
 
-        // Etiqueta con nombre — texto blanco con buffer negro
+        // Etiqueta
         if (v.name) {
-          const fs = Math.max(8, Math.round(sizePx / 38));
+          const fs = isSelected
+            ? Math.max(9, Math.round(sizePx / 36))
+            : Math.max(6, Math.round(sizePx / 60));
           ctx.font = `bold ${fs}px Arial, sans-serif`;
           ctx.textAlign = "center";
-          ctx.lineWidth = Math.max(2, fs / 4);
-          ctx.strokeStyle = "rgba(0,0,0,0.9)";
+          ctx.lineWidth = Math.max(1.5, fs / 5);
+          ctx.strokeStyle = "rgba(0,0,0,0.85)";
           ctx.lineJoin = "round";
           ctx.strokeText(v.name, cx, cy - ts - 3);
           ctx.fillStyle = "#ffffff";
           ctx.fillText(v.name, cx, cy - ts - 3);
           ctx.textAlign = "left";
         }
+
+        ctx.globalAlpha = 1.0;
       }
     }
     return cv;
@@ -356,7 +366,7 @@
     ctx.fillRect(lx - bgPad, ly - titleH - bgPad, barW + Math.round(fs * 3.2), barH + titleH + bgPad * 2);
 
     // Título
-    ctx.font = `bold ${fs}px Arial`;
+    ctx.font = `bold ${Math.round(fs * 0.75)}px Arial`;
     ctx.fillStyle = "#111";
     ctx.textAlign = "left";
     ctx.fillText("SO\u2082 (DU)", lx - bgPad + Math.round(bgPad * 0.5), ly - Math.round(bgPad * 0.5));
@@ -416,10 +426,10 @@
 
   // ── API pública ────────────────────────────────────────────────────────
   async function generate({ wmsUrl, wmsLayers, wmsStyles, wmsVersion, timeFormat,
-                             dates, bbox, sizePx, fps, volcanoes, borderGeoJson, onProgress }) {
+                             dates, bbox, sizePx, fps, volcanoes, selectedVolcano, borderGeoJson, onProgress }) {
     onProgress("Preparando overlays…", 0);
 
-    const overlayCanvas = buildOverlayCanvas(sizePx, bbox, volcanoes, borderGeoJson);
+    const overlayCanvas = buildOverlayCanvas(sizePx, bbox, volcanoes, selectedVolcano, borderGeoJson);
     const canvas = document.createElement("canvas");
     canvas.width = sizePx; canvas.height = sizePx;
     const ctx = canvas.getContext("2d");
