@@ -5,8 +5,20 @@
  */
 (function (global) {
 
-  const GIF_JS_URL    = "https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js";
-  const GIF_WORKER_URL = "https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js";
+  const GIF_JS_URL = "https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js";
+
+  // Worker embebido como blob para evitar restricciones CORS de GitHub Pages
+  function getWorkerUrl() {
+    if (window._gifWorkerUrl) return window._gifWorkerUrl;
+    const src = atob("dmFyIEdJRldvcmtlcjsKR0lGV29ya2VyID0gbmV3IEZ1bmN0aW9uKCJvcHRpb25zIiwgZnVuY3Rpb24ob3B0aW9ucyl7dmFyIHdvcmtlcj10aGlzO3dvcmtlci5vcHRpb25zPW9wdGlvbnM7");
+    // Cargar el worker real desde CDN y crear blob
+    return fetch("https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js")
+      .then(r => r.blob())
+      .then(blob => {
+        window._gifWorkerUrl = URL.createObjectURL(blob);
+        return window._gifWorkerUrl;
+      });
+  }
 
   // ── Cargar gif.js dinámicamente ─────────────────────────────────────────
   function loadGifJs() {
@@ -166,11 +178,11 @@
   // ── Generar GIF ─────────────────────────────────────────────────────────
   async function generate({ wmsUrl, wmsLayers, wmsStyles, wmsVersion, timeFormat, dates, bbox, sizePx, fps, volcanoes, borderGeoJson, onProgress }) {
     const GIF = await loadGifJs();
+    const workerUrl = await getWorkerUrl();
 
     onProgress("Preparando overlays…", 0);
     const overlayCanvas = buildOverlayCanvas(sizePx, bbox, volcanoes, borderGeoJson);
 
-    // Canvas de trabajo
     const canvas = document.createElement("canvas");
     canvas.width  = sizePx;
     canvas.height = sizePx;
@@ -181,7 +193,7 @@
       quality:      8,
       width:        sizePx,
       height:       sizePx,
-      workerScript: GIF_WORKER_URL,
+      workerScript: workerUrl,
       background:   "#ffffff"
     });
 
