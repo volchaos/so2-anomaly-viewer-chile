@@ -148,13 +148,13 @@
 
   // Tamaño base de íconos según zoom
   function iconSizeForZoom(zoom) {
-    if (zoom <= 4)  return { ovdas: 10, other: 6 };
-    if (zoom <= 5)  return { ovdas: 13, other: 7 };
-    if (zoom <= 6)  return { ovdas: 16, other: 8 };
-    if (zoom <= 7)  return { ovdas: 20, other: 10 };
-    if (zoom <= 8)  return { ovdas: 24, other: 12 };
-    if (zoom <= 9)  return { ovdas: 28, other: 14 };
-    return              { ovdas: 32, other: 16 };
+    if (zoom <= 4)  return { ovdas: 10, other: 6,  smelter: 4 };
+    if (zoom <= 5)  return { ovdas: 13, other: 7,  smelter: 5 };
+    if (zoom <= 6)  return { ovdas: 16, other: 8,  smelter: 6 };
+    if (zoom <= 7)  return { ovdas: 20, other: 10, smelter: 7 };
+    if (zoom <= 8)  return { ovdas: 24, other: 12, smelter: 8 };
+    if (zoom <= 9)  return { ovdas: 28, other: 14, smelter: 9 };
+    return              { ovdas: 32, other: 16, smelter: 10 };
   }
 
   // Ícono OVDAS: volcán estilizado con cuerpo gris, nieve blanca y emisión de gases
@@ -195,7 +195,7 @@
 
   const volcanoMarkerOVDAS = (latlng) => L.marker(latlng, { icon: ovdasDivIcon(20) });
   const volcanoMarkerOther = (latlng) => L.marker(latlng, { icon: otherDivIcon(10) });
-  const smelterMarker      = (latlng) => L.circleMarker(latlng, { radius: 5, weight: 1.5, fillOpacity: 0.85 });
+  const smelterMarker      = (latlng) => L.circleMarker(latlng, { radius: 7, weight: 1.5, fillOpacity: 0.9, color: "#000", fillColor: "#111" });
 
   // ---------------- Helpers ----------------
   function nameFromProps(props, fallback) {
@@ -734,16 +734,46 @@
     if (!container) return;
     container.innerHTML = "";
 
+    // SVG inline para cada tipo de ícono — coinciden exactamente con los del mapa
+    const swatchSvg = {
+      so2:     `<span style="display:inline-block;width:28px;height:12px;background:linear-gradient(to right,#2c7bb6,#40c878,#e8c000,#d73027);border-radius:3px;vertical-align:middle"></span>`,
+      border:  `<svg width="20" height="14" viewBox="0 0 20 14"><rect x="1" y="4" width="18" height="6" fill="none" stroke="#333" stroke-width="2" rx="1"/></svg>`,
+      volcano: `<svg width="18" height="20" viewBox="0 0 18 20">
+                  <path d="M9,2 L1,20 L17,20 Z" fill="#4a5568" stroke="#1a202c" stroke-width="0.8" stroke-linejoin="round"/>
+                  <path d="M9,2 L5,9 Q9,6 13,9 Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
+                  <path d="M7,1.5 Q6,−1 5,0.5" fill="none" stroke="#1a202c" stroke-width="0.9" stroke-linecap="round"/>
+                  <path d="M9,0.8 Q8.2,−1.5 7.5,−0.2" fill="none" stroke="#1a202c" stroke-width="0.9" stroke-linecap="round"/>
+                  <path d="M11,1.5 Q12,−1 13,0.5" fill="none" stroke="#1a202c" stroke-width="0.9" stroke-linecap="round"/>
+                </svg>`,
+      other:   `<svg width="14" height="14" viewBox="0 0 14 14">
+                  <polygon points="7,1 0,13 14,13" fill="#718096" stroke="#2d3748" stroke-width="0.8" stroke-linejoin="round"/>
+                </svg>`,
+      smelter: `<svg width="14" height="14" viewBox="0 0 14 14">
+                  <circle cx="7" cy="7" r="5.5" fill="#111" stroke="#000" stroke-width="1.5"/>
+                </svg>`,
+      wind:    `<svg width="20" height="14" viewBox="0 0 20 14"><line x1="2" y1="7" x2="18" y2="7" stroke="#555" stroke-width="1.5" stroke-dasharray="3,2"/></svg>`
+    };
+
+    const LEGEND_LAYERS_MAP = {
+      so2:     { label: "SO₂ (WMS)",              swatch: "so2" },
+      border:  { label: "Límite Chile",            swatch: "border" },
+      ovdas:   { label: "Volcanes OVDAS",          swatch: "volcano" },
+      otros:   { label: "Volcanes no monitoreados",swatch: "other" },
+      smelters:{ label: "Fundiciones",             swatch: "smelter" },
+    };
+
     for (const item of LEGEND_LAYERS) {
       const isActive = item.always || (item.layerRef && item.layerRef() && map.hasLayer(item.layerRef()));
       if (!isActive) continue;
+      const cfg2 = LEGEND_LAYERS_MAP[item.key];
+      if (!cfg2) continue;
       const div = document.createElement("div");
       div.className = "legend-item";
-      div.innerHTML = `<span class="swatch ${item.cls}"></span> ${item.label}`;
+      div.innerHTML = `${swatchSvg[cfg2.swatch] || ""} ${cfg2.label}`;
       container.appendChild(div);
     }
 
-    // Viento: mostrar si algún nivel está activo
+    // Viento
     const anyWind = WIND_LEVELS.some(wl => windLayers[wl.key] && map.hasLayer(windLayers[wl.key]));
     if (anyWind) {
       const activeWindLabels = WIND_LEVELS
@@ -751,7 +781,7 @@
         .map(wl => wl.label.replace("Viento ", ""));
       const div = document.createElement("div");
       div.className = "legend-item";
-      div.innerHTML = `<span class="swatch wind"></span> Viento (${activeWindLabels.join(", ")})`;
+      div.innerHTML = `${swatchSvg.wind} Viento (${activeWindLabels.join(", ")})`;
       container.appendChild(div);
     }
   }
@@ -996,7 +1026,7 @@
 
       wireWindOverlays();
 
-      // Redimensionar íconos de volcanes según zoom
+      // Redimensionar íconos de volcanes y fundiciones según zoom
       function resizeVolcanoIcons() {
         const zoom = map.getZoom();
         const sizes = iconSizeForZoom(zoom);
@@ -1008,6 +1038,11 @@
         if (volcanesOtrosLayer) {
           volcanesOtrosLayer.eachLayer(l => {
             if (l.setIcon) l.setIcon(otherDivIcon(sizes.other));
+          });
+        }
+        if (smeltersLayer) {
+          smeltersLayer.eachLayer(l => {
+            if (l.setRadius) l.setRadius(sizes.smelter);
           });
         }
       }
