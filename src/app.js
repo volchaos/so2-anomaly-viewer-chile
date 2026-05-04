@@ -68,7 +68,7 @@
     return `${base}?${params.toString()}`;
   }
   function buildFallbackLegendDataUri() {
-    // Gradiente: arriba = rojo (10 DU, alta concentración), abajo = azul (0 DU, baja)
+    // Paleta exacta TROPOMI SO2: blanco→lila→azul→cian→verde→amarillo→naranja→rojo
     const ticks = [
       { y: 18,  label: "10.0" },
       { y: 55,  label: "3.3"  },
@@ -84,15 +84,20 @@
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="120" height="175" viewBox="0 0 120 175">
         <rect x="0" y="0" width="120" height="175" fill="white"/>
-        <text x="8" y="13" font-size="11" font-weight="700" fill="#111" font-family="Arial,sans-serif">SO₂ (DU)</text>
+        <text x="8" y="13" font-size="11" font-weight="700" fill="#111" font-family="Arial,sans-serif">SO&#x2082; (DU)</text>
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stop-color="#a50026"/>
-            <stop offset="25%"  stop-color="#f46d43"/>
-            <stop offset="45%"  stop-color="#fdae61"/>
-            <stop offset="65%"  stop-color="#ffffbf"/>
-            <stop offset="82%"  stop-color="#abd9e9"/>
-            <stop offset="100%" stop-color="#2c7bb6"/>
+            <stop offset="0%"   stop-color="#c00000"/>
+            <stop offset="8%"   stop-color="#e83020"/>
+            <stop offset="18%"  stop-color="#e87820"/>
+            <stop offset="28%"  stop-color="#e8c000"/>
+            <stop offset="38%"  stop-color="#c8e040"/>
+            <stop offset="50%"  stop-color="#40c878"/>
+            <stop offset="62%"  stop-color="#40a0d8"/>
+            <stop offset="72%"  stop-color="#8080c8"/>
+            <stop offset="82%"  stop-color="#c8a0d0"/>
+            <stop offset="92%"  stop-color="#e8d5e8"/>
+            <stop offset="100%" stop-color="#ffffff"/>
           </linearGradient>
         </defs>
         <rect x="10" y="18" width="40" height="145" fill="url(#g)" stroke="#999" stroke-width="0.5"/>
