@@ -275,16 +275,35 @@
     }
 
     if (volcanoes && volcanoes.length) {
-      const ts = Math.max(6, Math.round(sizePx/60));
       for (const v of volcanoes) {
-        const [cx,cy] = g2c(v.lon, v.lat);
-        if (cx < -ts || cx > sizePx+ts || cy < -ts || cy > sizePx+ts) continue;
+        const [cx, cy] = g2c(v.lon, v.lat);
+        const ts = Math.max(6, Math.round(sizePx / 40));
+        if (cx < -ts*2 || cx > sizePx+ts*2 || cy < -ts*2 || cy > sizePx+ts*2) continue;
+
+        // Cuerpo del volcán (triángulo gris oscuro)
         ctx.beginPath();
-        ctx.moveTo(cx, cy-ts); ctx.lineTo(cx-ts, cy+ts); ctx.lineTo(cx+ts, cy+ts);
+        ctx.moveTo(cx, cy - ts);
+        ctx.lineTo(cx - ts, cy + ts);
+        ctx.lineTo(cx + ts, cy + ts);
         ctx.closePath();
-        ctx.fillStyle   = "rgba(0,0,0,0.85)"; ctx.fill();
-        ctx.strokeStyle = "rgba(220,50,50,1)";
-        ctx.lineWidth   = Math.max(1, ts/5); ctx.stroke();
+        ctx.fillStyle = "#4a5568";
+        ctx.fill();
+        ctx.strokeStyle = "#1a202c";
+        ctx.lineWidth = Math.max(0.5, ts / 12);
+        ctx.stroke();
+
+        // Nieve/cráter (triángulo blanco-azulado en la parte superior ~35%)
+        const snowH = ts * 0.38;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - ts);
+        ctx.lineTo(cx - ts * 0.48, cy - ts + ts * 0.38 * 2);
+        ctx.quadraticCurveTo(cx, cy - ts + ts * 0.28 * 2, cx + ts * 0.48, cy - ts + ts * 0.38 * 2);
+        ctx.closePath();
+        ctx.fillStyle = "#e8eaf0";
+        ctx.fill();
+        ctx.strokeStyle = "#9aa5b4";
+        ctx.lineWidth = Math.max(0.3, ts / 20);
+        ctx.stroke();
       }
     }
     return cv;
