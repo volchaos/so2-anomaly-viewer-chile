@@ -145,21 +145,57 @@
   }
 
   // ---------------- Icons ----------------
-  function volcanoDivIcon(sizePx, strokeColor) {
+
+  // Tamaño base de íconos según zoom
+  function iconSizeForZoom(zoom) {
+    if (zoom <= 4)  return { ovdas: 10, other: 6 };
+    if (zoom <= 5)  return { ovdas: 13, other: 7 };
+    if (zoom <= 6)  return { ovdas: 16, other: 8 };
+    if (zoom <= 7)  return { ovdas: 20, other: 10 };
+    if (zoom <= 8)  return { ovdas: 24, other: 12 };
+    if (zoom <= 9)  return { ovdas: 28, other: 14 };
+    return              { ovdas: 32, other: 16 };
+  }
+
+  // Ícono OVDAS: volcán estilizado con cuerpo gris, nieve blanca y emisión de gases
+  function ovdasDivIcon(sizePx) {
     const w = sizePx;
-    const h = Math.round(sizePx * 1.1);
-    const stroke = strokeColor || "none";
-    const strokeWidth = strokeColor ? 2 : 0;
-    const svg = `
-      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="${w/2},0 0,${h} ${w},${h}" fill="black" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
-      </svg>
-    `;
+    const h = Math.round(sizePx * 1.3);
+    // Coordenadas proporcionales al tamaño
+    const cx = w / 2;
+    // Montaña principal (gris oscuro)
+    const bodyPath = `M${cx},${h * 0.1} L0,${h} L${w},${h} Z`;
+    // Nieve/cráter (blanco-azulado, tapa superior)
+    const snowPath = `M${cx},${h * 0.1} L${cx * 0.55},${h * 0.42} Q${cx},${h * 0.32} ${cx * 1.45},${h * 0.42} Z`;
+    // Líneas de emisión (arcos sobre el cráter)
+    const e1 = `M${cx * 0.7},${h * 0.07} Q${cx * 0.55},${h * -0.08} ${cx * 0.4},${h * 0.04}`;
+    const e2 = `M${cx},${h * 0.02} Q${cx * 0.85},${h * -0.12} ${cx * 0.7},0`;
+    const e3 = `M${cx * 1.3},${h * 0.07} Q${cx * 1.45},${h * -0.08} ${cx * 1.6},${h * 0.04}`;
+    const sw = Math.max(1, sizePx / 18);
+    const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+      <path d="${bodyPath}" fill="#4a5568" stroke="#1a202c" stroke-width="${sw * 0.6}" stroke-linejoin="round"/>
+      <path d="${snowPath}" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="${sw * 0.4}"/>
+      <path d="${e1}" fill="none" stroke="#1a202c" stroke-width="${sw * 0.7}" stroke-linecap="round"/>
+      <path d="${e2}" fill="none" stroke="#1a202c" stroke-width="${sw * 0.7}" stroke-linecap="round"/>
+      <path d="${e3}" fill="none" stroke="#1a202c" stroke-width="${sw * 0.7}" stroke-linecap="round"/>
+    </svg>`;
     return L.divIcon({ className: "volcano-icon", html: svg, iconSize: [w, h], iconAnchor: [Math.round(w/2), h] });
   }
-  const volcanoMarkerOVDAS = (latlng) => L.marker(latlng, { icon: volcanoDivIcon(18, "red") });
-  const volcanoMarkerOther = (latlng) => L.marker(latlng, { icon: volcanoDivIcon(9, null) });
-  const smelterMarker = (latlng) => L.circleMarker(latlng, { radius: 6, weight: 2, fillOpacity: 0.9 });
+
+  // Ícono otros volcanes: triángulo simple gris pequeño
+  function otherDivIcon(sizePx) {
+    const w = sizePx;
+    const h = Math.round(sizePx * 1.1);
+    const sw = Math.max(0.5, sizePx / 12);
+    const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#718096" stroke="#2d3748" stroke-width="${sw}" stroke-linejoin="round"/>
+    </svg>`;
+    return L.divIcon({ className: "volcano-icon", html: svg, iconSize: [w, h], iconAnchor: [Math.round(w/2), h] });
+  }
+
+  const volcanoMarkerOVDAS = (latlng) => L.marker(latlng, { icon: ovdasDivIcon(20) });
+  const volcanoMarkerOther = (latlng) => L.marker(latlng, { icon: otherDivIcon(10) });
+  const smelterMarker      = (latlng) => L.circleMarker(latlng, { radius: 5, weight: 1.5, fillOpacity: 0.85 });
 
   // ---------------- Helpers ----------------
   function nameFromProps(props, fallback) {
@@ -947,8 +983,26 @@
 
       wireWindOverlays();
 
+      // Redimensionar íconos de volcanes según zoom
+      function resizeVolcanoIcons() {
+        const zoom = map.getZoom();
+        const sizes = iconSizeForZoom(zoom);
+        if (volcanesOvdasLayer) {
+          volcanesOvdasLayer.eachLayer(l => {
+            if (l.setIcon) l.setIcon(ovdasDivIcon(sizes.ovdas));
+          });
+        }
+        if (volcanesOtrosLayer) {
+          volcanesOtrosLayer.eachLayer(l => {
+            if (l.setIcon) l.setIcon(otherDivIcon(sizes.other));
+          });
+        }
+      }
+
       map.on("zoomend", updateLabelsByZoom);
+      map.on("zoomend", resizeVolcanoIcons);
       updateLabelsByZoom();
+      resizeVolcanoIcons();
 
       map.on("zoomend", rerenderVisibleWind);
       map.on("moveend", rerenderVisibleWind);
