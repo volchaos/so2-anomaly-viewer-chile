@@ -242,7 +242,7 @@
   let smeltersLayer = null;
 
   function bindPermanentLabel(layer, text, className, direction, offset) {
-    layer.bindTooltip(text, { permanent: true, direction: direction || "top", offset: offset || [0, -10], opacity: 0.9, className: className || "" });
+    layer.bindTooltip(text, { permanent: false, direction: direction || "top", offset: offset || [0, -10], opacity: 1.0, className: className || "" });
   }
 
   function updateLabelsByZoom() {
@@ -954,9 +954,11 @@
       layerControl.addOverlay(borderLayer, "Límite fronterizo Chile");
 
       volcanesOvdasLayer = await loadGeoJson(cfg.data.volcanoesOvdas, (latlng) => volcanoMarkerOVDAS(latlng), "Volcán OVDAS");
+      const ovdasNames = new Set();
       volcanesOvdasLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
         const name = nameFromProps(p, "Volcán");
+        ovdasNames.add(name);
         bindPermanentLabel(l, name, "label-volcano", "top", [0, -12]);
         const ll = l.getLatLng();
         ovdasVolcanoList.push({ name, lat: ll.lat, lon: ll.lng });
@@ -965,12 +967,23 @@
       layerControl.addOverlay(volcanesOvdasLayer, "Volcanes monitoreados (OVDAS)");
 
       volcanesOtrosLayer = await loadGeoJson(cfg.data.volcanoesAll, (latlng) => volcanoMarkerOther(latlng), "Volcán");
+      // Eliminar del layer "otros" los volcanes que ya están en OVDAS
+      const toRemove = [];
       volcanesOtrosLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
-        bindPermanentLabel(l, nameFromProps(p, "Volcán"), "label-volcano", "top", [0, -10]);
+        const name = nameFromProps(p, "Volcán");
+        if (ovdasNames.has(name)) {
+          toRemove.push(l);
+        } else {
+          bindPermanentLabel(l, name, "label-volcano", "top", [0, -10]);
+        }
       });
+      toRemove.forEach(l => volcanesOtrosLayer.removeLayer(l));
       volcanesOtrosLayer.addTo(map);
       layerControl.addOverlay(volcanesOtrosLayer, "Volcanes no monitoreados");
+
+      // Traer OVDAS al frente para que no queden debajo de otros
+      volcanesOvdasLayer.bringToFront();
 
       smeltersLayer = await loadGeoJson(cfg.data.smelters, (latlng) => smelterMarker(latlng), "Fundición");
       smeltersLayer.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
