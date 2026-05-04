@@ -157,27 +157,19 @@
     return              { ovdas: 32, other: 16, smelter: 10 };
   }
 
-  // Ícono OVDAS: volcán estilizado con cuerpo gris, nieve blanca y emisión de gases
+  // Ícono OVDAS: volcán estilizado con cuerpo gris y nieve blanca
   function ovdasDivIcon(sizePx) {
     const w = sizePx;
-    const h = Math.round(sizePx * 1.3);
-    // Coordenadas proporcionales al tamaño
+    const h = Math.round(sizePx * 1.15);
     const cx = w / 2;
+    const sw = Math.max(0.5, sizePx / 20);
     // Montaña principal (gris oscuro)
-    const bodyPath = `M${cx},${h * 0.1} L0,${h} L${w},${h} Z`;
-    // Nieve/cráter (blanco-azulado, tapa superior)
-    const snowPath = `M${cx},${h * 0.1} L${cx * 0.55},${h * 0.42} Q${cx},${h * 0.32} ${cx * 1.45},${h * 0.42} Z`;
-    // Líneas de emisión (arcos sobre el cráter)
-    const e1 = `M${cx * 0.7},${h * 0.07} Q${cx * 0.55},${h * -0.08} ${cx * 0.4},${h * 0.04}`;
-    const e2 = `M${cx},${h * 0.02} Q${cx * 0.85},${h * -0.12} ${cx * 0.7},0`;
-    const e3 = `M${cx * 1.3},${h * 0.07} Q${cx * 1.45},${h * -0.08} ${cx * 1.6},${h * 0.04}`;
-    const sw = Math.max(1, sizePx / 18);
+    const bodyPath = `M${cx},0 L0,${h} L${w},${h} Z`;
+    // Nieve/cráter (blanco-azulado, tapa superior ~35%)
+    const snowPath = `M${cx},0 L${cx*0.52},${h*0.38} Q${cx},${h*0.28} ${cx*1.48},${h*0.38} Z`;
     const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-      <path d="${bodyPath}" fill="#4a5568" stroke="#1a202c" stroke-width="${sw * 0.6}" stroke-linejoin="round"/>
-      <path d="${snowPath}" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="${sw * 0.4}"/>
-      <path d="${e1}" fill="none" stroke="#1a202c" stroke-width="${sw * 0.7}" stroke-linecap="round"/>
-      <path d="${e2}" fill="none" stroke="#1a202c" stroke-width="${sw * 0.7}" stroke-linecap="round"/>
-      <path d="${e3}" fill="none" stroke="#1a202c" stroke-width="${sw * 0.7}" stroke-linecap="round"/>
+      <path d="${bodyPath}" fill="#4a5568" stroke="#1a202c" stroke-width="${sw}" stroke-linejoin="round"/>
+      <path d="${snowPath}" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="${sw * 0.5}"/>
     </svg>`;
     return L.divIcon({ className: "volcano-icon", html: svg, iconSize: [w, h], iconAnchor: [Math.round(w/2), h] });
   }
@@ -739,11 +731,8 @@
       so2:     `<span style="display:inline-block;width:28px;height:12px;background:linear-gradient(to right,#2c7bb6,#40c878,#e8c000,#d73027);border-radius:3px;vertical-align:middle"></span>`,
       border:  `<svg width="20" height="14" viewBox="0 0 20 14"><rect x="1" y="4" width="18" height="6" fill="none" stroke="#333" stroke-width="2" rx="1"/></svg>`,
       volcano: `<svg width="18" height="20" viewBox="0 0 18 20">
-                  <path d="M9,2 L1,20 L17,20 Z" fill="#4a5568" stroke="#1a202c" stroke-width="0.8" stroke-linejoin="round"/>
-                  <path d="M9,2 L5,9 Q9,6 13,9 Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
-                  <path d="M7,1.5 Q6,−1 5,0.5" fill="none" stroke="#1a202c" stroke-width="0.9" stroke-linecap="round"/>
-                  <path d="M9,0.8 Q8.2,−1.5 7.5,−0.2" fill="none" stroke="#1a202c" stroke-width="0.9" stroke-linecap="round"/>
-                  <path d="M11,1.5 Q12,−1 13,0.5" fill="none" stroke="#1a202c" stroke-width="0.9" stroke-linecap="round"/>
+                  <path d="M9,0 L0,20 L18,20 Z" fill="#4a5568" stroke="#1a202c" stroke-width="0.8" stroke-linejoin="round"/>
+                  <path d="M9,0 L4.7,7.6 Q9,5.6 13.3,7.6 Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
                 </svg>`,
       other:   `<svg width="14" height="14" viewBox="0 0 14 14">
                   <polygon points="7,1 0,13 14,13" fill="#718096" stroke="#2d3748" stroke-width="0.8" stroke-linejoin="round"/>
