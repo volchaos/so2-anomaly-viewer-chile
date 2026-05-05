@@ -78,12 +78,44 @@ html, body {
 .btn.icon { padding: 7px 10px; font-size: 14px; }
 
 /* ===== Layout ===== */
+/* ===== Layout split ===== */
 main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .left      { flex: 1; min-width: 0; height: 100%; }
 
+/* Tablet (980px) — panel debajo del mapa */
 @media (max-width: 980px) {
   main.split { flex-direction: column; }
-  .right     { width: 100%; max-width: none; height: 420px; border-left: none; border-top: 1px solid var(--border); }
+  .right     { width: 100%; max-width: none; height: 45vh; min-height: 320px; border-left: none; border-top: 1px solid var(--border); }
+  .left      { height: 55vh; }
+}
+
+/* Móvil (600px) — mapa más grande, panel más compacto y scrolleable */
+@media (max-width: 600px) {
+  header { padding: 6px 10px; gap: 6px; }
+  .app-title    { font-size: 13px; }
+  .app-subtitle { display: none; }
+  .ctrl > span  { font-size: 10px; }
+
+  /* Topbar: fecha e inputs más pequeños */
+  #dateInput    { font-size: 12px; padding: 4px 6px; }
+  .btn          { padding: 5px 10px; font-size: 12px; }
+  #opacityInput { width: 80px; }
+
+  main.split    { flex-direction: column; height: calc(100% - 48px); }
+  .left         { height: 52vh; min-height: 200px; }
+  .right        { width: 100%; max-width: none; height: 48vh; min-height: 260px;
+                  border-left: none; border-top: 1px solid var(--border); overflow-y: auto; }
+
+  /* Ocultar tab colapsable en móvil — no tiene sentido */
+  .panel-tab    { display: none; }
+
+  /* Panel interno más compacto */
+  .panel        { padding: 10px; }
+  .collapsible-section { margin-top: 6px; }
+  .section-header { padding: 8px 12px; font-size: 13px; }
+
+  /* Leyenda SO2 más pequeña */
+  .so2-legend   { transform: scale(0.38) !important; }
 }
 
 /* ===== Mapa ===== */
@@ -160,12 +192,6 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   max-width: 0 !important;
   overflow: hidden;
   border-left: none;
-}
-
-@media (max-width: 980px) {
-  main.split    { flex-direction: column; }
-  .right        { width: 100%; max-width: none; height: 420px; border-left: none; border-top: 1px solid var(--border); }
-  .panel-tab    { top: auto; bottom: 420px; right: 8px; transform: none; border-radius: 8px 8px 0 0; border-right: 1px solid rgba(120,140,200,0.25); border-bottom: none; width: 52px; height: 20px; }
 }
 
 /* ===== Secciones colapsables del panel ===== */
