@@ -39,7 +39,21 @@
   const gifChkWind150 = document.getElementById("gifChkWind150");
 
   function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
-  function setGifProgress(msg) { if (gifProgress) gifProgress.textContent = msg; }
+  const gifProgressFill = document.getElementById("gifProgressFill");
+  const gifProgressWrap = document.getElementById("gifProgressWrap");
+
+  function setGifProgress(msg, pct) {
+    if (gifProgress) gifProgress.textContent = msg;
+    if (gifProgressFill && gifProgressWrap) {
+      if (pct !== undefined) {
+        gifProgressWrap.style.display = "";
+        gifProgressFill.style.width = Math.round(pct) + "%";
+      } else {
+        gifProgressWrap.style.display = "none";
+        gifProgressFill.style.width = "0%";
+      }
+    }
+  }
 
   function todayUtcDateString() {
     const now = new Date();
@@ -226,7 +240,7 @@
     return L.geoJSON(chile, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
   }
 
-  const layerControl = L.control.layers({}, {}, { collapsed: false }).addTo(map);
+  const layerControl = L.control.layers({}, {}, { collapsed: true }).addTo(map);
 
   let borderLayer = null;
   let volcanesOvdasLayer = null;
@@ -340,7 +354,7 @@
     for (const wl of WIND_LEVELS) {
       const lg = L.layerGroup();
       windLayers[wl.key] = lg;
-      layerControl.addOverlay(lg, wl.label);
+      // layerControl.addOverlay(lg, wl.label); // deshabilitado temporalmente
     }
     map.on("overlayadd", (ev) => {
       for (const wl of WIND_LEVELS) {
@@ -645,7 +659,7 @@
         selectedVolcano: volcanoName,
         borderGeoJson,
         onProgress: (msg, pct) => {
-          setGifProgress(msg);
+          setGifProgress(msg, pct);
         }
       });
 
@@ -667,6 +681,7 @@
 
     } catch (e) {
       setGifProgress("Error al generar GIF: " + e.message);
+      if (gifProgressWrap) gifProgressWrap.style.display = "none";
       console.error(e);
     } finally {
       _gifGenerating = false;

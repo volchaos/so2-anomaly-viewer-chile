@@ -329,6 +329,22 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 }
 .leaflet-control-attribution a { color: var(--accent) !important; }
 
+.gif-progress-wrap { margin: 6px 0 4px; }
+.gif-progress-bar-bg {
+  width: 100%; height: 8px;
+  background: var(--bg-block);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.gif-progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
 /* ===== Panel de validación ===== */
 .validator-intro p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
 .validator-intro a { color: var(--accent); }
