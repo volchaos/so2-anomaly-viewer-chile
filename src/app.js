@@ -354,7 +354,9 @@
     for (const wl of WIND_LEVELS) {
       const lg = L.layerGroup();
       windLayers[wl.key] = lg;
-      // layerControl.addOverlay(lg, wl.label); // deshabilitado temporalmente
+      if (wl.key !== "400hPa") {  // 400 hPa (~7 km) deshabilitado temporalmente
+        layerControl.addOverlay(lg, wl.label);
+      }
     }
     map.on("overlayadd", (ev) => {
       for (const wl of WIND_LEVELS) {
