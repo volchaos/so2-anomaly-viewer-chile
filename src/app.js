@@ -585,7 +585,7 @@
 
     let dates = [];
     if (mode === "lastN") {
-      const n = Math.max(2, Math.min(30, parseInt(gifLastN.value || "14", 10)));
+      const n = Math.max(2, Math.min(90, parseInt(gifLastN.value || "14", 10)));
       const end = dateInput.value || todayUtcDateString();
       const endD = new Date(end + "T00:00:00Z");
       const startD = new Date(endD);
@@ -600,7 +600,8 @@
     }
 
     if (!dates.length) { setGifProgress("Rango inválido."); return; }
-    if (dates.length > 30) { setGifProgress("Máximo 30 días por GIF."); return; }
+    if (dates.length > 90) { setGifProgress("Máximo 90 días por GIF."); return; }
+    if (dates.length > 30) { setGifProgress(`Generando GIF de ${dates.length} días — puede tardar varios minutos…`); await new Promise(r => setTimeout(r, 100)); }
 
     // BBox del ROI
     const roiBBox = computeRoiBounds(lat, lon, roiKm);
@@ -639,6 +640,7 @@
         bbox,
         sizePx,
         fps,
+        roiKm,
         volcanoes:       volcanoesForOverlay,
         selectedVolcano: volcanoName,
         borderGeoJson,

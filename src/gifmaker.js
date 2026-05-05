@@ -333,7 +333,7 @@
   }
 
   // ── Dibujar frame ──────────────────────────────────────────────────────
-  function drawFrame(ctx, sizePx, wmsImg, overlayCanvas, dateStr) {
+  function drawFrame(ctx, sizePx, wmsImg, overlayCanvas, dateStr, roiKm) {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, sizePx, sizePx);
 
@@ -351,27 +351,69 @@
 
     if (overlayCanvas) ctx.drawImage(overlayCanvas, 0, 0, sizePx, sizePx);
 
-    // ── Leyenda SO₂ (esquina inferior derecha) ──────────────────────────
-    const pad    = Math.round(sizePx * 0.02);
+    const pad = Math.round(sizePx * 0.02);
+
+    // ── Escala de distancia (esquina superior izquierda) ─────────────────
+    if (roiKm) {
+      // km totales que abarca el frame = roiKm * 2 (bbox es ±roiKm/2 en cada lado)
+      const totalKm = roiKm;
+      // Elegir una escala redonda apropiada (~25% del ancho)
+      const targetKm  = totalKm * 0.25;
+      const magnitude = Math.pow(10, Math.floor(Math.log10(targetKm)));
+      const roundVals = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+      const scaleKm   = roundVals.find(v => v * magnitude >= targetKm * 0.8) * magnitude
+                        || Math.round(targetKm / 10) * 10;
+      const scaleKmFinal = roundVals.reduce((prev, curr) =>
+        Math.abs(curr - targetKm) < Math.abs(prev - targetKm) ? curr : prev);
+
+      const pixelsPerKm = sizePx / totalKm;
+      const barPx = Math.round(scaleKmFinal * pixelsPerKm);
+      const fs    = Math.round(sizePx * 0.036);
+      const by    = pad + Math.round(fs * 1.5); // y de la barra
+      const bx    = pad;
+
+      // Fondo
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.fillRect(bx - 3, pad - 3, barPx + 6, fs * 2.2 + 6);
+
+      // Barra principal
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth   = Math.max(1.5, sizePx / 200);
+      ctx.beginPath();
+      ctx.moveTo(bx, by); ctx.lineTo(bx + barPx, by);
+      ctx.stroke();
+      // Extremos verticales
+      const tick = Math.round(fs * 0.5);
+      ctx.beginPath();
+      ctx.moveTo(bx, by - tick); ctx.lineTo(bx, by + tick);
+      ctx.moveTo(bx + barPx, by - tick); ctx.lineTo(bx + barPx, by + tick);
+      ctx.stroke();
+
+      // Etiqueta
+      ctx.font      = `bold ${fs}px Arial`;
+      ctx.fillStyle = "#111";
+      ctx.textAlign = "center";
+      ctx.fillText(`${scaleKmFinal} km`, bx + barPx / 2, by - tick - 2);
+      ctx.textAlign = "left";
+    }
+
+    // ── Leyenda SO₂ (esquina inferior derecha) ───────────────────────────
     const fs     = Math.round(sizePx * 0.038);
     const barW   = Math.round(sizePx * 0.028);
     const barH   = Math.round(sizePx * 0.28);
-    const lx     = sizePx - pad - barW - Math.round(fs * 2.8); // x inicio barra
-    const ly     = sizePx - pad - barH;                        // y inicio barra
+    const lx     = sizePx - pad - barW - Math.round(fs * 2.8);
+    const ly     = sizePx - pad - barH;
 
-    // Fondo semitransparente
-    const bgPad = Math.round(sizePx * 0.012);
+    const bgPad  = Math.round(sizePx * 0.012);
     const titleH = Math.round(fs * 1.4);
     ctx.fillStyle = "rgba(255,255,255,0.82)";
     ctx.fillRect(lx - bgPad, ly - titleH - bgPad, barW + Math.round(fs * 3.2), barH + titleH + bgPad * 2);
 
-    // Título
     ctx.font = `bold ${Math.round(fs * 0.75)}px Arial`;
     ctx.fillStyle = "#111";
     ctx.textAlign = "left";
     ctx.fillText("SO\u2082 (DU)", lx - bgPad + Math.round(bgPad * 0.5), ly - Math.round(bgPad * 0.5));
 
-    // Barra de colores — gradiente espectral TROPOMI
     const grad = ctx.createLinearGradient(0, ly, 0, ly + barH);
     grad.addColorStop(0.00, "#c00000");
     grad.addColorStop(0.08, "#e83020");
@@ -390,7 +432,6 @@
     ctx.lineWidth = 0.5;
     ctx.strokeRect(lx, ly, barW, barH);
 
-    // Ticks y etiquetas
     const ticks = [
       { pct: 0,    label: "10"  },
       { pct: 0.38, label: "3.3" },
@@ -407,13 +448,12 @@
       ctx.strokeStyle = "#555";
       ctx.lineWidth = 0.7;
       ctx.beginPath();
-      ctx.moveTo(lx + barW, ty);
-      ctx.lineTo(lx + barW + Math.round(fs * 0.4), ty);
+      ctx.moveTo(lx + barW, ty); ctx.lineTo(lx + barW + Math.round(fs * 0.4), ty);
       ctx.stroke();
       ctx.fillText(t.label, lx + barW + Math.round(fs * 0.55), ty + Math.round(fs * 0.35));
     }
 
-    // ── Etiqueta de fecha (esquina inferior izquierda) ──────────────────
+    // ── Fecha (esquina inferior izquierda) ───────────────────────────────
     const datefs = Math.round(sizePx * 0.045);
     ctx.font  = `bold ${datefs}px Arial`;
     ctx.textAlign = "left";
@@ -426,7 +466,7 @@
 
   // ── API pública ────────────────────────────────────────────────────────
   async function generate({ wmsUrl, wmsLayers, wmsStyles, wmsVersion, timeFormat,
-                             dates, bbox, sizePx, fps, volcanoes, selectedVolcano, borderGeoJson, onProgress }) {
+                             dates, bbox, sizePx, fps, roiKm, volcanoes, selectedVolcano, borderGeoJson, onProgress }) {
     onProgress("Preparando overlays…", 0);
 
     const overlayCanvas = buildOverlayCanvas(sizePx, bbox, volcanoes, selectedVolcano, borderGeoJson);
@@ -453,7 +493,7 @@
         console.warn("Frame sin datos:", dateStr, e.message);
       }
 
-      drawFrame(ctx, sizePx, wmsImg, overlayCanvas, dateStr);
+      drawFrame(ctx, sizePx, wmsImg, overlayCanvas, dateStr, roiKm);
       encoder.addFrame(canvas);
     }
 
