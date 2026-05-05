@@ -20,7 +20,9 @@
   const gifLastNBlock = document.getElementById("gifLastNBlock");
   const gifGenerateBtn = document.getElementById("gifGenerateBtn");
   const gifDownloadLink = document.getElementById("gifDownloadLink");
-  const gifPreview = document.getElementById("gifPreview");
+  const gifPreview          = document.getElementById("gifPreview");
+  const gifPreviewWrap      = document.getElementById("gifPreviewWrap");
+  const gifPreviewPlaceholder = document.getElementById("gifPreviewPlaceholder");
   const gifProgress = document.getElementById("gifProgress");
   const gifSize = document.getElementById("gifSize");
   const gifFps = document.getElementById("gifFps");
@@ -84,21 +86,21 @@
   function buildFallbackLegendDataUri() {
     // Paleta exacta TROPOMI SO2: blanco→lila→azul→cian→verde→amarillo→naranja→rojo
     const ticks = [
-      { y: 18,  label: "10.0" },
-      { y: 55,  label: "3.3"  },
-      { y: 90,  label: "1.1"  },
-      { y: 118, label: "0.3"  },
-      { y: 140, label: "0.1"  },
-      { y: 158, label: "0"    }
+      { y: 22,  label: "10.0" },
+      { y: 62,  label: "3.3"  },
+      { y: 101, label: "1.1"  },
+      { y: 132, label: "0.3"  },
+      { y: 155, label: "0.1"  },
+      { y: 175, label: "0"    }
     ];
     const tickLines = ticks.map(t => `
-      <line x1="52" y1="${t.y}" x2="58" y2="${t.y}" stroke="#333" stroke-width="1"/>
-      <text x="62" y="${t.y + 4}" font-size="11" fill="#111" font-family="Arial,sans-serif">${t.label}</text>
+      <line x1="52" y1="${t.y}" x2="60" y2="${t.y}" stroke="#333" stroke-width="1.2"/>
+      <text x="64" y="${t.y + 4}" font-size="13" fill="#111" font-family="Arial,sans-serif">${t.label}</text>
     `).join("");
     const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="175" viewBox="0 0 120 175">
-        <rect x="0" y="0" width="120" height="175" fill="white"/>
-        <text x="8" y="13" font-size="11" font-weight="700" fill="#111" font-family="Arial,sans-serif">SO&#x2082; (DU)</text>
+      <svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" viewBox="0 0 130 195">
+        <rect x="0" y="0" width="130" height="195" fill="white"/>
+        <text x="8" y="16" font-size="14" font-weight="700" fill="#111" font-family="Arial,sans-serif">SO&#x2082; (DU)</text>
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stop-color="#c00000"/>
@@ -114,7 +116,7 @@
             <stop offset="100%" stop-color="#ffffff"/>
           </linearGradient>
         </defs>
-        <rect x="10" y="18" width="40" height="145" fill="url(#g)" stroke="#999" stroke-width="0.5"/>
+        <rect x="10" y="22" width="40" height="175" fill="url(#g)" stroke="#999" stroke-width="0.5"/>
         ${tickLines}
       </svg>
     `;
@@ -677,7 +679,11 @@
       }
 
       // Preview
-      if (gifPreview) gifPreview.src = url;
+      if (gifPreview) {
+        gifPreview.src = url;
+        if (gifPreviewWrap) gifPreviewWrap.style.display = "";
+        if (gifPreviewPlaceholder) gifPreviewPlaceholder.style.display = "none";
+      }
 
       setGifProgress(`✓ GIF listo — ${dates.length} frames, ${(blob.size/1024).toFixed(0)} KB`);
 
