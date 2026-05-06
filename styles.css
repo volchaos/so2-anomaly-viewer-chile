@@ -91,8 +91,8 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 
 /* Móvil (600px) — mapa más grande, panel más compacto y scrolleable */
 @media (max-width: 600px) {
-  header { padding: 6px 10px; gap: 6px; }
-  .app-title    { font-size: 13px; }
+  header { padding: 6px 10px; gap: 6px; flex-wrap: wrap; }
+  .app-title    { font-size: 12px; line-height: 1.3; }
   .app-subtitle { display: none; }
   .ctrl > span  { font-size: 10px; }
 
@@ -101,12 +101,15 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   .btn          { padding: 5px 10px; font-size: 12px; }
   #opacityInput { width: 80px; }
 
-  main.split    { flex-direction: column; height: calc(100% - 48px); }
-  .left         { height: 52vh; min-height: 200px; }
-  .right        { width: 100%; max-width: none; height: 48vh; min-height: 260px;
-                  border-left: none; border-top: 1px solid var(--border); overflow-y: auto; }
+  /* Layout: usar dvh para evitar el espacio negro */
+  html, body { height: 100dvh; overflow: hidden; }
+  main.split    { flex-direction: column; height: calc(100dvh - 56px); }
+  .left         { flex: 0 0 50dvh; height: 50dvh; }
+  .right        { flex: 1; min-height: 0; width: 100%; max-width: none;
+                  border-left: none; border-top: 1px solid var(--border);
+                  overflow-y: auto; }
 
-  /* Ocultar tab colapsable en móvil — no tiene sentido */
+  /* Ocultar tab colapsable en móvil */
   .panel-tab    { display: none; }
 
   /* Panel interno más compacto */
@@ -115,7 +118,14 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   .section-header { padding: 8px 12px; font-size: 13px; }
 
   /* Leyenda SO2 más pequeña */
-  .so2-legend   { transform: scale(0.38) !important; }
+  .so2-legend   { transform: scale(0.30) !important; top: 60px; }
+
+  /* Leyenda capas activas más pequeña */
+  .legend { width: 160px !important; font-size: 10px !important; padding: 7px 10px !important; right: 8px !important; bottom: 8px !important; }
+  .legend-title { font-size: 9px !important; margin-bottom: 5px !important; }
+  .legend-item  { margin: 3px 0 !important; gap: 6px !important; }
+  .legend-foot  { margin-top: 6px !important; padding-top: 6px !important; }
+  .legend-foot a { font-size: 10px !important; }
 }
 
 /* ===== Mapa ===== */
