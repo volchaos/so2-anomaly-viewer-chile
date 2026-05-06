@@ -30,6 +30,13 @@
         <span>Opacidad SO₂</span>
         <input id="opacityInput" type="range" min="0" max="1" step="0.05" value="0.85" />
       </label>
+      <label class="ctrl">
+        <span>Viento</span>
+        <select id="windUnitsSelect">
+          <option value="kmh">km/h</option>
+          <option value="ms">m/s</option>
+        </select>
+      </label>
       <button id="todayBtn" class="btn">Hoy</button>
     </div>
   </header>
@@ -212,10 +219,6 @@
             <label class="field-inline">
               <input id="gifChkWind500" type="checkbox" />
               <span>Viento (~5 km, 500 hPa)</span>
-            </label>
-            <label class="field-inline">
-              <input id="gifChkWind400" type="checkbox" />
-              <span>Viento (~7 km, 400 hPa)</span>
             </label>
             <label class="field-inline">
               <input id="gifChkWind250" type="checkbox" />

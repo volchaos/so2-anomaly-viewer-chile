@@ -20,7 +20,18 @@
   const gifLastNBlock = document.getElementById("gifLastNBlock");
   const gifGenerateBtn = document.getElementById("gifGenerateBtn");
   const gifDownloadLink = document.getElementById("gifDownloadLink");
-  const gifPreview          = document.getElementById("gifPreview");
+  const windUnitsSelect = document.getElementById("windUnitsSelect");
+
+  // Listener para refrescar capas de viento al cambiar unidades
+  if (windUnitsSelect) {
+    windUnitsSelect.addEventListener("change", () => {
+      for (const wl of WIND_LEVELS) {
+        if (windLayers[wl.key] && map.hasLayer(windLayers[wl.key])) {
+          refreshWindLayer(wl.key);
+        }
+      }
+    });
+  }
   const gifPreviewWrap      = document.getElementById("gifPreviewWrap");
   const gifPreviewPlaceholder = document.getElementById("gifPreviewPlaceholder");
   const gifProgress = document.getElementById("gifProgress");
@@ -332,8 +343,8 @@
       const bearing = (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
       const fromBearing = (bearing + 180) % 360;
       const dir = dirs[Math.round(fromBearing / 22.5) % 16];
-      const speedKmh = Math.round(speed * 3.6);
-
+      const useKmh = !windUnitsSelect || windUnitsSelect.value === "kmh";
+      const speedDisplay = useKmh ? Math.round(speed * 3.6) + " km/h" : speed.toFixed(1) + " m/s";
       let lenKm = baseLenKm * (speed / refSpeed);
       lenKm = Math.max(minLenKm, Math.min(maxLenKm, lenKm));
 
@@ -344,7 +355,7 @@
       // Etiqueta de velocidad en el punto medio de la flecha
       const midLat = (a.tail[0] + a.tip[0]) / 2;
       const midLon = (a.tail[1] + a.tip[1]) / 2;
-      const label = `${speedKmh}<br><span style="font-size:8px">${dir}</span>`;
+      const label = `${speedDisplay}<br><span style="font-size:8px">${dir}</span>`;
       L.marker([midLat, midLon], {
         icon: L.divIcon({
           className: "wind-speed-label",
