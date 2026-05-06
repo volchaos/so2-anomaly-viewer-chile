@@ -320,6 +320,8 @@
     const z = map.getZoom();
     const stride = (z <= 3) ? 40 : (z === 4) ? 25 : (z === 5) ? 14 : (z === 6) ? 9 : (z === 7) ? 6 : 3;
 
+    const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+
     for (let i = 0; i < pts.length; i += stride) {
       const p = pts[i];
       const lat = p.lat, lon = p.lon, u = p.u, v = p.v;
@@ -328,24 +330,30 @@
 
       const speed = Math.sqrt(u*u + v*v);
       const bearing = (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
-
-      // Dirección cardinal de donde viene el viento
-      const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
       const fromBearing = (bearing + 180) % 360;
       const dir = dirs[Math.round(fromBearing / 22.5) % 16];
-      const speedKmh = (speed * 3.6).toFixed(0);
-      const tooltipText = `${speedKmh} km/h del ${dir}`;
+      const speedKmh = Math.round(speed * 3.6);
 
       let lenKm = baseLenKm * (speed / refSpeed);
       lenKm = Math.max(minLenKm, Math.min(maxLenKm, lenKm));
 
       const a = arrowPolyline(lat, lon, bearing, lenKm, headKm);
-      const shaft = L.polyline([a.tail, a.tip], { color, weight, opacity, interactive: true })
-        .bindTooltip(tooltipText, { sticky: true, className: "wind-tooltip" });
-      const head  = L.polyline([a.left, a.tip, a.right], { color, weight, opacity, interactive: true })
-        .bindTooltip(tooltipText, { sticky: true, className: "wind-tooltip" });
-      shaft.addTo(layerGroup);
-      head.addTo(layerGroup);
+      L.polyline([a.tail, a.tip], { color, weight, opacity, interactive: false }).addTo(layerGroup);
+      L.polyline([a.left, a.tip, a.right], { color, weight, opacity, interactive: false }).addTo(layerGroup);
+
+      // Etiqueta de velocidad en el punto medio de la flecha
+      const midLat = (a.tail[0] + a.tip[0]) / 2;
+      const midLon = (a.tail[1] + a.tip[1]) / 2;
+      const label = `${speedKmh}<br><span style="font-size:8px">${dir}</span>`;
+      L.marker([midLat, midLon], {
+        icon: L.divIcon({
+          className: "wind-speed-label",
+          html: label,
+          iconSize: [36, 20],
+          iconAnchor: [18, 10]
+        }),
+        interactive: false
+      }).addTo(layerGroup);
     }
   }
   async function refreshWindLayer(levelKey) {

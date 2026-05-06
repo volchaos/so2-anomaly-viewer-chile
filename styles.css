@@ -388,18 +388,20 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   min-width: 2px;
 }
 
-/* ===== Tooltip de viento ===== */
-.wind-tooltip {
-  background: rgba(20,25,40,0.88) !important;
-  border: 1px solid rgba(120,140,200,0.3) !important;
-  color: #e8ecf4 !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  padding: 4px 8px !important;
-  border-radius: 6px !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+/* ===== Etiqueta de velocidad de viento (inline sobre la flecha) ===== */
+.wind-speed-label {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
 }
-.wind-tooltip::before { display: none !important; }
 
 /* ===== Panel de validación ===== */
 .validator-intro p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
