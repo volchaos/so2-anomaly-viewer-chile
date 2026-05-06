@@ -329,12 +329,23 @@
       const speed = Math.sqrt(u*u + v*v);
       const bearing = (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
 
+      // Dirección cardinal de donde viene el viento
+      const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+      const fromBearing = (bearing + 180) % 360;
+      const dir = dirs[Math.round(fromBearing / 22.5) % 16];
+      const speedKmh = (speed * 3.6).toFixed(0);
+      const tooltipText = `${speedKmh} km/h del ${dir}`;
+
       let lenKm = baseLenKm * (speed / refSpeed);
       lenKm = Math.max(minLenKm, Math.min(maxLenKm, lenKm));
 
       const a = arrowPolyline(lat, lon, bearing, lenKm, headKm);
-      L.polyline([a.tail, a.tip], { color, weight, opacity, interactive: false }).addTo(layerGroup);
-      L.polyline([a.left, a.tip, a.right], { color, weight, opacity, interactive: false }).addTo(layerGroup);
+      const shaft = L.polyline([a.tail, a.tip], { color, weight, opacity, interactive: true })
+        .bindTooltip(tooltipText, { sticky: true, className: "wind-tooltip" });
+      const head  = L.polyline([a.left, a.tip, a.right], { color, weight, opacity, interactive: true })
+        .bindTooltip(tooltipText, { sticky: true, className: "wind-tooltip" });
+      shaft.addTo(layerGroup);
+      head.addTo(layerGroup);
     }
   }
   async function refreshWindLayer(levelKey) {
@@ -928,6 +939,19 @@
                  "rgba(239,68,68,0.8)"
     );
 
+    // Escala Y: mínimo 10 t, crece dinámicamente si hay valores mayores
+    const MIN_Y = 10;
+    const rawMax = Math.max(...values, 0);
+    // Redondear hacia arriba a un valor "limpio"
+    const niceMax = rawMax <= MIN_Y ? MIN_Y :
+      rawMax <= 20  ? 20  :
+      rawMax <= 30  ? 30  :
+      rawMax <= 50  ? 50  :
+      rawMax <= 75  ? 75  :
+      rawMax <= 100 ? 100 :
+      rawMax <= 150 ? 150 :
+      Math.ceil(rawMax / 50) * 50;
+
     if (statsChart) { statsChart.destroy(); statsChart = null; }
 
     statsChart = new Chart(canvas, {
@@ -946,7 +970,7 @@
         maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: {
           callbacks: {
-            label: ctx => `${ctx.parsed.y.toFixed(0)} t SO₂`
+            label: ctx => `${ctx.parsed.y.toFixed(1)} t SO₂`
           }
         }},
         scales: {
@@ -958,7 +982,9 @@
           y: {
             ticks: { color: "#8fa0c0", font: { size: 9 } },
             grid: { color: "rgba(120,140,200,0.08)" },
-            beginAtZero: true
+            beginAtZero: true,
+            max: niceMax,
+            min: 0
           }
         }
       }
