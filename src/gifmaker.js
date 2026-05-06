@@ -249,6 +249,92 @@
   }
 
   // ── Overlay estático (borde + volcanes) ────────────────────────────────
+  // ── Formato grado-minuto ───────────────────────────────────────────────
+  function fmtLon(deg) {
+    const d = Math.abs(Math.round(deg));
+    const m = Math.round(Math.abs(deg) * 60) % 60;
+    const hem = deg < 0 ? "W" : "E";
+    return m === 0 ? `${d}°${hem}` : `${d}°${m}'${hem}`;
+  }
+  function fmtLat(deg) {
+    const d = Math.abs(Math.round(deg));
+    const m = Math.round(Math.abs(deg) * 60) % 60;
+    const hem = deg < 0 ? "S" : "N";
+    return m === 0 ? `${d}°${hem}` : `${d}°${m}'${hem}`;
+  }
+
+  // ── Dibujar grilla de coordenadas cada 1° ─────────────────────────────
+  function drawGrid(ctx, sizePx, bbox) {
+    const [west, south, east, north] = bbox;
+    const rx = east - west, ry = north - south;
+    const g2c = (lon, lat) => [((lon - west) / rx) * sizePx, ((north - lat) / ry) * sizePx];
+
+    const fs = Math.max(9, Math.round(sizePx / 48));
+    ctx.font = `${fs}px Arial, sans-serif`;
+    ctx.setLineDash([3, 4]);
+    ctx.lineWidth = Math.max(0.4, sizePx / 600);
+
+    // Líneas verticales (meridianos) cada 1°
+    const lonStart = Math.ceil(west);
+    const lonEnd   = Math.floor(east);
+    for (let lon = lonStart; lon <= lonEnd; lon++) {
+      const [x] = g2c(lon, north);
+      if (x < 0 || x > sizePx) continue;
+
+      ctx.strokeStyle = "rgba(80,80,80,0.35)";
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, sizePx);
+      ctx.stroke();
+
+      // Etiqueta arriba y abajo
+      const label = fmtLon(lon);
+      const tw = ctx.measureText(label).width;
+      const pad = Math.round(sizePx * 0.01);
+
+      // Fondo blanco semitransparente para legibilidad
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.fillRect(x - tw / 2 - 2, pad - 1, tw + 4, fs + 2);
+      ctx.fillRect(x - tw / 2 - 2, sizePx - pad - fs - 1, tw + 4, fs + 2);
+
+      ctx.fillStyle = "#222";
+      ctx.textAlign = "center";
+      ctx.fillText(label, x, pad + fs);
+      ctx.fillText(label, x, sizePx - pad);
+    }
+
+    // Líneas horizontales (paralelos) cada 1°
+    const latStart = Math.ceil(south);
+    const latEnd   = Math.floor(north);
+    for (let lat = latStart; lat <= latEnd; lat++) {
+      const [, y] = g2c(west, lat);
+      if (y < 0 || y > sizePx) continue;
+
+      ctx.strokeStyle = "rgba(80,80,80,0.35)";
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(sizePx, y);
+      ctx.stroke();
+
+      const label = fmtLat(lat);
+      const tw = ctx.measureText(label).width;
+      const pad = Math.round(sizePx * 0.01);
+
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.fillRect(pad - 2, y - fs - 1, tw + 4, fs + 2);
+      ctx.fillRect(sizePx - pad - tw - 2, y - fs - 1, tw + 4, fs + 2);
+
+      ctx.fillStyle = "#222";
+      ctx.textAlign = "left";
+      ctx.fillText(label, pad, y - 2);
+      ctx.textAlign = "right";
+      ctx.fillText(label, sizePx - pad, y - 2);
+    }
+
+    ctx.setLineDash([]);
+    ctx.textAlign = "left";
+  }
+
   function buildOverlayCanvas(sizePx, bbox, volcanoes, selectedVolcano, borderGeoJson) {
     const [west, south, east, north] = bbox;
     const rx = east - west, ry = north - south;
@@ -257,6 +343,9 @@
     const cv  = document.createElement("canvas");
     cv.width  = sizePx; cv.height = sizePx;
     const ctx = cv.getContext("2d");
+
+    // Grilla de coordenadas cada 1°
+    drawGrid(ctx, sizePx, bbox);
 
     if (borderGeoJson) {
       ctx.strokeStyle = "rgba(0,0,0,0.85)";
@@ -399,17 +488,17 @@
 
     // ── Leyenda SO₂ (esquina inferior derecha) ───────────────────────────
     const fs     = Math.round(sizePx * 0.038);
-    const barW   = Math.round(sizePx * 0.028);
-    const barH   = Math.round(sizePx * 0.28);
+    const barW   = Math.round(sizePx * 0.030);
+    const barH   = Math.round(sizePx * 0.40);
     const lx     = sizePx - pad - barW - Math.round(fs * 2.8);
     const ly     = sizePx - pad - barH;
 
     const bgPad  = Math.round(sizePx * 0.012);
-    const titleH = Math.round(fs * 1.4);
+    const titleH = Math.round(fs * 1.6);
     ctx.fillStyle = "rgba(255,255,255,0.82)";
-    ctx.fillRect(lx - bgPad, ly - titleH - bgPad, barW + Math.round(fs * 3.2), barH + titleH + bgPad * 2);
+    ctx.fillRect(lx - bgPad, ly - titleH - bgPad, barW + Math.round(fs * 3.4), barH + titleH + bgPad * 2);
 
-    ctx.font = `bold ${Math.round(fs * 0.75)}px Arial`;
+    ctx.font = `bold ${Math.round(fs * 0.88)}px Arial`;
     ctx.fillStyle = "#111";
     ctx.textAlign = "left";
     ctx.fillText("SO\u2082 (DU)", lx - bgPad + Math.round(bgPad * 0.5), ly - Math.round(bgPad * 0.5));
