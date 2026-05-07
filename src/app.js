@@ -32,6 +32,7 @@
       }
     });
   }
+  const gifPreview          = document.getElementById("gifPreview");
   const gifPreviewWrap      = document.getElementById("gifPreviewWrap");
   const gifPreviewPlaceholder = document.getElementById("gifPreviewPlaceholder");
   const gifProgress = document.getElementById("gifProgress");
@@ -831,6 +832,28 @@
     }
   }
 
+  // ---------------- Mobile bottom tabs ----------------
+  function wireMobileTabs() {
+    const mapBtn   = document.getElementById("mobileTabMap");
+    const panelBtn = document.getElementById("mobileTabPanel");
+    const leftEl   = document.querySelector(".left");
+    const rightEl  = document.querySelector(".right");
+    if (!mapBtn || !panelBtn || !leftEl || !rightEl) return;
+
+    function setTab(tab) {
+      const toMap = tab === "map";
+      leftEl.classList.toggle("tab-visible", toMap);
+      rightEl.classList.toggle("tab-visible", !toMap);
+      mapBtn.classList.toggle("active", toMap);
+      panelBtn.classList.toggle("active", !toMap);
+      if (toMap) setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    mapBtn.addEventListener("click",   () => setTab("map"));
+    panelBtn.addEventListener("click", () => setTab("panel"));
+    setTab("map");
+  }
+
   // ---------------- Panel colapsable ----------------
   function wireCollapsePanel() {
     const tab = document.getElementById("panelCollapseTab");
@@ -1120,6 +1143,7 @@
       initSo2Legend();
       fillVolcanoSelect(ovdasVolcanoList);
       wireGifUi();
+      wireMobileTabs();
       wireCollapsePanel();
       wireCollapsibleSections();
       updateLegend();
