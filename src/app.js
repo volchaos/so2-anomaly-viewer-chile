@@ -32,7 +32,6 @@
       }
     });
   }
-  const gifPreview          = document.getElementById("gifPreview");
   const gifPreviewWrap      = document.getElementById("gifPreviewWrap");
   const gifPreviewPlaceholder = document.getElementById("gifPreviewPlaceholder");
   const gifProgress = document.getElementById("gifProgress");
@@ -832,28 +831,6 @@
     }
   }
 
-  // ---------------- Mobile bottom tabs ----------------
-  function wireMobileTabs() {
-    const mapBtn   = document.getElementById("mobileTabMap");
-    const panelBtn = document.getElementById("mobileTabPanel");
-    const leftEl   = document.querySelector(".left");
-    const rightEl  = document.querySelector(".right");
-    if (!mapBtn || !panelBtn || !leftEl || !rightEl) return;
-
-    function setTab(tab) {
-      const toMap = tab === "map";
-      leftEl.classList.toggle("tab-visible", toMap);
-      rightEl.classList.toggle("tab-visible", !toMap);
-      mapBtn.classList.toggle("active", toMap);
-      panelBtn.classList.toggle("active", !toMap);
-      if (toMap) setTimeout(() => map.invalidateSize(), 50);
-    }
-
-    mapBtn.addEventListener("click",   () => setTab("map"));
-    panelBtn.addEventListener("click", () => setTab("panel"));
-    setTab("map");
-  }
-
   // ---------------- Panel colapsable ----------------
   function wireCollapsePanel() {
     const tab = document.getElementById("panelCollapseTab");
@@ -1033,6 +1010,88 @@
     });
   }
 
+  // ── Panel NASA GSFC SO₂ ────────────────────────────────────────────────
+  function nasaUrl(bn, date) {
+    const yr = String(date.getUTCFullYear()).slice(-2);
+    const mo = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const dy = String(date.getUTCDate()).padStart(2, "0");
+    return `https://so2.gsfc.nasa.gov/pix/daily/ixxxza/troploop5pca.php?yr=${yr}&mo=${mo}&dy=${dy}&bn=${bn}`;
+  }
+
+  function nasaMonthIndexUrl(bn, year, month) {
+    const yy = String(year).slice(-2);
+    const mm = String(month).padStart(2, "0");
+    return `https://so2.gsfc.nasa.gov/pix/daily/${mm}${yy}/${bn}_${mm}${yy}tr.html`;
+  }
+
+  async function findLatestNasaDate(bn) {
+    for (let mOffset = 0; mOffset <= 1; mOffset++) {
+      const d = new Date();
+      d.setUTCMonth(d.getUTCMonth() - mOffset);
+      const year  = d.getUTCFullYear();
+      const month = d.getUTCMonth() + 1;
+      const indexUrl = nasaMonthIndexUrl(bn, year, month);
+      try {
+        const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(indexUrl);
+        const resp  = await fetch(proxy, { signal: AbortSignal.timeout(10000) });
+        if (!resp.ok) continue;
+        const html = await resp.text();
+        const matches = [...html.matchAll(/dy=(\d+)&(?:amp;)?mo=(\d+)&(?:amp;)?yr=(\d+)/g)];
+        if (!matches.length) continue;
+        const last = matches[matches.length - 1];
+        const dy = last[1].padStart(2, "0");
+        const mo = last[2].padStart(2, "0");
+        const yr = "20" + last[3];
+        return new Date(`${yr}-${mo}-${dy}T00:00:00Z`);
+      } catch (e) { continue; }
+    }
+    return null;
+  }
+
+  function wireNasaPanel() {
+    const regionSel = document.getElementById("nasaRegionSelect");
+    const statusEl  = document.getElementById("nasaStatus");
+    const wrapEl    = document.getElementById("nasaImageWrap");
+    const iframeEl  = document.getElementById("nasaIframe");
+    const linkEl    = document.getElementById("nasaLink");
+    if (!regionSel) return;
+
+    let loaded = false;
+
+    async function loadNasaImage() {
+      const bn = regionSel.value;
+      if (statusEl) { statusEl.textContent = "Buscando última imagen disponible…"; statusEl.style.display = ""; }
+      if (wrapEl)   wrapEl.style.display = "none";
+
+      const latestDate = await findLatestNasaDate(bn);
+      if (!latestDate) {
+        if (statusEl) statusEl.textContent = "No se pudo detectar la última fecha disponible.";
+        return;
+      }
+
+      const url      = nasaUrl(bn, latestDate);
+      const dateStr  = latestDate.toISOString().slice(0, 10);
+      const labels   = { nchile: "Norte de Chile", cchile: "Centro-Sur de Chile" };
+
+      if (statusEl) statusEl.textContent = `Última imagen disponible: ${dateStr} · ${labels[bn] || bn}`;
+      if (iframeEl) iframeEl.src = url;
+      if (linkEl)   linkEl.href  = url;
+      if (wrapEl)   wrapEl.style.display = "";
+      loaded = true;
+    }
+
+    // Cargar la primera vez que se abre la sección
+    const header = document.querySelector('[data-target="secNasa"]');
+    if (header) {
+      header.addEventListener("click", () => {
+        const body = document.getElementById("secNasa");
+        if (body?.classList.contains("open") && !loaded) loadNasaImage();
+      });
+    }
+
+    regionSel.addEventListener("change", () => { loaded = false; loadNasaImage(); });
+  }
+
   async function wireStatsPanel(ovdasList) {
     so2StatsData = await loadSo2Stats();
 
@@ -1143,11 +1202,11 @@
       initSo2Legend();
       fillVolcanoSelect(ovdasVolcanoList);
       wireGifUi();
-      wireMobileTabs();
       wireCollapsePanel();
       wireCollapsibleSections();
       updateLegend();
       wireStatsPanel(ovdasVolcanoList);
+      wireNasaPanel();
 
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
       setGifProgress("Selecciona un volcán para comenzar.");
