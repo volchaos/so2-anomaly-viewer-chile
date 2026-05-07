@@ -285,19 +285,14 @@
               <span>Región</span>
               <select id="nasaRegionSelect">
                 <option value="nchile">Norte de Chile</option>
-                <option value="cchile">Centro-Sur de Chile</option>
+                <option value="cchile">Central Chile</option>
+                <option value="schile">Sur de Chile</option>
               </select>
             </div>
             <div class="nasa-status" id="nasaStatus">Selecciona la sección para cargar.</div>
             <div id="nasaImageWrap" style="display:none;">
-              <iframe id="nasaIframe"
-                src=""
-                width="100%"
-                height="340"
-                frameborder="0"
-                scrolling="no"
-                style="border:none;border-radius:8px;background:#0f1117;margin-top:8px;"
-              ></iframe>
+              <img id="nasaImg" alt="SO₂ imagen NASA GSFC"
+                   style="width:100%;border-radius:8px;margin-top:8px;background:#0f1117;display:block;" />
               <a id="nasaLink" href="#" target="_blank" rel="noopener"
                  class="btn" style="margin-top:8px;width:100%;justify-content:center;">
                 Ver en NASA GSFC ↗
