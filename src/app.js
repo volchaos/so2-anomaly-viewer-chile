@@ -1066,15 +1066,15 @@
 
   // ── Panel NASA GSFC SO₂ ────────────────────────────────────────────────
   function nasaImgCandidates(bn, date) {
-    const yr2    = String(date.getUTCFullYear()).slice(-2);
+    const yr4    = date.getUTCFullYear();
+    const yr2    = String(yr4).slice(-2);
     const mo     = String(date.getUTCMonth() + 1).padStart(2, "0");
     const dy     = String(date.getUTCDate()).padStart(2, "0");
     const folder = `${mo}${yr2}`;
+    const full   = `${yr4}${mo}${dy}`;
+    // Confirmed pattern: BN_tropomi_so2trm_YYYYMMDD.png
     return [
-      `https://so2.gsfc.nasa.gov/pix/daily/${folder}/${bn}${mo}${dy}${yr2}.gif`,
-      `https://so2.gsfc.nasa.gov/pix/daily/${folder}/${bn}_${mo}${dy}${yr2}.gif`,
-      `https://so2.gsfc.nasa.gov/pix/daily/${folder}/${bn}${mo}${dy}${yr2}.png`,
-      `https://so2.gsfc.nasa.gov/pix/daily/${folder}/${bn}_${mo}${dy}${yr2}.png`,
+      `https://so2.gsfc.nasa.gov/pix/daily/${folder}/${bn}_tropomi_so2trm_${full}.png`,
     ];
   }
 
