@@ -105,13 +105,13 @@
       { y: 175, label: "0"    }
     ];
     const tickLines = ticks.map(t => `
-      <line x1="52" y1="${t.y}" x2="60" y2="${t.y}" stroke="#333" stroke-width="1.2"/>
-      <text x="64" y="${t.y + 4}" font-size="13" fill="#111" font-family="Arial,sans-serif">${t.label}</text>
+      <line x1="52" y1="${t.y}" x2="60" y2="${t.y}" stroke="#3d4d6a" stroke-width="1.2"/>
+      <text x="64" y="${t.y + 4}" font-size="13" fill="#7a8aaa" font-family="'IBM Plex Mono',monospace">${t.label}</text>
     `).join("");
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" viewBox="0 0 130 195">
-        <rect x="0" y="0" width="130" height="195" fill="white"/>
-        <text x="8" y="16" font-size="14" font-weight="700" fill="#111" font-family="Arial,sans-serif">SO&#x2082; (DU)</text>
+        <rect x="0" y="0" width="130" height="195" fill="#161b26"/>
+        <text x="8" y="16" font-size="14" font-weight="600" fill="#e2e8f0" font-family="'IBM Plex Mono',monospace">SO₂ (DU)</text>
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stop-color="#c00000"/>
