@@ -32,7 +32,8 @@
       }
     });
   }
-  const gifPreviewWrap      = document.getElementById("gifPreviewWrap");
+  const gifPreview            = document.getElementById("gifPreview");
+  const gifPreviewWrap        = document.getElementById("gifPreviewWrap");
   const gifPreviewPlaceholder = document.getElementById("gifPreviewPlaceholder");
   const gifProgress = document.getElementById("gifProgress");
   const gifSize = document.getElementById("gifSize");
@@ -831,6 +832,59 @@
     }
   }
 
+  // ---------------- Mobile: bottom tab bar ----------------
+  function wireMobileTabs() {
+    const mapBtn   = document.getElementById("mobileTabMap");
+    const panelBtn = document.getElementById("mobileTabPanel");
+    const leftEl   = document.querySelector(".left");
+    const rightEl  = document.querySelector(".right");
+    if (!mapBtn || !panelBtn || !leftEl || !rightEl) return;
+
+    function setTab(tab) {
+      const toMap = tab === "map";
+      leftEl.classList.toggle("tab-visible",  toMap);
+      rightEl.classList.toggle("tab-visible", !toMap);
+      mapBtn.classList.toggle("active",   toMap);
+      panelBtn.classList.toggle("active", !toMap);
+      if (toMap) setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    mapBtn.addEventListener("click",   () => setTab("map"));
+    panelBtn.addEventListener("click", () => setTab("panel"));
+    setTab("map");
+  }
+
+  // ---------------- Mobile: ajustes rápidos (opacity + viento) ----------------
+  function wireMobileQuickSettings() {
+    const opacityMobile    = document.getElementById("opacityMobile");
+    const windUnitsMobile  = document.getElementById("windUnitsMobile");
+    if (!opacityMobile && !windUnitsMobile) return;
+
+    // Opacity mobile ↔ topbar
+    if (opacityMobile) {
+      opacityMobile.value = opacityInput.value;
+      opacityMobile.addEventListener("input", () => {
+        opacityInput.value = opacityMobile.value;
+        if (so2Layer) so2Layer.setOpacity(parseFloat(opacityMobile.value));
+      });
+      opacityInput.addEventListener("input", () => {
+        opacityMobile.value = opacityInput.value;
+      });
+    }
+
+    // Wind units mobile ↔ topbar (reutiliza el listener existente de windUnitsSelect)
+    if (windUnitsMobile && windUnitsSelect) {
+      windUnitsMobile.value = windUnitsSelect.value;
+      windUnitsMobile.addEventListener("change", () => {
+        windUnitsSelect.value = windUnitsMobile.value;
+        windUnitsSelect.dispatchEvent(new Event("change"));
+      });
+      windUnitsSelect.addEventListener("change", () => {
+        windUnitsMobile.value = windUnitsSelect.value;
+      });
+    }
+  }
+
   // ---------------- Panel colapsable ----------------
   function wireCollapsePanel() {
     const tab = document.getElementById("panelCollapseTab");
@@ -1191,6 +1245,7 @@
 
       map.on("zoomend", updateLabelsByZoom);
       map.on("zoomend", resizeVolcanoIcons);
+      map.on("click",   updateLabelsByZoom);   // reabrir etiquetas tras tap mobile
       updateLabelsByZoom();
       resizeVolcanoIcons();
 
@@ -1202,6 +1257,8 @@
       initSo2Legend();
       fillVolcanoSelect(ovdasVolcanoList);
       wireGifUi();
+      wireMobileTabs();
+      wireMobileQuickSettings();
       wireCollapsePanel();
       wireCollapsibleSections();
       updateLegend();
