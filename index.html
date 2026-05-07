@@ -281,15 +281,23 @@
             <span class="section-chevron">&#8964;</span>
           </button>
           <div class="section-body" id="secNasa">
-            <div class="field">
+            <label class="field">
               <span>Región</span>
               <select id="nasaRegionSelect">
                 <option value="nchile">Norte de Chile</option>
                 <option value="cchile">Central Chile</option>
                 <option value="schile">Sur de Chile</option>
               </select>
-            </div>
-            <div class="nasa-status" id="nasaStatus">Selecciona la sección para cargar.</div>
+            </label>
+            <label class="field">
+              <span>Fecha</span>
+              <div class="nasa-date-nav">
+                <button id="nasaPrevBtn" class="btn icon" title="Día anterior">&#8592;</button>
+                <input id="nasaDateInput" type="date" />
+                <button id="nasaNextBtn" class="btn icon" title="Día siguiente">&#8594;</button>
+              </div>
+            </label>
+            <div class="nasa-status" id="nasaStatus">Abre esta sección para cargar.</div>
             <div id="nasaImageWrap" style="display:none;">
               <img id="nasaImg" alt="SO₂ imagen NASA GSFC"
                    style="width:100%;border-radius:8px;margin-top:8px;background:#0f1117;display:block;" />

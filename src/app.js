@@ -1107,47 +1107,75 @@
 
   function wireNasaPanel() {
     const regionSel = document.getElementById("nasaRegionSelect");
+    const nasaDate  = document.getElementById("nasaDateInput");
+    const prevBtn   = document.getElementById("nasaPrevBtn");
+    const nextBtn   = document.getElementById("nasaNextBtn");
     const statusEl  = document.getElementById("nasaStatus");
     const wrapEl    = document.getElementById("nasaImageWrap");
     const imgEl     = document.getElementById("nasaImg");
     const linkEl    = document.getElementById("nasaLink");
-    if (!regionSel) return;
+    if (!regionSel || !nasaDate) return;
 
     const labels = { nchile: "Norte de Chile", cchile: "Central Chile", schile: "Sur de Chile" };
-    let loaded = false;
 
-    async function loadNasaImage() {
+    // Init with today's UTC date
+    nasaDate.value = new Date().toISOString().slice(0, 10);
+
+    async function loadNasaImage(autoFind = false) {
       const bn = regionSel.value;
-      if (statusEl) { statusEl.textContent = "Buscando última imagen disponible…"; statusEl.style.display = ""; }
+      if (statusEl) { statusEl.textContent = "Buscando imagen…"; statusEl.style.display = ""; }
       if (wrapEl)   wrapEl.style.display = "none";
 
-      const fromDate = dateInput?.value
-        ? new Date(dateInput.value + "T00:00:00Z")
-        : new Date();
+      const fromDate = new Date(nasaDate.value + "T00:00:00Z");
+      let result = null;
 
-      const result = await findLatestNasaImage(bn, fromDate);
+      if (autoFind) {
+        result = await findLatestNasaImage(bn, fromDate);
+        if (result) nasaDate.value = result.date.toISOString().slice(0, 10);
+      } else {
+        const candidates = nasaImgCandidates(bn, fromDate);
+        const results = await Promise.all(candidates.map(tryNasaImg));
+        const found = results.find(r => r !== null);
+        if (found) result = { url: found, date: fromDate };
+      }
+
       if (!result) {
-        if (statusEl) statusEl.textContent = "No se encontró imagen reciente para esta región.";
+        if (statusEl) statusEl.textContent = autoFind
+          ? "No se encontró imagen reciente para esta región."
+          : `Sin imagen disponible para ${nasaDate.value}.`;
         return;
       }
 
       const dateStr = result.date.toISOString().slice(0, 10);
-      if (statusEl) statusEl.textContent = `Imagen del ${dateStr} · ${labels[bn] || bn}`;
+      if (statusEl) statusEl.textContent = `${labels[bn] || bn} · ${dateStr}`;
       if (imgEl)    imgEl.src = result.url;
       if (linkEl)   linkEl.href = nasaPageUrl(bn, result.date);
       if (wrapEl)   wrapEl.style.display = "";
-      loaded = true;
     }
 
+    function shiftDate(days) {
+      const d = new Date(nasaDate.value + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + days);
+      nasaDate.value = d.toISOString().slice(0, 10);
+      loadNasaImage(false);
+    }
+
+    prevBtn?.addEventListener("click", () => shiftDate(-1));
+    nextBtn?.addEventListener("click", () => shiftDate(+1));
+    nasaDate.addEventListener("change", () => loadNasaImage(false));
+    regionSel.addEventListener("change", () => loadNasaImage(false));
+
+    let loaded = false;
     const header = document.querySelector('[data-target="secNasa"]');
     if (header) {
       header.addEventListener("click", () => {
         const body = document.getElementById("secNasa");
-        if (body?.classList.contains("open") && !loaded) loadNasaImage();
+        if (body?.classList.contains("open") && !loaded) {
+          loaded = true;
+          loadNasaImage(true);
+        }
       });
     }
-
-    regionSel.addEventListener("change", () => { loaded = false; loadNasaImage(); });
   }
 
   async function wireStatsPanel(ovdasList) {

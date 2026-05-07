@@ -752,6 +752,10 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   font-family: var(--font-mono);
   padding: 6px 0; line-height: 1.5;
 }
+.nasa-date-nav {
+  display: flex; gap: 5px; align-items: center;
+}
+.nasa-date-nav input[type="date"] { flex: 1; }
 
 /* ===== Scrollbar global del panel ===== */
 .right::-webkit-scrollbar       { width: 4px; }
