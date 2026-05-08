@@ -2,6 +2,7 @@
   "updated": "2026-05-08",
   "high_threshold_du": 0.45,
   "low_threshold_du": 0.2,
+  "min_seed_pixels": 4,
   "seed_radius_km": 150.0,
   "max_radius_km": 1000.0,
   "close_pixels": 2,
