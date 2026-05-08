@@ -1178,28 +1178,20 @@
     }
   }
 
-  async function wireStatsPanel(ovdasList) {
+  async function wireStatsPanel() {
     so2StatsData = await loadSo2Stats();
-
-    const sel = document.getElementById("statsVolcanoSelect");
-    if (!sel) return;
-
-    sel.innerHTML = '<option value="">Selecciona un volcán…</option>';
-    for (const v of ovdasList) {
-      const opt = document.createElement("option");
-      opt.value = v.name || v.Name;
-      opt.textContent = v.name || v.Name;
-      sel.appendChild(opt);
-    }
-
-    sel.addEventListener("change", () => {
-      renderStatsPanel(sel.value);
-    });
 
     if (!so2StatsData) {
       const empty = document.getElementById("statsEmpty");
       if (empty) empty.textContent = "Datos no disponibles aún. El workflow de extracción está corriendo.";
     }
+
+    gifVolcanoSelect.addEventListener("change", () => {
+      const name = gifVolcanoSelect.value
+        ? gifVolcanoSelect.options[gifVolcanoSelect.selectedIndex].textContent.trim()
+        : "";
+      renderStatsPanel(name);
+    });
   }
   async function init() {
     try {
@@ -1294,7 +1286,7 @@
       wireCollapsePanel();
       wireCollapsibleSections();
       updateLegend();
-      wireStatsPanel(ovdasVolcanoList);
+      wireStatsPanel();
       wireNasaPanel();
 
       setStatus(`Listo. Fecha (UTC): ${dateInput.value}. Cambia la fecha para actualizar SO₂.`);
