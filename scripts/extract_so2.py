@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 import requests
-from scipy.ndimage import label
+from scipy.ndimage import label, binary_closing
 
 # ── Intentar importar rasterio; si no hay, instalar ──────────────────────────
 try:
@@ -36,7 +36,8 @@ except ImportError:
 SEED_RADIUS_KM  = 150.0   # radio para buscar la semilla inicial junto al volcán
 MAX_RADIUS_KM   = 1000.0  # límite máximo de expansión de la pluma
 HIGH_THRESHOLD  = 0.45    # DU: umbral de semilla (señal segura)
-LOW_THRESHOLD   = 0.20    # DU: umbral de crecimiento (rellena huecos, captura extremos)
+LOW_THRESHOLD   = 0.20    # DU: umbral de crecimiento (captura extremos débiles)
+CLOSE_PIXELS    = 2       # radio de cierre morfológico en píxeles (~20 km a 0.1°)
 HISTORY_DAYS    = 90      # días a incluir en el JSON del visor
 NODATA_VALUE    = 9.969e+36  # valor nodata del GeoTIFF de EOC
 BASE_URL        = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
@@ -130,16 +131,22 @@ def read_region(url: str, min_lon, min_lat, max_lon, max_lat):
 
 def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     """
-    Extracción de pluma con umbral dual (hysteresis) y sin límite de radio para el flood fill.
+    Extracción de pluma con umbral dual + cierre morfológico.
+
+    Equivale a lo que un analista hace en QGIS: observar la anomalía visible
+    y trazar un polígono alrededor de ella, incluyendo los huecos intermedios.
 
     Lógica:
-    1. Semilla: píxeles con SO₂ >= HIGH_THRESHOLD dentro de SEED_RADIUS_KM del volcán.
-       Asegura que la señal esté atribuida al volcán correcto.
-    2. Crecimiento: flood fill (conectividad 8) con SO₂ >= LOW_THRESHOLD dentro de
-       MAX_RADIUS_KM. El umbral bajo rellena huecos y captura los extremos débiles de
-       la pluma; el radio máximo previene expansión descontrolada.
-    3. Se toman TODAS las regiones conectadas que contengan al menos un píxel semilla,
-       capturando plumas parcialmente fragmentadas.
+    1. Semilla: píxeles >= HIGH_THRESHOLD dentro de SEED_RADIUS_KM.
+       Verifica que hay señal real cerca del volcán antes de proceder.
+    2. Máscara bruta: píxeles >= LOW_THRESHOLD dentro de MAX_RADIUS_KM.
+    3. Cierre morfológico (radio CLOSE_PIXELS): rellena huecos de hasta
+       CLOSE_PIXELS × 10 km entre partes de la pluma, simulando el trazado
+       manual de un polígono sobre la anomalía visible.
+    4. Conectividad: todas las regiones cerradas que contengan al menos un
+       píxel semilla forman la pluma detectada.
+    5. Masa: solo se integran los píxeles originales (>= LOW_THRESHOLD),
+       no los píxeles "rellenos" por el cierre.
     """
     rows, cols = data.shape
 
@@ -171,21 +178,28 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
 
     max_val = float(np.nanmax(data_clean[seed_mask]))
 
-    # Máscara de crecimiento: umbral bajo, dentro del radio máximo
+    # Máscara bruta: píxeles sobre umbral bajo dentro del radio máximo
     growth_mask = (data_clean >= LOW_THRESHOLD) & valid & in_max_radius
 
-    # Etiquetar regiones conectadas (conectividad 8)
-    structure = np.ones((3, 3), dtype=int)
-    labeled, n_features = label(growth_mask, structure=structure)
+    # Cierre morfológico: rellena huecos de hasta CLOSE_PIXELS píxeles (~10 km/px)
+    # Determina conectividad sin afectar el cálculo de masa (se usa growth_mask para eso)
+    close_struct = np.ones((2 * CLOSE_PIXELS + 1, 2 * CLOSE_PIXELS + 1), dtype=bool)
+    growth_closed = binary_closing(growth_mask, structure=close_struct)
+
+    # Etiquetar regiones conectadas sobre la máscara cerrada (conectividad 8)
+    structure8 = np.ones((3, 3), dtype=int)
+    labeled, n_features = label(growth_closed, structure=structure8)
     if n_features == 0:
         return None
 
-    # Todas las etiquetas que contienen al menos un píxel semilla
+    # Todas las regiones que contengan al menos un píxel semilla
     seed_labels = set(int(lbl) for lbl in np.unique(labeled[seed_mask]) if lbl > 0)
     if not seed_labels:
         return None
 
-    plume_mask = np.isin(labeled, list(seed_labels))
+    # Masa: solo píxeles ORIGINALES (>= LOW_THRESHOLD), no los rellenos por el cierre
+    plume_region = np.isin(labeled, list(seed_labels))
+    plume_mask   = growth_mask & plume_region
 
     # Área por píxel según latitud (vectorizado)
     area_grid = (np.radians(res_lat) * 6371000.0) * \
@@ -265,11 +279,12 @@ def record_exists(conn, date_str, volcano):
 def build_json(conn, volcanoes, json_path: Path):
     cutoff = (date.today() - timedelta(days=HISTORY_DAYS)).isoformat()
     result = {
-        "updated":          date.today().isoformat(),
+        "updated":           date.today().isoformat(),
         "high_threshold_du": HIGH_THRESHOLD,
         "low_threshold_du":  LOW_THRESHOLD,
         "seed_radius_km":    SEED_RADIUS_KM,
         "max_radius_km":     MAX_RADIUS_KM,
+        "close_pixels":      CLOSE_PIXELS,
         "volcanoes":         {}
     }
 
