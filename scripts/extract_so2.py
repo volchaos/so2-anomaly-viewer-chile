@@ -33,11 +33,13 @@ except ImportError:
     from rasterio.windows import Window
 
 # ── Configuración ─────────────────────────────────────────────────────────────
-RADIUS_KM     = 150.0      # radio de búsqueda alrededor del volcán
-THRESHOLD_DU  = 0.45       # umbral mínimo para considerar anomalía
-HISTORY_DAYS  = 90         # días a incluir en el JSON del visor
-NODATA_VALUE  = 9.969e+36  # valor nodata del GeoTIFF de EOC
-BASE_URL      = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
+SEED_RADIUS_KM  = 150.0   # radio para buscar la semilla inicial junto al volcán
+MAX_RADIUS_KM   = 1000.0  # límite máximo de expansión de la pluma
+HIGH_THRESHOLD  = 0.45    # DU: umbral de semilla (señal segura)
+LOW_THRESHOLD   = 0.20    # DU: umbral de crecimiento (rellena huecos, captura extremos)
+HISTORY_DAYS    = 90      # días a incluir en el JSON del visor
+NODATA_VALUE    = 9.969e+36  # valor nodata del GeoTIFF de EOC
+BASE_URL        = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
 
 REPO_ROOT = Path(__file__).parent.parent
 DB_PATH   = REPO_ROOT / "data" / "so2_history.db"
@@ -128,8 +130,16 @@ def read_region(url: str, min_lon, min_lat, max_lon, max_lat):
 
 def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     """
-    Enfoque B: flood fill desde el pixel máximo dentro del radio.
-    Devuelve dict con métricas o None si no hay anomalía.
+    Extracción de pluma con umbral dual (hysteresis) y sin límite de radio para el flood fill.
+
+    Lógica:
+    1. Semilla: píxeles con SO₂ >= HIGH_THRESHOLD dentro de SEED_RADIUS_KM del volcán.
+       Asegura que la señal esté atribuida al volcán correcto.
+    2. Crecimiento: flood fill (conectividad 8) con SO₂ >= LOW_THRESHOLD dentro de
+       MAX_RADIUS_KM. El umbral bajo rellena huecos y captura los extremos débiles de
+       la pluma; el radio máximo previene expansión descontrolada.
+    3. Se toman TODAS las regiones conectadas que contengan al menos un píxel semilla,
+       capturando plumas parcialmente fragmentadas.
     """
     rows, cols = data.shape
 
@@ -137,82 +147,67 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     valid = (data < NODATA_VALUE * 0.9) & np.isfinite(data)
     data_clean = np.where(valid, data, np.nan)
 
-    # Construir máscara de distancia dentro del radio
-    in_radius = np.zeros((rows, cols), dtype=bool)
-    for r in range(rows):
-        for c in range(cols):
-            px_lon = transform.c + c * transform.a + transform.a / 2
-            px_lat = transform.f + r * transform.e - abs(transform.e) / 2
-            dist = haversine_km(v_lat, v_lon, px_lat, px_lon)
-            if dist <= RADIUS_KM:
-                in_radius[r, c] = True
+    # Grilla de coordenadas y distancias (vectorizado)
+    col_idx = np.arange(cols)
+    row_idx = np.arange(rows)
+    lons = transform.c + col_idx * transform.a + transform.a / 2
+    lats = transform.f + row_idx * transform.e - abs(transform.e) / 2
+    lon_grid, lat_grid = np.meshgrid(lons, lats)
 
-    # Solo pixels dentro del radio y sobre umbral
-    candidate = in_radius & (data_clean >= THRESHOLD_DU)
+    dlat = np.radians(lat_grid - v_lat)
+    dlon = np.radians(lon_grid - v_lon)
+    sin_dlat = np.sin(dlat / 2)
+    sin_dlon = np.sin(dlon / 2)
+    a_hav = sin_dlat**2 + np.cos(np.radians(v_lat)) * np.cos(np.radians(lat_grid)) * sin_dlon**2
+    dist_km = 6371.0 * 2 * np.arctan2(np.sqrt(a_hav), np.sqrt(1.0 - a_hav))
 
-    if not np.any(candidate):
+    in_seed_radius = dist_km <= SEED_RADIUS_KM
+    in_max_radius  = dist_km <= MAX_RADIUS_KM
+
+    # Píxeles semilla: señal fuerte y cercana al volcán
+    seed_mask = in_seed_radius & (data_clean >= HIGH_THRESHOLD) & valid
+    if not np.any(seed_mask):
         return None
 
-    # Pixel máximo dentro del radio
-    masked = np.where(in_radius & valid, data_clean, np.nan)
-    max_val = np.nanmax(masked)
-    if max_val < THRESHOLD_DU:
-        return None
+    max_val = float(np.nanmax(data_clean[seed_mask]))
 
-    # Flood fill (conectividad 8) desde el máximo
-    seed_mask = (data_clean == max_val) & in_radius
-    above_threshold = (data_clean >= THRESHOLD_DU) & valid & in_radius
+    # Máscara de crecimiento: umbral bajo, dentro del radio máximo
+    growth_mask = (data_clean >= LOW_THRESHOLD) & valid & in_max_radius
 
-    # Etiquetar regiones conectadas sobre el umbral
+    # Etiquetar regiones conectadas (conectividad 8)
     structure = np.ones((3, 3), dtype=int)
-    labeled, n_features = label(above_threshold, structure=structure)
-
+    labeled, n_features = label(growth_mask, structure=structure)
     if n_features == 0:
         return None
 
-    # Encontrar la etiqueta del pixel máximo
-    seed_positions = np.argwhere(seed_mask)
-    if len(seed_positions) == 0:
-        return None
-    sr, sc = seed_positions[0]
-    plume_label = labeled[sr, sc]
-    if plume_label == 0:
+    # Todas las etiquetas que contienen al menos un píxel semilla
+    seed_labels = set(int(lbl) for lbl in np.unique(labeled[seed_mask]) if lbl > 0)
+    if not seed_labels:
         return None
 
-    plume_mask = (labeled == plume_label)
+    plume_mask = np.isin(labeled, list(seed_labels))
 
-    # Calcular métricas
-    plume_pixels = int(np.sum(plume_mask))
-    plume_values = data_clean[plume_mask]
+    # Área por píxel según latitud (vectorizado)
+    area_grid = (np.radians(res_lat) * 6371000.0) * \
+                (np.radians(res_lon) * 6371000.0 * np.abs(np.cos(np.radians(lat_grid))))
 
-    # Masa total en toneladas
-    total_mass_g = 0.0
-    total_area_m2 = 0.0
-    weighted_lat = 0.0
-    weighted_lon = 0.0
+    plume_vals  = data_clean[plume_mask]
+    plume_areas = area_grid[plume_mask]
+    plume_lats  = lat_grid[plume_mask]
+    plume_lons  = lon_grid[plume_mask]
 
-    for r, c in np.argwhere(plume_mask):
-        px_lon = transform.c + c * transform.a + transform.a / 2
-        px_lat = transform.f + r * transform.e - abs(transform.e) / 2
-        area = pixel_area_m2(px_lat, res_lon, res_lat)
-        val_du = data_clean[r, c]
-        mass_g = val_du * DU_TO_G_PER_M2 * area
-        total_mass_g += mass_g
-        total_area_m2 += area
-        weighted_lat += px_lat * mass_g
-        weighted_lon += px_lon * mass_g
+    mass_g_arr    = plume_vals * DU_TO_G_PER_M2 * plume_areas
+    total_mass_g  = float(np.sum(mass_g_arr))
+    total_area_m2 = float(np.sum(plume_areas))
 
-    so2_tons = total_mass_g / 1e6  # g → toneladas
-    plume_km2 = total_area_m2 / 1e6
-
-    centroid_lat = weighted_lat / total_mass_g if total_mass_g > 0 else v_lat
-    centroid_lon = weighted_lon / total_mass_g if total_mass_g > 0 else v_lon
+    centroid_lat = float(np.sum(plume_lats * mass_g_arr) / total_mass_g) if total_mass_g > 0 else v_lat
+    centroid_lon = float(np.sum(plume_lons * mass_g_arr) / total_mass_g) if total_mass_g > 0 else v_lon
 
     return {
-        "so2_tons":    round(so2_tons, 2),
-        "max_du":      round(float(max_val), 3),
-        "plume_pixels": plume_pixels,
-        "plume_km2":   round(plume_km2, 1),
+        "so2_tons":     round(total_mass_g / 1e6, 2),
+        "max_du":       round(max_val, 3),
+        "plume_pixels": int(np.sum(plume_mask)),
+        "plume_km2":    round(total_area_m2 / 1e6, 1),
         "centroid_lat": round(centroid_lat, 4),
         "centroid_lon": round(centroid_lon, 4),
     }
@@ -270,10 +265,12 @@ def record_exists(conn, date_str, volcano):
 def build_json(conn, volcanoes, json_path: Path):
     cutoff = (date.today() - timedelta(days=HISTORY_DAYS)).isoformat()
     result = {
-        "updated":      date.today().isoformat(),
-        "threshold_du": THRESHOLD_DU,
-        "radius_km":    RADIUS_KM,
-        "volcanoes":    {}
+        "updated":          date.today().isoformat(),
+        "high_threshold_du": HIGH_THRESHOLD,
+        "low_threshold_du":  LOW_THRESHOLD,
+        "seed_radius_km":    SEED_RADIUS_KM,
+        "max_radius_km":     MAX_RADIUS_KM,
+        "volcanoes":         {}
     }
 
     for v in volcanoes:
@@ -366,11 +363,11 @@ def main():
 
         print(f"  URL: {url}")
 
-        # Leer el COG una sola vez para todo Chile
-        # Bounding box que cubre todos los volcanes OVDAS + margen
+        # Leer el COG una sola vez para todo Chile + margen para flood fill
+        # El margen usa MAX_RADIUS_KM para que las plumas puedan crecer libremente
         all_lats = [v["lat"] for v in volcanoes]
         all_lons = [v["lon"] for v in volcanoes]
-        margin = RADIUS_KM / 111.0 + 0.5
+        margin = MAX_RADIUS_KM / 111.0 + 0.5
         bbox = (
             min(all_lons) - margin,
             min(all_lats) - margin,
