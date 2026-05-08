@@ -947,9 +947,12 @@
   }
 
   function alertLevel(tons) {
-    if (tons < 1)    return { cls: "alert-normal",   txt: "Sin anomalía detectada" };
-    if (tons < 500)  return { cls: "alert-elevated",  txt: `⚠ Anomalía elevada: ${tons.toFixed(0)} t` };
-    return             { cls: "alert-high",    txt: `🔴 Anomalía alta: ${tons.toFixed(0)} t` };
+    if (tons <    1) return { cls: "alert-normal",    txt: "Sin anomalía detectada" };
+    if (tons <   50) return { cls: "alert-trace",     txt: `〜 Traza: ${tons.toFixed(0)} t` };
+    if (tons <  150) return { cls: "alert-low",       txt: `▲ Baja: ${tons.toFixed(0)} t` };
+    if (tons <  400) return { cls: "alert-medium",    txt: `⚠ Media: ${tons.toFixed(0)} t` };
+    if (tons < 1000) return { cls: "alert-high",      txt: `🔴 Alta: ${tons.toFixed(0)} t` };
+    return                   { cls: "alert-eruption", txt: `🔴 Muy alta: ${tons.toFixed(0)} t` };
   }
 
   function renderStatsPanel(volcanoName) {
@@ -1007,9 +1010,12 @@
     const labels = last30.map(e => e.date.slice(5));
     const values = last30.map(e => e.so2_tons || 0);
     const colors = values.map(v =>
-      v <= 0   ? "rgba(120,140,200,0.25)" :
-      v < 500  ? "rgba(245,158,11,0.7)"   :
-                 "rgba(239,68,68,0.8)"
+      v <    1 ? "rgba(120,140,200,0.2)"  :   // sin anomalía
+      v <   50 ? "rgba(100,130,210,0.5)"  :   // traza
+      v <  150 ? "rgba(234,179,8,0.65)"   :   // baja
+      v <  400 ? "rgba(245,130,30,0.75)"  :   // media
+      v < 1000 ? "rgba(239,68,68,0.8)"    :   // alta
+                 "rgba(220,20,220,0.9)"       // muy alta/eruptiva
     );
 
     // Escala Y: mínimo 10 t, crece dinámicamente si hay valores mayores
