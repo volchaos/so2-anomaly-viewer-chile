@@ -298,15 +298,17 @@
                 <option value="schile">Sur de Chile</option>
               </select>
             </label>
-            <label class="field">
-              <span>Fecha</span>
-              <div class="nasa-date-nav">
-                <button id="nasaPrevBtn" class="btn icon" title="Día anterior">&#8592;</button>
-                <input id="nasaDateInput" type="date" />
-                <button id="nasaNextBtn" class="btn icon" title="Día siguiente">&#8594;</button>
-                <button id="nasaLatestBtn" class="btn" title="Ir a la imagen más reciente disponible">Reciente</button>
-              </div>
-            </label>
+            <div class="field-with-action">
+              <label class="field">
+                <span>Fecha</span>
+                <div class="nasa-date-nav">
+                  <button id="nasaPrevBtn" class="btn icon" title="Día anterior">&#8592;</button>
+                  <input id="nasaDateInput" type="date" />
+                  <button id="nasaNextBtn" class="btn icon" title="Día siguiente">&#8594;</button>
+                </div>
+              </label>
+              <button id="nasaLatestBtn" class="btn" title="Ir a la imagen más reciente disponible">Reciente</button>
+            </div>
             <div class="nasa-status" id="nasaStatus">Abre esta sección para cargar.</div>
             <div id="nasaImageWrap" style="display:none;">
               <img id="nasaImg" alt="SO₂ imagen NASA GSFC"

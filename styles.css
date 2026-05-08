@@ -774,6 +774,14 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .plume-minimap .leaflet-control-zoom { transform: scale(0.8); transform-origin: top left; }
 
 /* ===== Panel NASA GSFC ===== */
+.field-with-action {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.field-with-action .field { flex: 1; margin-bottom: 0; }
+.field-with-action > .btn { flex-shrink: 0; height: 32px; align-self: flex-end; margin-bottom: 0; }
+
 .nasa-status {
   font-size: 11px; color: var(--text-secondary);
   font-family: var(--font-mono);
