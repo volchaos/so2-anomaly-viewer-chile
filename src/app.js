@@ -947,7 +947,7 @@
   }
 
   function alertLevel(tons) {
-    if (tons <= 0)   return { cls: "alert-normal",   txt: "Sin anomalía detectada" };
+    if (tons < 1)    return { cls: "alert-normal",   txt: "Sin anomalía detectada" };
     if (tons < 500)  return { cls: "alert-elevated",  txt: `⚠ Anomalía elevada: ${tons.toFixed(0)} t` };
     return             { cls: "alert-high",    txt: `🔴 Anomalía alta: ${tons.toFixed(0)} t` };
   }
