@@ -935,7 +935,6 @@
   const SO2_STATS_URL = "data/so2_stats.json";
   let so2StatsData = null;
   let statsChart   = null;
-  let plumeLayer   = null;
 
   async function loadSo2Stats() {
     try {
@@ -1206,47 +1205,67 @@
     }
   }
 
-  // ── Capa de detección de pluma ────────────────────────────────────────────
-  function clearPlumeLayer() {
-    if (plumeLayer) { map.removeLayer(plumeLayer); plumeLayer = null; }
+  // ── Mini-mapa de detección de pluma ──────────────────────────────────────
+  let plumeMapInstance    = null;
+  let plumeMapWmsLayer    = null;
+  let plumeMapGeoJsonLayer = null;
+
+  function initPlumeMapInstance() {
+    if (plumeMapInstance) return;
+    const container = document.getElementById("plumeMap");
+    if (!container) return;
+    plumeMapInstance = L.map("plumeMap", {
+      zoomControl:        true,
+      attributionControl: false,
+    });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19
+    }).addTo(plumeMapInstance);
   }
 
-  async function loadPlumeLayer(volcanoName, dateStr) {
-    clearPlumeLayer();
-    if (!document.getElementById("showPlumeCheck")?.checked) return;
-    if (!volcanoName || !dateStr) return;
+  function clearPlumeMapLayers() {
+    if (!plumeMapInstance) return;
+    if (plumeMapWmsLayer)    { plumeMapInstance.removeLayer(plumeMapWmsLayer);    plumeMapWmsLayer    = null; }
+    if (plumeMapGeoJsonLayer){ plumeMapInstance.removeLayer(plumeMapGeoJsonLayer); plumeMapGeoJsonLayer = null; }
+  }
 
+  async function updatePlumeMap(volcanoName, dateStr, volcLat, volcLon) {
+    if (!plumeMapInstance) return;
+    plumeMapInstance.invalidateSize();
+    clearPlumeMapLayers();
+
+    // SO₂ WMS layer for this date
+    const timeParam = toWmsTime(dateStr);
+    const wmsParams = {
+      layers:      cfg.wms.layers,
+      format:      cfg.wms.format,
+      transparent: cfg.wms.transparent,
+      version:     cfg.wms.version,
+      time:        timeParam,
+    };
+    if (cfg.wms.styles !== undefined) wmsParams.styles = cfg.wms.styles;
+    plumeMapWmsLayer = L.tileLayer.wms(cfg.wms.url, wmsParams);
+    plumeMapWmsLayer.setOpacity(0.85);
+    plumeMapWmsLayer.addTo(plumeMapInstance);
+
+    plumeMapInstance.setView([volcLat, volcLon], 7);
+
+    // Plume GeoJSON overlay
     const file = dateStr.replace(/-/g, "");
     try {
       const resp = await fetch(`data/plumes/${file}.json`);
-      if (!resp.ok) {
-        setStatus(`Sin datos de detección para ${dateStr}`);
-        return;
-      }
+      if (!resp.ok) return;
       const geojson = await resp.json();
       const feature = geojson.features?.find(f => f.properties.volcano === volcanoName);
-      if (!feature) {
-        setStatus(`Sin detección para ${volcanoName} el ${dateStr}`);
-        return;
-      }
+      if (!feature) return;
 
-      plumeLayer = L.geoJSON(feature, {
-        style: {
-          color:       "#fbbf24",
-          weight:      1,
-          fillColor:   "#fbbf24",
-          fillOpacity: 0.30,
-          opacity:     0.75,
-        }
-      }).addTo(map);
+      plumeMapGeoJsonLayer = L.geoJSON(feature, {
+        style: { color: "#fbbf24", weight: 1.5, fillColor: "#fbbf24", fillOpacity: 0.35, opacity: 0.9 }
+      }).addTo(plumeMapInstance);
 
-      const tons = feature.properties.so2_tons;
-      plumeLayer.bindTooltip(
-        `<b>${volcanoName}</b><br>Detección: ${tons.toFixed(1)} t SO₂`,
-        { sticky: true }
-      );
+      plumeMapInstance.fitBounds(plumeMapGeoJsonLayer.getBounds().pad(0.35));
     } catch (e) {
-      setStatus("No se pudo cargar la detección de pluma.");
+      console.warn("No se pudo cargar pluma para mini-mapa:", e);
     }
   }
 
@@ -1282,20 +1301,37 @@
 
     const plumeCheck = document.getElementById("showPlumeCheck");
     const plumeWrap  = document.getElementById("plumeToggleWrap");
+    const plumeMapWrapEl = document.getElementById("plumeMapWrap");
+
+    function currentVolcanoCoords() {
+      if (!gifVolcanoSelect.value) return null;
+      const [latStr, lonStr] = gifVolcanoSelect.value.split(",");
+      return { lat: parseFloat(latStr), lon: parseFloat(lonStr) };
+    }
+
+    function showPlumeMap(name, date) {
+      if (!name || !date || !plumeCheck?.checked) {
+        if (plumeMapWrapEl) plumeMapWrapEl.style.display = "none";
+        return;
+      }
+      if (plumeMapWrapEl) plumeMapWrapEl.style.display = "";
+      initPlumeMapInstance();
+      const coords = currentVolcanoCoords();
+      if (coords) updatePlumeMap(name, date, coords.lat, coords.lon);
+    }
 
     function renderAndPlume() {
       const name = currentVolcanoName();
       const date = statsDate?.value || null;
       renderStatsPanel(name, date);
-      // Mostrar toggle solo cuando hay volcán y fecha
       if (plumeWrap) plumeWrap.style.display = (name && date) ? "" : "none";
-      loadPlumeLayer(name, date);
+      showPlumeMap(name, date);
     }
 
     prevBtn?.addEventListener("click", () => shiftDate(-1));
     nextBtn?.addEventListener("click", () => shiftDate(+1));
     statsDate?.addEventListener("change", renderAndPlume);
-    plumeCheck?.addEventListener("change", () => loadPlumeLayer(currentVolcanoName(), statsDate?.value || null));
+    plumeCheck?.addEventListener("change", () => showPlumeMap(currentVolcanoName(), statsDate?.value || null));
 
     gifVolcanoSelect.addEventListener("change", () => {
       const name = currentVolcanoName();
