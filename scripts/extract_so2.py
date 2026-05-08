@@ -44,8 +44,8 @@ DB_PATH   = REPO_ROOT / "data" / "so2_history.db"
 JSON_PATH = REPO_ROOT / "data" / "so2_stats.json"
 GJ_PATH   = REPO_ROOT / "data" / "volcanoes_ovdas_44.geojson"
 
-# Factor de conversión: 1 DU de SO2 = 2.8522e-3 g/m² (masa molecular SO2 = 64 g/mol)
-DU_TO_G_PER_M2 = 2.8522e-3
+# Factor de conversión: 1 DU SO₂ = 2.6867e20 molec/m² × 64.066 g/mol ÷ 6.022e23 = 2.856e-2 g/m²
+DU_TO_G_PER_M2 = 2.856e-2
 
 # ── Funciones de geometría ────────────────────────────────────────────────────
 
