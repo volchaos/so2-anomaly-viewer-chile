@@ -955,7 +955,7 @@
     return                   { cls: "alert-eruption", txt: `🔴 Muy alta: ${tons.toFixed(0)} t` };
   }
 
-  function renderStatsPanel(volcanoName) {
+  function renderStatsPanel(volcanoName, selectedDate) {
     const empty   = document.getElementById("statsEmpty");
     const metrics = document.getElementById("statsMetrics");
     const chartWrap = document.getElementById("statsChartWrap");
@@ -969,54 +969,73 @@
       return;
     }
 
-    const vData  = so2StatsData.volcanoes[volcanoName];
+    const vData   = so2StatsData.volcanoes[volcanoName];
     const history = vData.history || [];
-    const last30  = history.slice(-30);
+
+    // Ventana de 30 días terminando en la fecha seleccionada
+    let selIdx = selectedDate
+      ? history.findIndex(e => e.date === selectedDate)
+      : history.length - 1;
+    const windowEnd   = selIdx >= 0 ? selIdx : history.length - 1;
+    const windowStart = Math.max(0, windowEnd - 29);
+    const window30    = history.slice(windowStart, windowEnd + 1);
 
     if (empty) empty.style.display = "none";
     if (metrics) metrics.style.display = "grid";
     if (chartWrap) chartWrap.style.display = "";
 
-    // Métricas
-    const lastEntry  = last30[last30.length - 1];
-    const lastTons   = lastEntry ? lastEntry.so2_tons : 0;
-    const maxTons    = Math.max(...last30.map(e => e.so2_tons || 0));
-    const activeDays = last30.filter(e => e.so2_tons > 0).length;
+    // Métricas del día seleccionado y la ventana
+    const selEntry   = selIdx >= 0 ? history[selIdx] : null;
+    const selTons    = selEntry ? (selEntry.so2_tons || 0) : null;
+    const maxTons    = Math.max(...window30.map(e => e.so2_tons || 0));
+    const activeDays = window30.filter(e => e.so2_tons >= 1).length;
 
     const statLastVal    = document.getElementById("statLastVal");
     const statMaxVal     = document.getElementById("statMaxVal");
     const statActiveDays = document.getElementById("statActiveDays");
-    if (statLastVal)    statLastVal.textContent    = lastTons > 0 ? lastTons.toFixed(0) : "0";
+    if (statLastVal)    statLastVal.textContent    = selTons !== null ? selTons.toFixed(0) : "—";
     if (statMaxVal)     statMaxVal.textContent     = maxTons > 0 ? maxTons.toFixed(0) : "0";
     if (statActiveDays) statActiveDays.textContent = activeDays;
 
     // Badge de alerta
     if (badge) {
-      const lvl = alertLevel(lastTons);
-      badge.className = "stats-alert " + lvl.cls;
-      badge.textContent = lvl.txt;
-      badge.style.display = "";
+      if (selTons === null) {
+        badge.className = "stats-alert alert-trace";
+        badge.textContent = "Sin datos para esta fecha";
+        badge.style.display = "";
+      } else {
+        const lvl = alertLevel(selTons);
+        badge.className = "stats-alert " + lvl.cls;
+        badge.textContent = lvl.txt;
+        badge.style.display = "";
+      }
     }
 
     // Gráfico
     const canvas = document.getElementById("statsChart");
     if (!canvas) return;
 
-    // Fijar dimensiones para evitar crecimiento infinito en contenedor colapsado
     canvas.style.width  = "100%";
     canvas.style.height = "120px";
     canvas.height = 120;
 
-    const labels = last30.map(e => e.date.slice(5));
-    const values = last30.map(e => e.so2_tons || 0);
-    const colors = values.map(v =>
-      v <    1 ? "rgba(120,140,200,0.2)"  :   // sin anomalía
-      v <   50 ? "rgba(100,130,210,0.5)"  :   // traza
-      v <  150 ? "rgba(234,179,8,0.65)"   :   // baja
-      v <  400 ? "rgba(245,130,30,0.75)"  :   // media
-      v < 1000 ? "rgba(239,68,68,0.8)"    :   // alta
-                 "rgba(220,20,220,0.9)"       // muy alta/eruptiva
+    const labels  = window30.map(e => e.date.slice(5));
+    const values  = window30.map(e => e.so2_tons || 0);
+    const selPosInWindow = selIdx >= 0 ? selIdx - windowStart : -1;
+    const colors  = values.map((v, i) => {
+      const base =
+        v <    1 ? "rgba(120,140,200,0.2)"  :
+        v <   50 ? "rgba(100,130,210,0.5)"  :
+        v <  150 ? "rgba(234,179,8,0.65)"   :
+        v <  400 ? "rgba(245,130,30,0.75)"  :
+        v < 1000 ? "rgba(239,68,68,0.8)"    :
+                   "rgba(220,20,220,0.9)";
+      return i === selPosInWindow ? base.replace(/[\d.]+\)$/, "1)") : base;
+    });
+    const borderColors = values.map((_, i) =>
+      i === selPosInWindow ? "rgba(255,255,255,0.9)" : "transparent"
     );
+    const borderWidths = values.map((_, i) => i === selPosInWindow ? 2 : 0);
 
     // Escala Y: mínimo 10 t, crece dinámicamente si hay valores mayores
     const MIN_Y = 10;
@@ -1040,6 +1059,8 @@
         datasets: [{
           data: values,
           backgroundColor: colors,
+          borderColor: borderColors,
+          borderWidth: borderWidths,
           borderRadius: 3,
           borderSkipped: false,
         }]
@@ -1187,16 +1208,47 @@
   async function wireStatsPanel() {
     so2StatsData = await loadSo2Stats();
 
+    const statsDate = document.getElementById("statsDateInput");
+    const prevBtn   = document.getElementById("statsPrevBtn");
+    const nextBtn   = document.getElementById("statsNextBtn");
+
     if (!so2StatsData) {
       const empty = document.getElementById("statsEmpty");
       if (empty) empty.textContent = "Datos no disponibles aún. El workflow de extracción está corriendo.";
     }
 
-    gifVolcanoSelect.addEventListener("change", () => {
-      const name = gifVolcanoSelect.value
+    function currentVolcanoName() {
+      return gifVolcanoSelect.value
         ? gifVolcanoSelect.options[gifVolcanoSelect.selectedIndex].textContent.trim()
         : "";
-      renderStatsPanel(name);
+    }
+
+    function render() {
+      renderStatsPanel(currentVolcanoName(), statsDate?.value || null);
+    }
+
+    function shiftDate(days) {
+      if (!statsDate?.value) return;
+      const d = new Date(statsDate.value + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + days);
+      statsDate.value = d.toISOString().slice(0, 10);
+      render();
+    }
+
+    prevBtn?.addEventListener("click", () => shiftDate(-1));
+    nextBtn?.addEventListener("click", () => shiftDate(+1));
+    statsDate?.addEventListener("change", render);
+
+    gifVolcanoSelect.addEventListener("change", () => {
+      const name = currentVolcanoName();
+      if (name && so2StatsData?.volcanoes[name]) {
+        // Inicializar en la última fecha disponible del volcán
+        const history = so2StatsData.volcanoes[name].history || [];
+        if (statsDate && history.length) {
+          statsDate.value = history[history.length - 1].date;
+        }
+      }
+      renderStatsPanel(name, statsDate?.value || null);
     });
   }
   async function init() {

@@ -115,10 +115,18 @@
             <span class="section-chevron">&#8964;</span>
           </button>
           <div class="section-body" id="secStats">
+            <label class="field">
+              <span>Fecha</span>
+              <div class="nasa-date-nav">
+                <button id="statsPrevBtn" class="btn icon" title="Día anterior">&#8592;</button>
+                <input id="statsDateInput" type="date" />
+                <button id="statsNextBtn" class="btn icon" title="Día siguiente">&#8594;</button>
+              </div>
+            </label>
             <div id="statsAlertBadge" style="display:none;" class="stats-alert"></div>
             <div class="stats-metrics" id="statsMetrics" style="display:none;">
               <div class="stat-card">
-                <div class="stat-label">Último día</div>
+                <div class="stat-label">Día</div>
                 <div class="stat-value" id="statLastVal">—</div>
                 <div class="stat-unit">toneladas</div>
               </div>
