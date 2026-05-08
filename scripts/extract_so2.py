@@ -38,6 +38,7 @@ MAX_RADIUS_KM   = 1000.0  # límite máximo de expansión de la pluma
 HIGH_THRESHOLD  = 0.45    # DU: umbral de semilla (señal segura)
 LOW_THRESHOLD   = 0.20    # DU: umbral de crecimiento (captura extremos débiles)
 CLOSE_PIXELS    = 2       # radio de cierre morfológico en píxeles (~20 km a 0.1°)
+MIN_SEED_PIXELS = 4       # mínimo de píxeles >= HIGH_THRESHOLD cerca del volcán
 HISTORY_DAYS    = 90      # días a incluir en el JSON del visor
 NODATA_VALUE    = 9.969e+36  # valor nodata del GeoTIFF de EOC
 BASE_URL        = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
@@ -173,8 +174,9 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     in_max_radius  = dist_km <= MAX_RADIUS_KM
 
     # Píxeles semilla: señal fuerte y cercana al volcán
+    # Se requieren al menos MIN_SEED_PIXELS para descartar píxeles ruidosos aislados
     seed_mask = in_seed_radius & (data_clean >= HIGH_THRESHOLD) & valid
-    if not np.any(seed_mask):
+    if int(np.sum(seed_mask)) < MIN_SEED_PIXELS:
         return None
 
     max_val = float(np.nanmax(data_clean[seed_mask]))
@@ -193,13 +195,15 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     if n_features == 0:
         return None
 
-    # Todas las regiones que contengan al menos un píxel semilla
+    # Componente dominante: la región con más píxeles semilla
+    # Evita que el cierre morfológico conecte con regiones no relacionadas lejos del volcán
     seed_labels = set(int(lbl) for lbl in np.unique(labeled[seed_mask]) if lbl > 0)
     if not seed_labels:
         return None
+    best_label = max(seed_labels, key=lambda lbl: int(np.sum(labeled[seed_mask] == lbl)))
 
     # Masa: solo píxeles ORIGINALES (>= LOW_THRESHOLD), no los rellenos por el cierre
-    plume_region = np.isin(labeled, list(seed_labels))
+    plume_region = (labeled == best_label)
     plume_mask   = growth_mask & plume_region
 
     # Área por píxel según latitud (vectorizado)
@@ -301,6 +305,7 @@ def build_json(conn, volcanoes, json_path: Path):
         "updated":           date.today().isoformat(),
         "high_threshold_du": HIGH_THRESHOLD,
         "low_threshold_du":  LOW_THRESHOLD,
+        "min_seed_pixels":   MIN_SEED_PIXELS,
         "seed_radius_km":    SEED_RADIUS_KM,
         "max_radius_km":     MAX_RADIUS_KM,
         "close_pixels":      CLOSE_PIXELS,
