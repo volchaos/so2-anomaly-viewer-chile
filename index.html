@@ -84,6 +84,30 @@
           </label>
         </div>
 
+        <!-- Sección: Volcán y ROI -->
+        <div class="collapsible-section">
+          <button class="section-header" data-target="secVolcano">
+            <span>Volcán y área</span>
+            <span class="section-chevron">&#8964;</span>
+          </button>
+          <div class="section-body" id="secVolcano">
+            <label class="field">
+              <span>Volcán (OVDAS)</span>
+              <select id="gifVolcanoSelect">
+                <option value="">Cargando volcanes…</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>ROI (km × km)</span>
+              <select id="gifRoiSelect">
+                <option value="100">100 × 100 km</option>
+                <option value="200" selected>200 × 200 km</option>
+                <option value="500">500 × 500 km</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
         <!-- Sección: Estadísticas SO₂ -->
         <div class="collapsible-section">
           <button class="section-header" data-target="secStats">
@@ -114,30 +138,6 @@
               <canvas id="statsChart" height="120"></canvas>
             </div>
             <div class="stats-empty" id="statsEmpty">Selecciona un volcán en «Volcán y área» para ver estadísticas.</div>
-          </div>
-        </div>
-
-        <!-- Sección: Volcán y ROI -->
-        <div class="collapsible-section">
-          <button class="section-header" data-target="secVolcano">
-            <span>Volcán y área</span>
-            <span class="section-chevron">&#8964;</span>
-          </button>
-          <div class="section-body" id="secVolcano">
-            <label class="field">
-              <span>Volcán (OVDAS)</span>
-              <select id="gifVolcanoSelect">
-                <option value="">Cargando volcanes…</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>ROI (km × km)</span>
-              <select id="gifRoiSelect">
-                <option value="100">100 × 100 km</option>
-                <option value="200" selected>200 × 200 km</option>
-                <option value="500">500 × 500 km</option>
-              </select>
-            </label>
           </div>
         </div>
 
