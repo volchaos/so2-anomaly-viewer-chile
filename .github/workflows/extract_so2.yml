@@ -58,7 +58,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/so2_history.db data/so2_stats.json
+          git add data/so2_history.db data/so2_stats.json data/plumes/
           git diff --cached --quiet || \
             git commit -m "SO2 extract $(date -u +%Y-%m-%d)"
           git push

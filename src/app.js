@@ -934,7 +934,8 @@
   // ---------------- Panel de estadísticas SO₂ ----------------
   const SO2_STATS_URL = "data/so2_stats.json";
   let so2StatsData = null;
-  let statsChart = null;
+  let statsChart   = null;
+  let plumeLayer   = null;
 
   async function loadSo2Stats() {
     try {
@@ -1205,6 +1206,50 @@
     }
   }
 
+  // ── Capa de detección de pluma ────────────────────────────────────────────
+  function clearPlumeLayer() {
+    if (plumeLayer) { map.removeLayer(plumeLayer); plumeLayer = null; }
+  }
+
+  async function loadPlumeLayer(volcanoName, dateStr) {
+    clearPlumeLayer();
+    if (!document.getElementById("showPlumeCheck")?.checked) return;
+    if (!volcanoName || !dateStr) return;
+
+    const file = dateStr.replace(/-/g, "");
+    try {
+      const resp = await fetch(`data/plumes/${file}.json`);
+      if (!resp.ok) {
+        setStatus(`Sin datos de detección para ${dateStr}`);
+        return;
+      }
+      const geojson = await resp.json();
+      const feature = geojson.features?.find(f => f.properties.volcano === volcanoName);
+      if (!feature) {
+        setStatus(`Sin detección para ${volcanoName} el ${dateStr}`);
+        return;
+      }
+
+      plumeLayer = L.geoJSON(feature, {
+        style: {
+          color:       "#fbbf24",
+          weight:      1,
+          fillColor:   "#fbbf24",
+          fillOpacity: 0.30,
+          opacity:     0.75,
+        }
+      }).addTo(map);
+
+      const tons = feature.properties.so2_tons;
+      plumeLayer.bindTooltip(
+        `<b>${volcanoName}</b><br>Detección: ${tons.toFixed(1)} t SO₂`,
+        { sticky: true }
+      );
+    } catch (e) {
+      setStatus("No se pudo cargar la detección de pluma.");
+    }
+  }
+
   async function wireStatsPanel() {
     so2StatsData = await loadSo2Stats();
 
@@ -1235,20 +1280,32 @@
       render();
     }
 
+    const plumeCheck = document.getElementById("showPlumeCheck");
+    const plumeWrap  = document.getElementById("plumeToggleWrap");
+
+    function renderAndPlume() {
+      const name = currentVolcanoName();
+      const date = statsDate?.value || null;
+      renderStatsPanel(name, date);
+      // Mostrar toggle solo cuando hay volcán y fecha
+      if (plumeWrap) plumeWrap.style.display = (name && date) ? "" : "none";
+      loadPlumeLayer(name, date);
+    }
+
     prevBtn?.addEventListener("click", () => shiftDate(-1));
     nextBtn?.addEventListener("click", () => shiftDate(+1));
-    statsDate?.addEventListener("change", render);
+    statsDate?.addEventListener("change", renderAndPlume);
+    plumeCheck?.addEventListener("change", () => loadPlumeLayer(currentVolcanoName(), statsDate?.value || null));
 
     gifVolcanoSelect.addEventListener("change", () => {
       const name = currentVolcanoName();
       if (name && so2StatsData?.volcanoes[name]) {
-        // Inicializar en la última fecha disponible del volcán
         const history = so2StatsData.volcanoes[name].history || [];
         if (statsDate && history.length) {
           statsDate.value = history[history.length - 1].date;
         }
       }
-      renderStatsPanel(name, statsDate?.value || null);
+      renderAndPlume();
     });
   }
   async function init() {

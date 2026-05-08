@@ -749,6 +749,17 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .val-btn.val-ok:hover { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.4); }
 .val-btn.val-no:hover { background: rgba(239,68,68,0.18);  border-color: rgba(239,68,68,0.35); }
 
+/* ===== Toggle detección de pluma ===== */
+.plume-toggle {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  color: #fbbf24;
+  font-size: 12px;
+}
+
 /* ===== Panel NASA GSFC ===== */
 .nasa-status {
   font-size: 11px; color: var(--text-secondary);

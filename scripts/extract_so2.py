@@ -42,10 +42,11 @@ HISTORY_DAYS    = 90      # días a incluir en el JSON del visor
 NODATA_VALUE    = 9.969e+36  # valor nodata del GeoTIFF de EOC
 BASE_URL        = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
 
-REPO_ROOT = Path(__file__).parent.parent
-DB_PATH   = REPO_ROOT / "data" / "so2_history.db"
-JSON_PATH = REPO_ROOT / "data" / "so2_stats.json"
-GJ_PATH   = REPO_ROOT / "data" / "volcanoes_ovdas_44.geojson"
+REPO_ROOT  = Path(__file__).parent.parent
+DB_PATH    = REPO_ROOT / "data" / "so2_history.db"
+JSON_PATH  = REPO_ROOT / "data" / "so2_stats.json"
+GJ_PATH    = REPO_ROOT / "data" / "volcanoes_ovdas_44.geojson"
+PLUME_DIR  = REPO_ROOT / "data" / "plumes"
 
 # Factor de conversión: 1 DU SO₂ = 2.6867e20 molec/m² × 64.066 g/mol ÷ 6.022e23 = 2.856e-2 g/m²
 DU_TO_G_PER_M2 = 2.856e-2
@@ -217,6 +218,23 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     centroid_lat = float(np.sum(plume_lats * mass_g_arr) / total_mass_g) if total_mass_g > 0 else v_lat
     centroid_lon = float(np.sum(plume_lons * mass_g_arr) / total_mass_g) if total_mass_g > 0 else v_lon
 
+    # Geometría GeoJSON: un rectángulo 0.1°×0.1° por píxel detectado
+    half_lon = res_lon / 2
+    half_lat = res_lat / 2
+    plume_rows, plume_cols = np.where(plume_mask)
+    px_lons = lon_grid[plume_rows, plume_cols].tolist()
+    px_lats = lat_grid[plume_rows, plume_cols].tolist()
+    pixel_polys = [
+        [[
+            [lo - half_lon, la - half_lat],
+            [lo + half_lon, la - half_lat],
+            [lo + half_lon, la + half_lat],
+            [lo - half_lon, la + half_lat],
+            [lo - half_lon, la - half_lat],
+        ]]
+        for lo, la in zip(px_lons, px_lats)
+    ]
+
     return {
         "so2_tons":     round(total_mass_g / 1e6, 2),
         "max_du":       round(max_val, 3),
@@ -224,6 +242,7 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
         "plume_km2":    round(total_area_m2 / 1e6, 1),
         "centroid_lat": round(centroid_lat, 4),
         "centroid_lon": round(centroid_lon, 4),
+        "plume_geometry": {"type": "MultiPolygon", "coordinates": pixel_polys},
     }
 
 # ── Base de datos SQLite ──────────────────────────────────────────────────────
@@ -404,12 +423,16 @@ def main():
         print(f"  Región leída: {data.shape[0]}×{data.shape[1]} pixels")
 
         # Procesar cada volcán
+        date_features = []
         for v in volcanoes:
             if not force and record_exists(conn, date_str, v["name"]):
                 continue
 
             metrics = extract_anomaly(data, transform, res_lon, res_lat,
                                       v["lat"], v["lon"])
+
+            # Separar geometría antes de guardar en SQLite
+            plume_geom = metrics.pop("plume_geometry", None) if metrics else None
             upsert(conn, date_str, v["name"], metrics, data_ok=True)
 
             if metrics and metrics["so2_tons"] > 0:
@@ -417,8 +440,35 @@ def main():
                       f"max={metrics['max_du']:.2f} DU  "
                       f"{metrics['plume_pixels']} px  "
                       f"{metrics['plume_km2']:.0f} km²")
+                if plume_geom:
+                    date_features.append({
+                        "type": "Feature",
+                        "properties": {
+                            "volcano":   v["name"],
+                            "so2_tons":  metrics["so2_tons"],
+                            "max_du":    metrics["max_du"],
+                            "plume_km2": metrics["plume_km2"],
+                        },
+                        "geometry": plume_geom,
+                    })
             else:
                 print(f"  {v['name']:30s} sin anomalía")
+
+        # Guardar GeoJSON de plumas para esta fecha
+        if date_features:
+            PLUME_DIR.mkdir(parents=True, exist_ok=True)
+            plume_file = PLUME_DIR / f"{date_str.replace('-', '')}.json"
+            plume_file.write_text(json.dumps(
+                {"type": "FeatureCollection", "date": date_str, "features": date_features},
+                ensure_ascii=False, separators=(',', ':')
+            ))
+
+    # Limpiar archivos de plumas más antiguos que HISTORY_DAYS
+    if PLUME_DIR.exists():
+        cutoff = (date.today() - timedelta(days=HISTORY_DAYS)).strftime("%Y%m%d")
+        for f in PLUME_DIR.glob("*.json"):
+            if f.stem < cutoff:
+                f.unlink()
 
     # Generar JSON de 90 días
     print("\nGenerando JSON del visor...")
