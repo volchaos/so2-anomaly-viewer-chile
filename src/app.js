@@ -1135,8 +1135,9 @@
   function wireNasaPanel() {
     const regionSel = document.getElementById("nasaRegionSelect");
     const nasaDate  = document.getElementById("nasaDateInput");
-    const prevBtn   = document.getElementById("nasaPrevBtn");
-    const nextBtn   = document.getElementById("nasaNextBtn");
+    const prevBtn    = document.getElementById("nasaPrevBtn");
+    const nextBtn    = document.getElementById("nasaNextBtn");
+    const latestBtn  = document.getElementById("nasaLatestBtn");
     const statusEl  = document.getElementById("nasaStatus");
     const wrapEl    = document.getElementById("nasaImageWrap");
     const imgEl     = document.getElementById("nasaImg");
@@ -1189,6 +1190,10 @@
 
     prevBtn?.addEventListener("click", () => shiftDate(-1));
     nextBtn?.addEventListener("click", () => shiftDate(+1));
+    latestBtn?.addEventListener("click", () => {
+      nasaDate.value = new Date().toISOString().slice(0, 10);
+      loadNasaImage(true);
+    });
     nasaDate.addEventListener("change", () => loadNasaImage(false));
     regionSel.addEventListener("change", () => loadNasaImage(false));
 
