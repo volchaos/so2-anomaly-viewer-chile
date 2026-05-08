@@ -34,11 +34,12 @@ except ImportError:
 
 # ── Configuración ─────────────────────────────────────────────────────────────
 SEED_RADIUS_KM  = 150.0   # radio para buscar la semilla inicial junto al volcán
+NEAR_RADIUS_KM  =  40.0   # al menos 1 píxel HIGH debe estar aquí (pegado al volcán)
 MAX_RADIUS_KM   = 1000.0  # límite máximo de expansión de la pluma
 HIGH_THRESHOLD  = 0.45    # DU: umbral de semilla (señal segura)
 LOW_THRESHOLD   = 0.20    # DU: umbral de crecimiento (captura extremos débiles)
 CLOSE_PIXELS    = 2       # radio de cierre morfológico en píxeles (~20 km a 0.1°)
-MIN_SEED_PIXELS = 4       # mínimo de píxeles >= HIGH_THRESHOLD cerca del volcán
+MIN_SEED_PIXELS = 4       # mínimo de píxeles >= HIGH_THRESHOLD dentro de SEED_RADIUS_KM
 HISTORY_DAYS    = 90      # días a incluir en el JSON del visor
 NODATA_VALUE    = 9.969e+36  # valor nodata del GeoTIFF de EOC
 BASE_URL        = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
@@ -170,13 +171,22 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     a_hav = sin_dlat**2 + np.cos(np.radians(v_lat)) * np.cos(np.radians(lat_grid)) * sin_dlon**2
     dist_km = 6371.0 * 2 * np.arctan2(np.sqrt(a_hav), np.sqrt(1.0 - a_hav))
 
+    in_near_radius = dist_km <= NEAR_RADIUS_KM
     in_seed_radius = dist_km <= SEED_RADIUS_KM
     in_max_radius  = dist_km <= MAX_RADIUS_KM
 
     # Píxeles semilla: señal fuerte y cercana al volcán
-    # Se requieren al menos MIN_SEED_PIXELS para descartar píxeles ruidosos aislados
     seed_mask = in_seed_radius & (data_clean >= HIGH_THRESHOLD) & valid
+
+    # Filtro 1: mínimo de píxeles semilla en el radio amplio
     if int(np.sum(seed_mask)) < MIN_SEED_PIXELS:
+        return None
+
+    # Filtro 2: al menos 1 pixel HIGH_THRESHOLD muy pegado al cráter
+    # Una pluma volcánica siempre origina en el volcán.
+    # Si no hay señal elevada dentro de NEAR_RADIUS_KM, la anomalía
+    # proviene de otra fuente (fundición, transporte de larga distancia).
+    if not np.any(in_near_radius & (data_clean >= HIGH_THRESHOLD) & valid):
         return None
 
     max_val = float(np.nanmax(data_clean[seed_mask]))
@@ -306,6 +316,7 @@ def build_json(conn, volcanoes, json_path: Path):
         "high_threshold_du": HIGH_THRESHOLD,
         "low_threshold_du":  LOW_THRESHOLD,
         "min_seed_pixels":   MIN_SEED_PIXELS,
+        "near_radius_km":    NEAR_RADIUS_KM,
         "seed_radius_km":    SEED_RADIUS_KM,
         "max_radius_km":     MAX_RADIUS_KM,
         "close_pixels":      CLOSE_PIXELS,
