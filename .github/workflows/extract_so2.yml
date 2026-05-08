@@ -6,9 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       backfill_days:
-        description: "Días hacia atrás a procesar (0 = solo ayer)"
+        description: "Días hacia atrás a procesar (1 = solo ayer)"
         required: false
         default: "1"
+      force:
+        description: "Recalcular fechas ya procesadas (true para backfill completo)"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -44,11 +48,11 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           DAYS="${{ github.event.inputs.backfill_days }}"
-          if [ "$DAYS" -gt "1" ]; then
-            python scripts/extract_so2.py --backfill "$DAYS"
-          else
-            python scripts/extract_so2.py
-          fi
+          FORCE="${{ github.event.inputs.force }}"
+          ARGS=""
+          [ "$DAYS" -gt "1" ] && ARGS="--backfill $DAYS"
+          [ "$FORCE" = "true" ] && ARGS="$ARGS --force"
+          python scripts/extract_so2.py $ARGS
 
       - name: Commit results
         run: |

@@ -328,6 +328,7 @@ def main():
 
     # Determinar qué fechas procesar
     # Por defecto: ayer (cron diario). Con argumento --backfill N: últimos N días
+    force = "--force" in sys.argv
     if "--backfill" in sys.argv:
         idx = sys.argv.index("--backfill")
         n_days = int(sys.argv[idx + 1])
@@ -339,17 +340,19 @@ def main():
     dates_to_process.reverse()  # Procesar del más antiguo al más reciente
 
     print(f"Fechas a procesar: {len(dates_to_process)} "
-          f"({dates_to_process[0]} → {dates_to_process[-1]})")
+          f"({dates_to_process[0]} → {dates_to_process[-1]})"
+          + (" [FORCE]" if force else ""))
 
     for d in dates_to_process:
         date_str = d.isoformat()
         url = cog_url(d)
 
-        # Verificar si todos los volcanes ya están en la DB para esta fecha
-        all_done = all(record_exists(conn, date_str, v["name"]) for v in volcanoes)
-        if all_done:
-            print(f"{date_str}: ya procesado, omitiendo")
-            continue
+        # Sin --force, saltar fechas ya completadas
+        if not force:
+            all_done = all(record_exists(conn, date_str, v["name"]) for v in volcanoes)
+            if all_done:
+                print(f"{date_str}: ya procesado, omitiendo")
+                continue
 
         print(f"\n── {date_str} ──────────────────────────────────")
 
@@ -357,14 +360,13 @@ def main():
         if not file_exists(url):
             print(f"  Archivo no disponible: {url}")
             for v in volcanoes:
-                if not record_exists(conn, date_str, v["name"]):
+                if force or not record_exists(conn, date_str, v["name"]):
                     upsert(conn, date_str, v["name"], None, data_ok=False)
             continue
 
         print(f"  URL: {url}")
 
         # Leer el COG una sola vez para todo Chile + margen para flood fill
-        # El margen usa MAX_RADIUS_KM para que las plumas puedan crecer libremente
         all_lats = [v["lat"] for v in volcanoes]
         all_lons = [v["lon"] for v in volcanoes]
         margin = MAX_RADIUS_KM / 111.0 + 0.5
@@ -379,7 +381,7 @@ def main():
         if result is None:
             print("  No se pudo leer el COG, marcando como data_ok=False")
             for v in volcanoes:
-                if not record_exists(conn, date_str, v["name"]):
+                if force or not record_exists(conn, date_str, v["name"]):
                     upsert(conn, date_str, v["name"], None, data_ok=False)
             continue
 
@@ -388,7 +390,7 @@ def main():
 
         # Procesar cada volcán
         for v in volcanoes:
-            if record_exists(conn, date_str, v["name"]):
+            if not force and record_exists(conn, date_str, v["name"]):
                 continue
 
             metrics = extract_anomaly(data, transform, res_lon, res_lat,
