@@ -33,13 +33,12 @@ except ImportError:
     from rasterio.windows import Window
 
 # ── Configuración ─────────────────────────────────────────────────────────────
-SEED_RADIUS_KM  = 150.0   # radio para buscar la semilla inicial junto al volcán
-NEAR_RADIUS_KM  =  40.0   # al menos 1 píxel HIGH debe estar aquí (pegado al volcán)
+NEAR_RADIUS_KM  =  40.0   # radio para buscar la semilla (pegado al volcán)
 MAX_RADIUS_KM   = 1000.0  # límite máximo de expansión de la pluma
 HIGH_THRESHOLD  = 0.45    # DU: umbral de semilla (señal segura)
 LOW_THRESHOLD   = 0.20    # DU: umbral de crecimiento (captura extremos débiles)
-CLOSE_PIXELS    = 2       # radio de cierre morfológico en píxeles (~20 km a 0.1°)
-MIN_SEED_PIXELS = 4       # mínimo de píxeles >= HIGH_THRESHOLD dentro de SEED_RADIUS_KM
+CLOSE_PIXELS    = 1       # radio de cierre morfológico en píxeles (3×3 → ~10 km)
+MIN_SEED_PIXELS = 4       # mínimo de píxeles CONTIGUOS >= HIGH_THRESHOLD cerca del cráter
 HISTORY_DAYS    = 90      # días a incluir en el JSON del visor
 NODATA_VALUE    = 9.969e+36  # valor nodata del GeoTIFF de EOC
 BASE_URL        = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
@@ -172,22 +171,24 @@ def extract_anomaly(data, transform, res_lon, res_lat, v_lat, v_lon):
     dist_km = 6371.0 * 2 * np.arctan2(np.sqrt(a_hav), np.sqrt(1.0 - a_hav))
 
     in_near_radius = dist_km <= NEAR_RADIUS_KM
-    in_seed_radius = dist_km <= SEED_RADIUS_KM
     in_max_radius  = dist_km <= MAX_RADIUS_KM
 
-    # Píxeles semilla: señal fuerte y cercana al volcán
-    seed_mask = in_seed_radius & (data_clean >= HIGH_THRESHOLD) & valid
-
-    # Filtro 1: mínimo de píxeles semilla en el radio amplio
-    if int(np.sum(seed_mask)) < MIN_SEED_PIXELS:
+    # ── Semilla: cúmulo contiguo de píxeles HIGH_THRESHOLD cerca del cráter ──
+    # El ruido de fondo produce píxeles dispersos; una pluma real produce un
+    # cuerpo denso. Se requiere un componente CONTIGUO de >= MIN_SEED_PIXELS
+    # dentro de NEAR_RADIUS_KM. Píxeles dispersos no pasan este filtro.
+    near_high = in_near_radius & (data_clean >= HIGH_THRESHOLD) & valid
+    near_labeled, _ = label(near_high, structure=np.ones((3, 3), dtype=int))
+    if near_labeled.max() == 0:
         return None
 
-    # Filtro 2: al menos 1 pixel HIGH_THRESHOLD muy pegado al cráter
-    # Una pluma volcánica siempre origina en el volcán.
-    # Si no hay señal elevada dentro de NEAR_RADIUS_KM, la anomalía
-    # proviene de otra fuente (fundición, transporte de larga distancia).
-    if not np.any(in_near_radius & (data_clean >= HIGH_THRESHOLD) & valid):
+    near_counts = np.bincount(near_labeled.ravel())
+    near_counts[0] = 0  # ignorar fondo
+    best_near = int(near_counts.argmax())
+    if int(near_counts[best_near]) < MIN_SEED_PIXELS:
         return None
+
+    seed_mask = (near_labeled == best_near)
 
     max_val = float(np.nanmax(data_clean[seed_mask]))
 
@@ -317,7 +318,6 @@ def build_json(conn, volcanoes, json_path: Path):
         "low_threshold_du":  LOW_THRESHOLD,
         "min_seed_pixels":   MIN_SEED_PIXELS,
         "near_radius_km":    NEAR_RADIUS_KM,
-        "seed_radius_km":    SEED_RADIUS_KM,
         "max_radius_km":     MAX_RADIUS_KM,
         "close_pixels":      CLOSE_PIXELS,
         "volcanoes":         {}
