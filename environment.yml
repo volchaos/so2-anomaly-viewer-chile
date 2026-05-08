@@ -10,3 +10,5 @@ dependencies:
   - xarray
   - cfgrib
   - eccodes
+  - rasterio
+  - scipy
