@@ -9,7 +9,6 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <link rel="stylesheet" href="styles.css" />
   <script src="src/gifmaker.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -105,54 +104,6 @@
                 <option value="500">500 × 500 km</option>
               </select>
             </label>
-          </div>
-        </div>
-
-        <!-- Sección: Estadísticas SO₂ -->
-        <div class="collapsible-section">
-          <button class="section-header" data-target="secStats">
-            <span>Estadísticas SO₂</span>
-            <span class="section-chevron">&#8964;</span>
-          </button>
-          <div class="section-body" id="secStats">
-            <label class="field">
-              <span>Fecha</span>
-              <div class="nasa-date-nav">
-                <button id="statsPrevBtn" class="btn icon" title="Día anterior">&#8592;</button>
-                <input id="statsDateInput" type="date" />
-                <button id="statsNextBtn" class="btn icon" title="Día siguiente">&#8594;</button>
-              </div>
-            </label>
-            <div id="statsAlertBadge" style="display:none;" class="stats-alert"></div>
-            <div class="stats-metrics" id="statsMetrics" style="display:none;">
-              <div class="stat-card">
-                <div class="stat-label">Día</div>
-                <div class="stat-value" id="statLastVal">—</div>
-                <div class="stat-unit">toneladas</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Máx 30 días</div>
-                <div class="stat-value" id="statMaxVal">—</div>
-                <div class="stat-unit">toneladas</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Días activos</div>
-                <div class="stat-value" id="statActiveDays">—</div>
-                <div class="stat-unit">/ 30 días</div>
-              </div>
-            </div>
-            <div class="stats-chart-wrap" id="statsChartWrap" style="display:none;">
-              <div class="stats-chart-label">SO₂ (toneladas) — últimos 30 días</div>
-              <canvas id="statsChart" height="120"></canvas>
-            </div>
-            <div class="stats-empty" id="statsEmpty">Selecciona un volcán en «Volcán y área» para ver estadísticas.</div>
-            <label class="field-inline plume-toggle" id="plumeToggleWrap" style="display:none;">
-              <input id="showPlumeCheck" type="checkbox" />
-              <span>Ver detección de pluma</span>
-            </label>
-            <div id="plumeMapWrap" style="display:none;">
-              <div id="plumeMap" class="plume-minimap"></div>
-            </div>
           </div>
         </div>
 
