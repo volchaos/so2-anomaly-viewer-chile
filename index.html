@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.min.css" />
   <script src="src/gifmaker.js"></script>
 </head>
 <body>
@@ -66,6 +67,15 @@
     <!-- RIGHT: GIF MODULE -->
     <div id="panelCollapseTab" class="panel-tab" title="Ocultar panel">&#8250;</div>
     <section class="right" id="rightPanel">
+
+      <!-- Pestañas del panel derecho -->
+      <div class="right-tab-bar">
+        <button class="right-tab active" id="rightTabGif">GIF &amp; NASA</button>
+        <button class="right-tab" id="rightTabMasa">Masa SO₂</button>
+      </div>
+
+      <!-- Pestaña: GIF y NASA -->
+      <div id="panelGif">
       <div class="panel">
 
         <!-- Ajustes rápidos: solo visible en mobile (opacity + viento) -->
@@ -276,6 +286,77 @@
           El GIF se genera directamente en el navegador. Para series largas (&gt;30 días) usa el script <code>gifmaker.py</code> localmente.
         </div>
       </div>
+      </div><!-- #panelGif -->
+
+      <!-- Pestaña: Masa SO₂ -->
+      <div id="panelMasa" style="display:none;">
+        <div class="panel">
+
+          <div class="collapsible-section">
+            <button class="section-header" data-target="secMasaConfig">
+              <span>Configuración</span>
+              <span class="section-chevron">&#8964;</span>
+            </button>
+            <div class="section-body" id="secMasaConfig">
+              <label class="field">
+                <span>Volcán (OVDAS)</span>
+                <select id="masaVolcanoSelect">
+                  <option value="">Cargando volcanes…</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Fecha (UTC)</span>
+                <div class="nasa-date-nav">
+                  <button id="masaPrevBtn" class="btn icon" title="Día anterior">&#8592;</button>
+                  <input id="masaDateInput" type="date" />
+                  <button id="masaNextBtn" class="btn icon" title="Día siguiente">&#8594;</button>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="panel-actions">
+            <button id="masaLoadRasterBtn" class="btn primary">Cargar raster</button>
+            <button id="masaDrawBtn" class="btn" disabled>Dibujar polígono</button>
+            <button id="masaClearBtn" class="btn" style="display:none;">Limpiar</button>
+          </div>
+
+          <div id="masaStatus" class="progress" style="margin-top:10px;">
+            Selecciona fecha y carga el raster L2.
+          </div>
+
+          <div id="masaResults" style="display:none;margin-top:12px;">
+            <div class="masa-result-grid">
+              <div class="masa-result-card">
+                <div class="masa-result-val" id="masaTons">—</div>
+                <div class="masa-result-label">toneladas SO₂</div>
+              </div>
+              <div class="masa-result-card">
+                <div class="masa-result-val" id="masaMaxDu">—</div>
+                <div class="masa-result-label">máx. DU</div>
+              </div>
+              <div class="masa-result-card">
+                <div class="masa-result-val" id="masaKm2">—</div>
+                <div class="masa-result-label">km²</div>
+              </div>
+              <div class="masa-result-card">
+                <div class="masa-result-val" id="masaPixels">—</div>
+                <div class="masa-result-label">píxeles</div>
+              </div>
+            </div>
+            <button id="masaExportBtn" class="btn"
+                    style="margin-top:10px;width:100%;justify-content:center;">
+              ⬇ Exportar polígono GeoJSON
+            </button>
+          </div>
+
+          <div class="panel-footnote" style="margin-top:12px;">
+            Lee el raster desde <code>data/qgis/so2_l2_YYYYMMDD.tif</code>.<br>
+            Requiere servidor local: <code>python -m http.server</code>
+          </div>
+
+        </div>
+      </div><!-- #panelMasa -->
     </section>
   </main>
 
@@ -299,7 +380,10 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
   <script src="src/config.js"></script>
+  <script src="src/masa.js"></script>
   <script src="src/app.js"></script>
 </body>
 </html>

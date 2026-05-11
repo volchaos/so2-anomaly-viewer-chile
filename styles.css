@@ -796,3 +796,84 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .right::-webkit-scrollbar       { width: 4px; }
 .right::-webkit-scrollbar-track  { background: transparent; }
 .right::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 2px; }
+
+/* ===== Pestañas del panel derecho ===== */
+.right-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel-alt);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.right-tab {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.12s;
+}
+.right-tab:hover  { color: var(--text-primary); background: var(--bg-hover); }
+.right-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ===== Resultados de masa SO₂ ===== */
+.masa-result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.masa-result-card {
+  background: var(--bg-block);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 8px;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.masa-result-card:hover { border-color: rgba(255,255,255,0.12); }
+
+.masa-result-val {
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.masa-result-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+}
+
+/* ===== Leaflet.draw – tema oscuro ===== */
+.leaflet-draw-toolbar a {
+  background-color: var(--bg-panel) !important;
+  border-bottom-color: var(--border) !important;
+}
+.leaflet-draw-toolbar a:hover { background-color: var(--bg-hover) !important; }
+.leaflet-draw-actions a {
+  background-color: var(--bg-block) !important;
+  color: var(--text-primary) !important;
+}
+.leaflet-draw-actions a:hover { background-color: var(--bg-hover) !important; }
+.leaflet-draw-tooltip {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+}

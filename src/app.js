@@ -1056,6 +1056,27 @@
     }
   }
 
+  // ---------------- Pestañas del panel derecho ----------------
+  function wireRightPanelTabs() {
+    const tabGif  = document.getElementById("rightTabGif");
+    const tabMasa = document.getElementById("rightTabMasa");
+    const pGif    = document.getElementById("panelGif");
+    const pMasa   = document.getElementById("panelMasa");
+    if (!tabGif || !tabMasa || !pGif || !pMasa) return;
+
+    function showTab(which) {
+      const isGif = which === "gif";
+      tabGif.classList.toggle("active",  isGif);
+      tabMasa.classList.toggle("active", !isGif);
+      pGif.style.display  = isGif ? "" : "none";
+      pMasa.style.display = isGif ? "none" : "";
+      if (!isGif) setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    tabGif.addEventListener("click",  () => showTab("gif"));
+    tabMasa.addEventListener("click", () => showTab("masa"));
+  }
+
   async function init() {
     try {
       dateInput.value = todayUtcDateString();
@@ -1150,6 +1171,8 @@
       wireMobileQuickSettings();
       wireCollapsePanel();
       wireCollapsibleSections();
+      wireRightPanelTabs();
+      if (window.MasaTab) window.MasaTab.init(map, () => ovdasVolcanoList, dateInput);
       updateLegend();
       wireNasaPanel();
 
