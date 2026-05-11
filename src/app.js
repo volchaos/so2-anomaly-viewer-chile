@@ -48,7 +48,6 @@
   // Wind toggles (per level)
   const gifChkWind900 = document.getElementById("gifChkWind900");
   const gifChkWind500 = document.getElementById("gifChkWind500");
-  const gifChkWind400 = document.getElementById("gifChkWind400");
   const gifChkWind250 = document.getElementById("gifChkWind250");
   const gifChkWind150 = document.getElementById("gifChkWind150");
 
@@ -82,7 +81,17 @@
     return `${dateStr}T05:00:00Z`;
   }
 
-  // Legend init (unchanged)
+  function addDaysToDateStr(dateStr, days) {
+    const d = new Date(dateStr + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function debounce(fn, ms) {
+    let timer;
+    return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+  }
+
   function buildSo2LegendUrl() {
     const base = cfg.wms.url;
     const params = new URLSearchParams();
@@ -536,7 +545,6 @@
     // Wind overlays per level
     const wind900 = gifChkWind900 ? gifChkWind900.checked : false;
     const wind500 = gifChkWind500 ? gifChkWind500.checked : false;
-    const wind400 = gifChkWind400 ? gifChkWind400.checked : false;
     const wind250 = gifChkWind250 ? gifChkWind250.checked : false;
     const wind150 = gifChkWind150 ? gifChkWind150.checked : false;
 
@@ -567,7 +575,7 @@
         // ✅ wind layers (read from data/wind/YYYY-MM-DD/*.json)
         wind_900hPa: wind900,
         wind_500hPa: wind500,
-        wind_400hPa: wind400,
+        wind_400hPa: false,   // sin checkbox en el panel (nivel deshabilitado)
         wind_250hPa: wind250,
         wind_150hPa: wind150,
         wind_style: {
@@ -1022,9 +1030,7 @@
     }
 
     function shiftDate(days) {
-      const d = new Date(nasaDate.value + "T00:00:00Z");
-      d.setUTCDate(d.getUTCDate() + days);
-      nasaDate.value = d.toISOString().slice(0, 10);
+      nasaDate.value = addDaysToDateStr(nasaDate.value, days);
       loadNasaImage(false);
     }
 
@@ -1056,11 +1062,16 @@
       addSo2Layer(dateInput.value);
       setStatus("Cargando capas…");
 
-      borderLayer = await loadChileBorder();
+      [borderLayer, volcanesOvdasLayer, volcanesOtrosLayer, smeltersLayer] = await Promise.all([
+        loadChileBorder(),
+        loadGeoJson(cfg.data.volcanoesOvdas, (latlng) => volcanoMarkerOVDAS(latlng), "Volcán OVDAS"),
+        loadGeoJson(cfg.data.volcanoesAll,   (latlng) => volcanoMarkerOther(latlng),  "Volcán"),
+        loadGeoJson(cfg.data.smelters,       (latlng) => smelterMarker(latlng),       "Fundición"),
+      ]);
+
       borderLayer.addTo(map);
       layerControl.addOverlay(borderLayer, "Límite fronterizo Chile");
 
-      volcanesOvdasLayer = await loadGeoJson(cfg.data.volcanoesOvdas, (latlng) => volcanoMarkerOVDAS(latlng), "Volcán OVDAS");
       const ovdasNames = new Set();
       volcanesOvdasLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
@@ -1073,8 +1084,7 @@
       volcanesOvdasLayer.addTo(map);
       layerControl.addOverlay(volcanesOvdasLayer, "Volcanes monitoreados (OVDAS)");
 
-      volcanesOtrosLayer = await loadGeoJson(cfg.data.volcanoesAll, (latlng) => volcanoMarkerOther(latlng), "Volcán");
-      // Eliminar del layer "otros" los volcanes que ya están en OVDAS
+      // Excluir de "otros" los que ya aparecen en OVDAS
       const toRemove = [];
       volcanesOtrosLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
@@ -1089,10 +1099,8 @@
       volcanesOtrosLayer.addTo(map);
       layerControl.addOverlay(volcanesOtrosLayer, "Volcanes no monitoreados");
 
-      // Traer OVDAS al frente para que no queden debajo de otros
       volcanesOvdasLayer.bringToFront();
 
-      smeltersLayer = await loadGeoJson(cfg.data.smelters, (latlng) => smelterMarker(latlng), "Fundición");
       smeltersLayer.eachLayer(l => { if (l.setStyle) l.setStyle({ color: "#000", fillColor: "#000" }); });
       smeltersLayer.eachLayer(l => {
         const p = l.feature?.properties || {};
@@ -1131,7 +1139,7 @@
       resizeVolcanoIcons();
 
       map.on("zoomend", rerenderVisibleWind);
-      map.on("moveend", rerenderVisibleWind);
+      map.on("moveend", debounce(rerenderVisibleWind, 250));
 
       map.on("overlayadd overlayremove", updateLegend);
 
@@ -1156,12 +1164,7 @@
 
   function shiftDate(days) {
     if (!dateInput.value) return;
-    const d = new Date(dateInput.value + "T00:00:00Z");
-    d.setUTCDate(d.getUTCDate() + days);
-    const yyyy = d.getUTCFullYear();
-    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const dd = String(d.getUTCDate()).padStart(2, "0");
-    dateInput.value = `${yyyy}-${mm}-${dd}`;
+    dateInput.value = addDaysToDateStr(dateInput.value, days);
     addSo2Layer(dateInput.value);
     rerenderVisibleWind();
   }
