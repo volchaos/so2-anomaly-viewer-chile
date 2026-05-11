@@ -7,6 +7,9 @@ __pycache__/
 *.pyo
 .env
 
+# Caché de archivos L2 TROPOMI (~300-500 MB c/u)
+data/l2_cache/
+
 # OS
 .DS_Store
 Thumbs.db

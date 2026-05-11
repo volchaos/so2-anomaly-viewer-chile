@@ -1,19 +1,24 @@
 """
 prepare_day.py  <YYYY-MM-DD> <Nombre Volcán>
 
-Descarga el GeoTIFF L3 de SO₂ para la fecha indicada y genera un proyecto
-QGIS (.qgz) listo para digitalizar la anomalía manualmente.
+Descarga datos L2 TROPOMI SO₂ desde Copernicus Dataspace, aplica QA y
+sustracción de fondo espacial, y genera un proyecto QGIS (.qgz) listo
+para digitalizar la anomalía manualmente.
 
-Requisitos: rasterio, numpy, requests  (ya instalados en el entorno)
+Requisitos: rasterio, numpy, netcdf4, requests  (entorno so2-wind)
+
+Credenciales necesarias (registro gratuito en dataspace.copernicus.eu):
+    CDSE_USER   tu email
+    CDSE_PASS   tu contraseña
 
 Uso:
     python scripts/prepare_day.py 2026-02-08 Lascar
     python scripts/prepare_day.py 2026-04-26 "Lascar"
 
 Salida:
-    data/qgis/so2_YYYYMMDD.tif            ← raster SO₂ (Chile)
-    data/qgis/YYYYMMDD_Nombre.gpkg        ← capa vacía "Anomalía" + volcanes
-    data/qgis/YYYYMMDD_Nombre.qgz         ← proyecto QGIS listo para abrir
+    data/qgis/so2_l2_YYYYMMDD.tif   ← anomalía SO₂ en DU (L2, con fondo sustraído)
+    data/qgis/YYYYMMDD_Nombre.gpkg  ← capa vacía "Anomalía" + volcanes
+    data/qgis/YYYYMMDD_Nombre.qgz   ← proyecto QGIS listo para abrir
 """
 
 import json
@@ -25,69 +30,41 @@ import zipfile
 from datetime import date, datetime
 from pathlib import Path
 
-import numpy as np
-import requests
-import rasterio
-from rasterio.transform import rowcol
-from rasterio.windows import Window
-
 # ── Rutas ─────────────────────────────────────────────────────────────────────
 REPO_ROOT = Path(__file__).parent.parent
 GJ_PATH   = REPO_ROOT / "data" / "volcanoes_ovdas_44.geojson"
 QGIS_DIR  = REPO_ROOT / "data" / "qgis"
-BASE_URL  = "https://download.geoservice.dlr.de/S5P_TROPOMI/files/L3"
-NODATA    = 9.969e+36
+NODATA    = -9999.0   # valor nodata del GeoTIFF L2 generado por process_l2_so2.py
 
-# Bounding box Chile + margen
-CHILE_BBOX = (-82.0, -60.0, -60.0, -15.0)   # min_lon, min_lat, max_lon, max_lat
+# ── Pipeline L2 ───────────────────────────────────────────────────────────────
 
-# ── URL del COG ───────────────────────────────────────────────────────────────
+def prepare_l2_raster(date_str: str, volcano_name: str) -> Path:
+    """
+    Descarga datos L2 desde CDSE y procesa la anomalía SO₂.
+    Retorna la ruta del GeoTIFF resultante.
+    """
+    # Importación local: evita depender de netCDF4 si no se usa este módulo
+    from fetch_l2_so2 import fetch
+    from process_l2_so2 import process
 
-def cog_url(d: date) -> str:
-    ds = d.strftime("%Y%m%d")
-    return (
-        f"{BASE_URL}/{d.year:04d}/{d.month:02d}/{d.day:02d}/"
-        f"S5P_DLR_NRTI_01_L3_SO2_{ds}/"
-        f"S5P_DLR_NRTI_01_L3_SO2_{ds}_so2.tif"
-    )
+    ds_flat  = date_str.replace("-", "")
+    tif_path = QGIS_DIR / f"so2_l2_{ds_flat}.tif"
 
-# ── Descarga del GeoTIFF ──────────────────────────────────────────────────────
+    if tif_path.exists():
+        print(f"  GeoTIFF L2 ya existe, reutilizando: {tif_path.name}")
+        return tif_path
 
-def download_tif(d: date, out_path: Path) -> Path:
-    url = cog_url(d)
-    print(f"  Descargando: {url}")
-    min_lon, min_lat, max_lon, max_lat = CHILE_BBOX
+    print("  Paso 1/2 — Descargando datos L2 desde Copernicus Dataspace…")
+    files = fetch(date_str)
+    if not files:
+        raise RuntimeError(
+            f"No se encontraron datos L2 para {date_str}.\n"
+            "Verifica las credenciales CDSE_USER / CDSE_PASS y que la fecha "
+            "tenga datos disponibles (NRTI: disponible ~3h después de la pasada)."
+        )
 
-    env_path = f"/vsicurl/{url}"
-    with rasterio.open(env_path) as src:
-        row_min, col_min = rowcol(src.transform, min_lon, max_lat)
-        row_max, col_max = rowcol(src.transform, max_lon, min_lat)
-        row_min, row_max = sorted([int(row_min), int(row_max)])
-        col_min, col_max = sorted([int(col_min), int(col_max)])
-        row_min = max(0, row_min); col_min = max(0, col_min)
-        row_max = min(src.height - 1, row_max)
-        col_max = min(src.width  - 1, col_max)
-
-        window = Window(col_min, row_min,
-                        col_max - col_min + 1,
-                        row_max - row_min + 1)
-        data          = src.read(1, window=window)
-        win_transform = src.window_transform(window)
-        crs           = src.crs
-        nodata_val    = src.nodata or NODATA
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with rasterio.open(
-        out_path, "w", driver="GTiff",
-        height=data.shape[0], width=data.shape[1],
-        count=1, dtype=data.dtype,
-        crs=crs, transform=win_transform, nodata=nodata_val,
-    ) as dst:
-        dst.write(data, 1)
-
-    size_kb = out_path.stat().st_size / 1024
-    print(f"  GeoTIFF guardado ({size_kb:.0f} KB): {out_path.name}")
-    return out_path
+    print("\n  Paso 2/2 — Procesando L2 (QA + sustracción de fondo)…")
+    return process(date_str, volcano_name)
 
 # ── GeoPackage (sqlite3, sin dependencias extra) ──────────────────────────────
 
@@ -443,28 +420,27 @@ def main():
     safe_name = v["name"].replace(" ", "_").replace("/", "-")
 
     QGIS_DIR.mkdir(parents=True, exist_ok=True)
-    tif_path  = QGIS_DIR / f"so2_{ds}.tif"
     gpkg_path = QGIS_DIR / f"{ds}_{safe_name}.gpkg"
     qgz_path  = QGIS_DIR / f"{ds}_{safe_name}.qgz"
 
     print(f"\nPreparando  {v['name']}  ·  {date_str}")
     print("─" * 55)
 
-    if tif_path.exists():
-        print(f"  GeoTIFF ya existe, reutilizando: {tif_path.name}")
-    else:
-        download_tif(d, tif_path)
+    tif_path = prepare_l2_raster(date_str, v["name"])
 
     create_gpkg(gpkg_path, volcanoes)
     generate_qgz(qgz_path, tif_path, gpkg_path, v["lat"], v["lon"], v["name"], date_str)
 
     print(f"""
-✓ Listo. Pasos siguientes:
-  1. Abre:  {qgz_path}
+✓ Listo. El raster usa datos L2 TROPOMI con sustracción de fondo espacial.
+  Los valores en DU representan la anomalía sobre el fondo regional.
+
+Pasos siguientes:
+  1. Abre en QGIS:  {qgz_path}
   2. Selecciona la capa "Anomalía SO₂" en el panel de capas
-  3. Activa edición: lápiz en la barra de herramientas (o Ctrl+E... no, Layer → Toggle Editing)
-  4. Digitaliza el polígono sobre la anomalía visible
-  5. Guarda la capa: Ctrl+S  (o Layer → Save Layer Edits)
+  3. Layer → Toggle Editing  (o ícono lápiz en barra de herramientas)
+  4. Digitaliza el polígono sobre la anomalía visible (valores > 0 DU)
+  5. Guarda la capa: Ctrl+S
   6. Cierra QGIS
   7. Ejecuta: python scripts/save_polygon.py {date_str} "{v['name']}"
 """)

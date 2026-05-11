@@ -12,3 +12,4 @@ dependencies:
   - eccodes
   - rasterio
   - scipy
+  - netcdf4

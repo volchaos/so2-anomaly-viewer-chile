@@ -36,7 +36,7 @@ PLUME_DIR    = REPO_ROOT / "data" / "plumes"
 HISTORY_DAYS = 90
 
 DU_TO_G_PER_M2 = 2.856e-2   # 1 DU SO₂ = 2.856×10⁻² g/m²
-NODATA         = 9.969e+36
+NODATA         = -9999.0    # nodata del GeoTIFF L2 generado por process_l2_so2.py
 
 # ── Lectura del polígono desde el GeoPackage ──────────────────────────────────
 
@@ -127,7 +127,7 @@ def calculate_mass(tif_path: Path, polygon: dict) -> dict | None:
     lats = transform.f + np.arange(rows) * transform.e - abs(transform.e) / 2
     lon_grid, lat_grid = np.meshgrid(lons, lats)
 
-    valid = (data < NODATA * 0.9) & np.isfinite(data) & (data > 0)
+    valid = (data > NODATA + 1.0) & np.isfinite(data) & (data > 0)
 
     if not np.any(valid):
         print("  Sin píxeles SO₂ válidos dentro del polígono.")
@@ -299,7 +299,7 @@ def main():
     ds        = date_str.replace("-", "")
     safe_name = v["name"].replace(" ", "_").replace("/", "-")
     gpkg_path = QGIS_DIR / f"{ds}_{safe_name}.gpkg"
-    tif_path  = QGIS_DIR / f"so2_{ds}.tif"
+    tif_path  = QGIS_DIR / f"so2_l2_{ds}.tif"
 
     print(f"\nGuardando anomalía  {v['name']}  ·  {date_str}")
     print("─" * 55)
