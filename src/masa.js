@@ -257,11 +257,42 @@
     if (!dateVal) { setStatus("Selecciona una fecha.", true); return; }
 
     if (typeof GeoTIFF === "undefined") {
-      setStatus("Librería GeoTIFF.js no cargada (revisa la consola).", true); return;
+      setStatus("Librería GeoTIFF.js no cargada (revisa la consola del navegador).", true); return;
+    }
+
+    // geotiff.js requiere HTTP — no funciona con file://
+    if (window.location.protocol === "file:") {
+      setStatus(
+        "Error: abre el visor desde un servidor local, no directamente desde el archivo.\n" +
+        "Ejecuta: python -m http.server 8080  y abre http://localhost:8080",
+        true
+      );
+      return;
     }
 
     const flat = dateVal.replace(/-/g, "");
     const url  = `data/qgis/so2_l2_${flat}.tif`;
+
+    // Verificar que el archivo existe antes de llamar a geotiff.js
+    setStatus(`Verificando ${url}…`);
+    try {
+      const head = await fetch(url, { method: "HEAD" });
+      if (!head.ok) {
+        setStatus(
+          `Archivo no encontrado (HTTP ${head.status}): ${url}\n` +
+          `¿Ejecutaste prepare_day.py para la fecha ${dateVal}?`,
+          true
+        );
+        return;
+      }
+    } catch {
+      setStatus(
+        "No se puede conectar al servidor.\n" +
+        "Ejecuta: python -m http.server 8080  y abre http://localhost:8080",
+        true
+      );
+      return;
+    }
 
     el("masaLoadRasterBtn").disabled = true;
     setStatus(`Cargando ${url}…`);
@@ -281,7 +312,7 @@
       el("masaClearBtn").style.display = "";
       setStatus(`Raster ${_raster.width}×${_raster.height} px · Dibuja el polígono sobre la pluma.`);
     } catch (err) {
-      setStatus(`Error: ${err.message}`, true);
+      setStatus(`Error al leer el GeoTIFF: ${err.message}`, true);
       console.error(err);
     } finally {
       el("masaLoadRasterBtn").disabled = false;
