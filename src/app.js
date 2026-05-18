@@ -1059,23 +1059,25 @@
   // ---------------- Pestañas del panel derecho ----------------
   function wireRightPanelTabs() {
     const TABS = [
-      { id: "rightTabGif",     panel: "panelGif"     },
-      { id: "rightTabMasa",    panel: "panelMasa"    },
-      { id: "rightTabMonitor", panel: "panelMonitor" },
+      { tabId: "rightTabGif",     panelId: "panelGif"     },
+      { tabId: "rightTabMasa",    panelId: "panelMasa"    },
+      { tabId: "rightTabMonitor", panelId: "panelMonitor" },
     ];
 
-    const tabEls   = TABS.map(t => document.getElementById(t.id));
-    const panelEls = TABS.map(t => document.getElementById(t.panel));
-    if (tabEls.some(e => !e) || panelEls.some(e => !e)) return;
-
-    function showTab(idx) {
-      tabEls.forEach((t, i)   => t.classList.toggle("active", i === idx));
-      panelEls.forEach((p, i) => { p.style.display = i === idx ? "" : "none"; });
-      // Invalidar mapa si se vuelve al GIF o Masa (el mapa puede haber cambiado de tamaño)
-      if (idx !== 0) setTimeout(() => map.invalidateSize(), 50);
+    function showTab(activeIdx) {
+      TABS.forEach(({ tabId, panelId }, i) => {
+        const tabEl   = document.getElementById(tabId);
+        const panelEl = document.getElementById(panelId);
+        if (tabEl)   tabEl.classList.toggle("active", i === activeIdx);
+        if (panelEl) panelEl.style.display = i === activeIdx ? "" : "none";
+      });
+      setTimeout(() => map.invalidateSize(), 50);
     }
 
-    tabEls.forEach((t, i) => t.addEventListener("click", () => showTab(i)));
+    TABS.forEach(({ tabId }, i) => {
+      const btn = document.getElementById(tabId);
+      if (btn) btn.addEventListener("click", () => showTab(i));
+    });
   }
 
   async function init() {
