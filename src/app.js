@@ -1058,23 +1058,24 @@
 
   // ---------------- Pestañas del panel derecho ----------------
   function wireRightPanelTabs() {
-    const tabGif  = document.getElementById("rightTabGif");
-    const tabMasa = document.getElementById("rightTabMasa");
-    const pGif    = document.getElementById("panelGif");
-    const pMasa   = document.getElementById("panelMasa");
-    if (!tabGif || !tabMasa || !pGif || !pMasa) return;
+    const TABS = [
+      { id: "rightTabGif",     panel: "panelGif"     },
+      { id: "rightTabMasa",    panel: "panelMasa"    },
+      { id: "rightTabMonitor", panel: "panelMonitor" },
+    ];
 
-    function showTab(which) {
-      const isGif = which === "gif";
-      tabGif.classList.toggle("active",  isGif);
-      tabMasa.classList.toggle("active", !isGif);
-      pGif.style.display  = isGif ? "" : "none";
-      pMasa.style.display = isGif ? "none" : "";
-      if (!isGif) setTimeout(() => map.invalidateSize(), 50);
+    const tabEls   = TABS.map(t => document.getElementById(t.id));
+    const panelEls = TABS.map(t => document.getElementById(t.panel));
+    if (tabEls.some(e => !e) || panelEls.some(e => !e)) return;
+
+    function showTab(idx) {
+      tabEls.forEach((t, i)   => t.classList.toggle("active", i === idx));
+      panelEls.forEach((p, i) => { p.style.display = i === idx ? "" : "none"; });
+      // Invalidar mapa si se vuelve al GIF o Masa (el mapa puede haber cambiado de tamaño)
+      if (idx !== 0) setTimeout(() => map.invalidateSize(), 50);
     }
 
-    tabGif.addEventListener("click",  () => showTab("gif"));
-    tabMasa.addEventListener("click", () => showTab("masa"));
+    tabEls.forEach((t, i) => t.addEventListener("click", () => showTab(i)));
   }
 
   async function init() {

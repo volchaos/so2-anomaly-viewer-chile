@@ -72,6 +72,7 @@
       <div class="right-tab-bar">
         <button class="right-tab active" id="rightTabGif">GIF &amp; NASA</button>
         <button class="right-tab" id="rightTabMasa">Masa SO₂</button>
+        <button class="right-tab" id="rightTabMonitor">Monitor</button>
       </div>
 
       <!-- Pestaña: GIF y NASA -->
@@ -357,6 +358,49 @@
 
         </div>
       </div><!-- #panelMasa -->
+
+      <!-- Pestaña: Monitor sala -->
+      <div id="panelMonitor" style="display:none;">
+        <div class="panel">
+
+          <p class="panel-subtitle" style="margin-top:0;">
+            Vistas de pantalla completa para sala de monitoreo.<br>
+            Optimizadas para pantallas 1920&times;1080 en vertical.
+          </p>
+
+          <div class="monitor-zone-card">
+            <div class="monitor-zone-header">
+              <span class="monitor-zone-tag">Norte</span>
+              <span class="monitor-zone-range">17°S – 35°S</span>
+            </div>
+            <div class="monitor-zone-body">
+              Atacama · Altiplano · Norte Chico<br>
+              <span class="monitor-zone-volcanoes">Lascar · Lastarria · Putana · Irruputuncu · Ollagüe…</span>
+            </div>
+            <a href="monitor.html?zona=norte" target="_blank" rel="noopener"
+               class="btn primary monitor-open-btn">&#9974; Abrir Chile Norte</a>
+          </div>
+
+          <div class="monitor-zone-card">
+            <div class="monitor-zone-header">
+              <span class="monitor-zone-tag">Sur</span>
+              <span class="monitor-zone-range">35°S – 56°S</span>
+            </div>
+            <div class="monitor-zone-body">
+              Araucanía · Los Lagos · Aysén<br>
+              <span class="monitor-zone-volcanoes">Copahue · Villarrica · Calbuco · Osorno · Hudson…</span>
+            </div>
+            <a href="monitor.html?zona=sur" target="_blank" rel="noopener"
+               class="btn primary monitor-open-btn">&#9974; Abrir Chile Sur</a>
+          </div>
+
+          <div class="panel-footnote">
+            Capas: SO₂ TROPOMI · Volcanes OVDAS · Borde · Fundiciones<br>
+            Auto-actualización cada 30 min · Navegar con <kbd>←</kbd> <kbd>→</kbd>
+          </div>
+
+        </div>
+      </div><!-- #panelMonitor -->
     </section>
   </main>
 

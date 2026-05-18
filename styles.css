@@ -861,6 +861,65 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
   font-family: var(--font-mono);
 }
 
+/* ===== Panel Monitor – tarjetas de zona ===== */
+.monitor-zone-card {
+  background: var(--bg-block);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  margin-top: 10px;
+  transition: border-color 0.15s;
+}
+.monitor-zone-card:hover { border-color: rgba(230,160,50,0.3); }
+
+.monitor-zone-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.monitor-zone-tag {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.monitor-zone-range {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.monitor-zone-body {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.monitor-zone-volcanoes {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.monitor-open-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--bg-block);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--text-secondary);
+}
+
 /* ===== Leaflet.draw – tema oscuro ===== */
 .leaflet-draw-toolbar a {
   background-color: var(--bg-panel) !important;
