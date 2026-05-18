@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SO₂ Monitor · Chile</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;600&display=swap');
+
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%; width: 100%;
+      background: #0f1117;
+      overflow: hidden;
+    }
+
+    #map { height: 100vh; width: 100vw; }
+
+    /* ── HUD ── */
+    .hud {
+      position: fixed;
+      top: 16px; left: 16px;
+      background: rgba(15, 17, 23, 0.94);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+      z-index: 900;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      min-width: 220px;
+    }
+    .hud::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #e6a032, transparent 70%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .hud-zone {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e6a032;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .hud-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-top: 2px;
+    }
+    .hud-date {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      color: #e2e8f0;
+      margin-top: 6px;
+      letter-spacing: 0.02em;
+    }
+    .hud-nav {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .hud-btn {
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #7a8aaa;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.12s, color 0.12s;
+    }
+    .hud-btn:hover { background: rgba(230,160,50,0.15); color: #e6a032; border-color: rgba(230,160,50,0.3); }
+
+    .hud-refresh {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: #3d4d6a;
+      margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 6px;
+    }
+    .hud-refresh span { color: #7a8aaa; }
+
+    /* ── Marcadores ── */
+    .volcano-icon, .monitor-label { background: transparent; border: none; }
+
+    .monitor-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ── Leyenda SO₂ ── */
+    .so2-legend {
+      position: fixed;
+      left: 16px; bottom: 24px;
+      background: rgba(22,27,38,0.95);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 6px 8px 4px;
+      z-index: 800;
+      transform: scale(0.55);
+      transform-origin: bottom left;
+    }
+
+    /* Leaflet overrides para tema oscuro */
+    .leaflet-control-zoom a {
+      background: rgba(22,27,38,0.95) !important;
+      border-color: rgba(255,255,255,0.08) !important;
+      color: #7a8aaa !important;
+    }
+    .leaflet-control-zoom a:hover { color: #e6a032 !important; }
+    .leaflet-control-attribution {
+      background: rgba(15,17,23,0.8) !important;
+      color: #3d4d6a !important;
+      font-size: 9px !important;
+    }
+    .leaflet-control-attribution a { color: #7a8aaa !important; }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <!-- HUD de monitoreo -->
+  <div class="hud">
+    <div class="hud-zone" id="hudZone">Chile Norte</div>
+    <div class="hud-title">SO₂ · TROPOMI</div>
+    <div class="hud-date" id="hudDate">—</div>
+    <div class="hud-nav">
+      <button class="hud-btn" id="btnPrev">&#8592;</button>
+      <button class="hud-btn" id="btnHoy">Hoy</button>
+      <button class="hud-btn" id="btnNext">&#8594;</button>
+    </div>
+    <div class="hud-refresh">
+      Actualizado: <span id="hudLastRefresh">—</span><br>
+      Próxima: <span id="hudNextRefresh">—</span>
+    </div>
+  </div>
+
+  <!-- Leyenda SO₂ -->
+  <div class="so2-legend">
+    <svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" viewBox="0 0 130 195">
+      <rect x="0" y="0" width="130" height="195" fill="#161b26"/>
+      <text x="8" y="16" font-size="14" font-weight="600" fill="#e2e8f0"
+            font-family="IBM Plex Mono,monospace">SO₂ (DU)</text>
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#c00000"/>
+          <stop offset="18%"  stop-color="#e87820"/>
+          <stop offset="36%"  stop-color="#e8c000"/>
+          <stop offset="50%"  stop-color="#40c878"/>
+          <stop offset="62%"  stop-color="#40a0d8"/>
+          <stop offset="76%"  stop-color="#8080c8"/>
+          <stop offset="92%"  stop-color="#e8d5e8"/>
+          <stop offset="100%" stop-color="#ffffff"/>
+        </linearGradient>
+      </defs>
+      <rect x="10" y="22" width="40" height="155" fill="url(#g)" stroke="#999" stroke-width="0.5"/>
+      <line x1="52" y1="22"  x2="60" y2="22"  stroke="#3d4d6a" stroke-width="1.2"/>
+      <text x="64" y="26"  font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">10.0</text>
+      <line x1="52" y1="60"  x2="60" y2="60"  stroke="#3d4d6a" stroke-width="1.2"/>
+      <text x="64" y="64"  font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">3.3</text>
+      <line x1="52" y1="100" x2="60" y2="100" stroke="#3d4d6a" stroke-width="1.2"/>
+      <text x="64" y="104" font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">1.1</text>
+      <line x1="52" y1="132" x2="60" y2="132" stroke="#3d4d6a" stroke-width="1.2"/>
+      <text x="64" y="136" font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">0.3</text>
+      <line x1="52" y1="177" x2="60" y2="177" stroke="#3d4d6a" stroke-width="1.2"/>
+      <text x="64" y="181" font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">0</text>
+    </svg>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="src/config.js"></script>
+  <script>
+  /* global APP_CONFIG, L */
+  (function () {
+    const cfg = window.APP_CONFIG;
+
+    // ── Zona desde ?zona=norte|sur ──────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const zonaKey = (params.get("zona") || "norte").toLowerCase();
+
+    const ZONAS = {
+      norte: {
+        label:  "Chile Norte",
+        // Norte Grande + Norte Chico: Arica→La Serena
+        bounds: [[-35.5, -73.5], [-17.0, -61.5]],
+      },
+      sur: {
+        label:  "Chile Sur",
+        // Región del Bío-Bío → Magallanes
+        bounds: [[-56.0, -76.5], [-35.5, -64.0]],
+      },
+    };
+    const zona = ZONAS[zonaKey] || ZONAS.norte;
+
+    document.title        = `SO₂ Monitor · ${zona.label}`;
+    document.getElementById("hudZone").textContent = zona.label;
+
+    // ── Fecha (UTC) ────────────────────────────────────────────────────────
+    function todayUtc() {
+      const n = new Date();
+      return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,"0")}-${String(n.getUTCDate()).padStart(2,"0")}`;
+    }
+    function shiftDate(dateStr, days) {
+      const d = new Date(dateStr + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    let currentDate = params.get("fecha") || todayUtc();
+    document.getElementById("hudDate").textContent = currentDate;
+
+    // ── Mapa ───────────────────────────────────────────────────────────────
+    const map = L.map("map", { zoomControl: true, attributionControl: true })
+      .fitBounds(zona.bounds);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 12,
+      attribution: "&copy; OpenStreetMap · TROPOMI/ESA"
+    }).addTo(map);
+
+    // ── Capa WMS SO₂ ───────────────────────────────────────────────────────
+    let so2Layer = null;
+
+    function toWmsTime(dateStr) {
+      return cfg.wms.timeFormat === "date" ? dateStr : `${dateStr}T05:00:00Z`;
+    }
+
+    function loadSo2(dateStr) {
+      if (so2Layer) map.removeLayer(so2Layer);
+      const p = {
+        layers: cfg.wms.layers,
+        format: cfg.wms.format,
+        transparent: cfg.wms.transparent,
+        version: cfg.wms.version,
+        time: toWmsTime(dateStr),
+        opacity: 0.85,
+      };
+      if (cfg.wms.styles !== undefined) p.styles = cfg.wms.styles;
+      so2Layer = L.tileLayer.wms(cfg.wms.url, p).addTo(map);
+    }
+
+    // ── Capas GeoJSON ──────────────────────────────────────────────────────
+    function ovdasIcon(sz) {
+      const w = sz, h = Math.round(sz * 1.15), cx = w / 2, sw = Math.max(0.5, sz/20);
+      return L.divIcon({
+        className: "volcano-icon",
+        html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+          <path d="M${cx},0 L0,${h} L${w},${h} Z" fill="#4a5568" stroke="#1a202c" stroke-width="${sw}" stroke-linejoin="round"/>
+          <path d="M${cx},0 L${cx*.52},${h*.38} Q${cx},${h*.28} ${cx*1.48},${h*.38} Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="${sw*.5}"/>
+        </svg>`,
+        iconSize: [w, h], iconAnchor: [Math.round(w/2), h],
+      });
+    }
+    function otherIcon(sz) {
+      const w = sz, h = Math.round(sz * 1.1), sw = Math.max(0.5, sz/12);
+      return L.divIcon({
+        className: "volcano-icon",
+        html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#718096" stroke="#2d3748" stroke-width="${sw}" stroke-linejoin="round"/>
+        </svg>`,
+        iconSize: [w, h], iconAnchor: [Math.round(w/2), h],
+      });
+    }
+
+    function nameOf(props) {
+      return (props && (props.name || props.Name || props.NOMBRE)) || "";
+    }
+
+    async function loadGeoJson(url, pointFn, labelClass) {
+      try {
+        const r = await fetch(new URL(url, document.baseURI).toString(), { cache: "no-store" });
+        if (!r.ok) return;
+        const gj = await r.json();
+        L.geoJSON(gj, {
+          pointToLayer: (f, ll) => pointFn(ll, f),
+          onEachFeature: (f, lyr) => {
+            const name = nameOf(f.properties);
+            if (name) {
+              lyr.bindTooltip(name, {
+                permanent: true, direction: "top", offset: [0, -10], opacity: 1,
+                className: "monitor-label",
+              });
+            }
+          }
+        }).addTo(map);
+      } catch (e) { console.warn("GeoJSON no cargado:", url, e); }
+    }
+
+    async function loadBorder() {
+      try {
+        const r = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
+        if (!r.ok) return;
+        const gj = await r.json();
+        const chile = {
+          type: "FeatureCollection",
+          features: (gj.features || []).filter(f => {
+            const p = f.properties || {};
+            return cfg.data.chileNamePropertyCandidates.some(
+              k => p[k] && String(p[k]).toLowerCase() === "chile"
+            );
+          }),
+        };
+        L.geoJSON(chile, { style: { color: "#fff", weight: 1.5, fillOpacity: 0, opacity: 0.5 } })
+          .addTo(map);
+      } catch (e) { console.warn("Borde no cargado:", e); }
+    }
+
+    // ── Auto-refresh ───────────────────────────────────────────────────────
+    const REFRESH_MS = 30 * 60 * 1000;   // 30 minutos
+    let nextRefreshAt = Date.now() + REFRESH_MS;
+
+    function fmtTime(d) {
+      return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    }
+
+    function updateHud() {
+      const now = Date.now();
+      const secsLeft = Math.max(0, Math.round((nextRefreshAt - now) / 1000));
+      const m = String(Math.floor(secsLeft / 60)).padStart(2, "0");
+      const s = String(secsLeft % 60).padStart(2, "0");
+      document.getElementById("hudNextRefresh").textContent = `${m}:${s}`;
+    }
+
+    function doRefresh() {
+      const newDate = todayUtc();
+      if (newDate !== currentDate) {
+        currentDate = newDate;
+        document.getElementById("hudDate").textContent = currentDate;
+      }
+      loadSo2(currentDate);
+      const now = new Date();
+      document.getElementById("hudLastRefresh").textContent = fmtTime(now) + " UTC";
+      nextRefreshAt = Date.now() + REFRESH_MS;
+      document.getElementById("hudNextRefresh").textContent = fmtTime(new Date(nextRefreshAt)) + " UTC";
+    }
+
+    // Countdown HUD cada segundo
+    setInterval(updateHud, 1000);
+    // Refresh WMS cada 30 min
+    setInterval(doRefresh, REFRESH_MS);
+
+    // ── Navegación de fecha ────────────────────────────────────────────────
+    function setDate(dateStr) {
+      currentDate = dateStr;
+      document.getElementById("hudDate").textContent = currentDate;
+      loadSo2(currentDate);
+    }
+
+    document.getElementById("btnPrev").addEventListener("click", () => setDate(shiftDate(currentDate, -1)));
+    document.getElementById("btnNext").addEventListener("click", () => setDate(shiftDate(currentDate, +1)));
+    document.getElementById("btnHoy").addEventListener("click", () => setDate(todayUtc()));
+
+    // Teclas ← → para cambiar fecha sin ratón
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft")  setDate(shiftDate(currentDate, -1));
+      if (e.key === "ArrowRight") setDate(shiftDate(currentDate, +1));
+      if (e.key === "Home")       setDate(todayUtc());
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    async function init() {
+      loadSo2(currentDate);
+
+      await Promise.all([
+        loadBorder(),
+        loadGeoJson(cfg.data.volcanoesOvdas,
+          (ll) => L.marker(ll, { icon: ovdasIcon(22) })),
+        loadGeoJson(cfg.data.volcanoesAll,
+          (ll) => L.marker(ll, { icon: otherIcon(12) })),
+        loadGeoJson(cfg.data.smelters,
+          (ll) => L.circleMarker(ll, { radius: 6, weight: 1.5, fillOpacity: 0.9, color: "#000", fillColor: "#111" })),
+      ]);
+
+      // HUD inicial
+      const now = new Date();
+      document.getElementById("hudLastRefresh").textContent = fmtTime(now) + " UTC";
+      document.getElementById("hudNextRefresh").textContent =
+        fmtTime(new Date(nextRefreshAt)) + " UTC";
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
