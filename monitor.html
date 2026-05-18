@@ -9,13 +9,16 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; }
 
     html, body {
       margin: 0; padding: 0;
       height: 100%; width: 100%;
       background: #0f1117;
       overflow: hidden;
+      font-family: 'DM Sans', system-ui, sans-serif;
     }
 
     #map { height: 100vh; width: 100vw; }
@@ -24,111 +27,138 @@
     .hud {
       position: fixed;
       top: 16px; left: 16px;
-      background: rgba(15, 17, 23, 0.94);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 12px 16px;
+      background: rgba(15, 17, 23, 0.95);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 14px 16px;
       z-index: 900;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-      min-width: 220px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.55);
+      width: 210px;
     }
+    /* Línea de acento superior */
     .hud::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, #e6a032, transparent 70%);
-      border-radius: 10px 10px 0 0;
+      border-radius: 12px 12px 0 0;
     }
 
     .hud-zone {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px; font-weight: 700;
       color: #e6a032;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      font-family: 'IBM Plex Mono', monospace;
     }
-    .hud-title {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px;
-      font-weight: 600;
+    .hud-product {
+      font-size: 13px; font-weight: 600;
       color: #e2e8f0;
-      margin-top: 2px;
+      margin-top: 2px; letter-spacing: -0.01em;
     }
+
+    .hud-sep {
+      border: none; border-top: 1px solid rgba(255,255,255,0.07);
+      margin: 10px 0;
+    }
+
     .hud-date {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 20px;
-      font-weight: 500;
-      color: #e2e8f0;
-      margin-top: 6px;
-      letter-spacing: 0.02em;
+      font-size: 22px; font-weight: 600;
+      color: #e2e8f0; letter-spacing: 0.02em;
+      line-height: 1.1;
     }
     .hud-nav {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
+      display: flex; gap: 5px; margin-top: 8px;
     }
     .hud-btn {
-      padding: 5px 12px;
+      flex: 1; padding: 6px 0;
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      color: #7a8aaa;
-      font-size: 14px;
-      cursor: pointer;
+      border-radius: 7px;
+      color: #7a8aaa; font-size: 13px; cursor: pointer;
       font-family: 'DM Sans', sans-serif;
-      transition: background 0.12s, color 0.12s;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      text-align: center;
     }
     .hud-btn:hover { background: rgba(230,160,50,0.15); color: #e6a032; border-color: rgba(230,160,50,0.3); }
 
     .hud-refresh {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px;
-      color: #3d4d6a;
-      margin-top: 8px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      padding-top: 6px;
+      font-size: 10px; color: #3d4d6a;
+      margin-top: 8px; line-height: 1.7;
     }
-    .hud-refresh span { color: #7a8aaa; }
+    .hud-refresh b { color: #7a8aaa; font-weight: 500; }
 
-    /* ── Marcadores ── */
-    .volcano-icon, .monitor-label { background: transparent; border: none; }
-
-    .monitor-label {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      color: #fff;
-      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-      white-space: nowrap;
-      pointer-events: none;
+    /* ── Leyenda de capas ── */
+    .hud-legend {
+      margin-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 8px;
     }
+    .hud-legend-title {
+      font-size: 9px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+      color: #3d4d6a; text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .hud-legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: #7a8aaa;
+      margin: 4px 0;
+    }
+    .hud-legend-item svg { flex-shrink: 0; }
 
     /* ── Leyenda SO₂ ── */
-    .so2-legend {
+    .so2-scale {
       position: fixed;
       left: 16px; bottom: 24px;
-      background: rgba(22,27,38,0.95);
+      background: rgba(22, 27, 38, 0.95);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px;
       padding: 6px 8px 4px;
       z-index: 800;
-      transform: scale(0.55);
+      transform: scale(0.52);
       transform-origin: bottom left;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
 
-    /* Leaflet overrides para tema oscuro */
+    /* ── Marcadores volcán ── */
+    .volcano-icon { background: transparent; border: none; box-shadow: none; }
+
+    /* ── Tooltip: visible solo con zoom alto ── */
+    .monitor-tooltip {
+      background: rgba(10, 13, 26, 0.95) !important;
+      border: 1px solid rgba(160,180,255,0.2) !important;
+      border-radius: 4px !important;
+      padding: 3px 8px !important;
+      font-size: 11px !important; font-weight: 600 !important;
+      color: #fff !important;
+      white-space: nowrap !important;
+      box-shadow: none !important;
+      font-family: 'DM Sans', sans-serif !important;
+    }
+    .monitor-tooltip::before { display: none !important; }
+
+    /* ── Overrides Leaflet ── */
+    .leaflet-control-zoom {
+      border: 1px solid rgba(255,255,255,0.09) !important;
+      border-radius: 8px !important;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+    }
     .leaflet-control-zoom a {
-      background: rgba(22,27,38,0.95) !important;
+      background: rgba(22,27,38,0.96) !important;
       border-color: rgba(255,255,255,0.08) !important;
       color: #7a8aaa !important;
+      font-size: 18px !important; font-weight: 400 !important;
+      width: 34px !important; height: 34px !important;
+      line-height: 34px !important;
     }
-    .leaflet-control-zoom a:hover { color: #e6a032 !important; }
+    .leaflet-control-zoom a:hover { color: #e6a032 !important; background: rgba(230,160,50,0.12) !important; }
+
     .leaflet-control-attribution {
-      background: rgba(15,17,23,0.8) !important;
-      color: #3d4d6a !important;
-      font-size: 9px !important;
+      background: rgba(15,17,23,0.75) !important;
+      color: #3d4d6a !important; font-size: 9px !important;
     }
     .leaflet-control-attribution a { color: #7a8aaa !important; }
   </style>
@@ -137,26 +167,61 @@
 
   <div id="map"></div>
 
-  <!-- HUD de monitoreo -->
+  <!-- HUD -->
   <div class="hud">
     <div class="hud-zone" id="hudZone">Chile Norte</div>
-    <div class="hud-title">SO₂ · TROPOMI</div>
+    <div class="hud-product">SO₂ · TROPOMI</div>
+
+    <hr class="hud-sep" />
+
     <div class="hud-date" id="hudDate">—</div>
     <div class="hud-nav">
-      <button class="hud-btn" id="btnPrev">&#8592;</button>
-      <button class="hud-btn" id="btnHoy">Hoy</button>
-      <button class="hud-btn" id="btnNext">&#8594;</button>
+      <button class="hud-btn" id="btnPrev" title="Día anterior">&#8592;</button>
+      <button class="hud-btn" id="btnHoy" title="Ir a hoy">Hoy</button>
+      <button class="hud-btn" id="btnNext" title="Día siguiente">&#8594;</button>
     </div>
+
     <div class="hud-refresh">
-      Actualizado: <span id="hudLastRefresh">—</span><br>
-      Próxima: <span id="hudNextRefresh">—</span>
+      Actualizado: <b id="hudLastRefresh">—</b><br>
+      Próx. refresh: <b id="hudNextRefresh">—</b><br>
+      <span style="color:#2a3550">Datos disp. ~20:00 UTC</span>
+    </div>
+
+    <!-- Leyenda de capas -->
+    <div class="hud-legend">
+      <div class="hud-legend-title">Capas</div>
+      <div class="hud-legend-item">
+        <svg width="16" height="18" viewBox="0 0 16 18">
+          <path d="M8,0 L0,18 L16,18 Z" fill="#4a5568" stroke="#1a202c" stroke-width="0.8"/>
+          <path d="M8,0 L4.2,6.8 Q8,5 11.8,6.8 Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
+        </svg>
+        <span>Volcán OVDAS</span>
+      </div>
+      <div class="hud-legend-item">
+        <svg width="14" height="15" viewBox="0 0 14 15">
+          <polygon points="7,1 0,14 14,14" fill="#718096" stroke="#2d3748" stroke-width="0.8"/>
+        </svg>
+        <span>Volcán</span>
+      </div>
+      <div class="hud-legend-item">
+        <svg width="14" height="14" viewBox="0 0 14 14">
+          <circle cx="7" cy="7" r="5" fill="#111" stroke="#555" stroke-width="1.5"/>
+        </svg>
+        <span>Fundición</span>
+      </div>
+      <div class="hud-legend-item">
+        <svg width="22" height="8" viewBox="0 0 22 8">
+          <line x1="0" y1="4" x2="22" y2="4" stroke="#fff" stroke-width="1.5" stroke-opacity="0.5"/>
+        </svg>
+        <span>Límite Chile</span>
+      </div>
     </div>
   </div>
 
-  <!-- Leyenda SO₂ -->
-  <div class="so2-legend">
+  <!-- Escala SO₂ -->
+  <div class="so2-scale">
     <svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" viewBox="0 0 130 195">
-      <rect x="0" y="0" width="130" height="195" fill="#161b26"/>
+      <rect x="0" y="0" width="130" height="195" fill="#161b26" rx="2"/>
       <text x="8" y="16" font-size="14" font-weight="600" fill="#e2e8f0"
             font-family="IBM Plex Mono,monospace">SO₂ (DU)</text>
       <defs>
@@ -171,7 +236,7 @@
           <stop offset="100%" stop-color="#ffffff"/>
         </linearGradient>
       </defs>
-      <rect x="10" y="22" width="40" height="155" fill="url(#g)" stroke="#999" stroke-width="0.5"/>
+      <rect x="10" y="22" width="40" height="155" fill="url(#g)" stroke="#555" stroke-width="0.5"/>
       <line x1="52" y1="22"  x2="60" y2="22"  stroke="#3d4d6a" stroke-width="1.2"/>
       <text x="64" y="26"  font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">10.0</text>
       <line x1="52" y1="60"  x2="60" y2="60"  stroke="#3d4d6a" stroke-width="1.2"/>
@@ -191,93 +256,102 @@
   <script>
   /* global APP_CONFIG, L */
   (function () {
+    "use strict";
     const cfg = window.APP_CONFIG;
 
-    // ── Zona desde ?zona=norte|sur ──────────────────────────────────────────
-    const params = new URLSearchParams(window.location.search);
+    // ── Zonas ──────────────────────────────────────────────────────────────
+    const params  = new URLSearchParams(window.location.search);
     const zonaKey = (params.get("zona") || "norte").toLowerCase();
 
     const ZONAS = {
       norte: {
         label:  "Chile Norte",
-        // Norte Grande + Norte Chico: Arica→La Serena
         bounds: [[-35.5, -73.5], [-17.0, -61.5]],
       },
       sur: {
         label:  "Chile Sur",
-        // Región del Bío-Bío → Magallanes
         bounds: [[-56.0, -76.5], [-35.5, -64.0]],
       },
     };
     const zona = ZONAS[zonaKey] || ZONAS.norte;
-
-    document.title        = `SO₂ Monitor · ${zona.label}`;
+    document.title = `SO₂ Monitor · ${zona.label}`;
     document.getElementById("hudZone").textContent = zona.label;
 
-    // ── Fecha (UTC) ────────────────────────────────────────────────────────
-    function todayUtc() {
-      const n = new Date();
-      return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,"0")}-${String(n.getUTCDate()).padStart(2,"0")}`;
+    // ── Fecha inteligente ──────────────────────────────────────────────────
+    // El producto L3 P1D de EOC/DLR está disponible ~20:00 UTC.
+    // Antes de esa hora mostramos ayer (datos seguros); después, hoy.
+    const EOC_UPDATE_HOUR_UTC = 20;
+
+    function smartDate() {
+      const now = new Date();
+      const d   = new Date(now);
+      if (now.getUTCHours() < EOC_UPDATE_HOUR_UTC) {
+        d.setUTCDate(d.getUTCDate() - 1);
+      }
+      return d.toISOString().slice(0, 10);
     }
+
     function shiftDate(dateStr, days) {
       const d = new Date(dateStr + "T00:00:00Z");
       d.setUTCDate(d.getUTCDate() + days);
       return d.toISOString().slice(0, 10);
     }
 
-    let currentDate = params.get("fecha") || todayUtc();
-    document.getElementById("hudDate").textContent = currentDate;
+    function fmtUtc(d) {
+      return String(d.getUTCHours()).padStart(2,"0") + ":" +
+             String(d.getUTCMinutes()).padStart(2,"0") + " UTC";
+    }
 
-    // ── Mapa ───────────────────────────────────────────────────────────────
-    const map = L.map("map", { zoomControl: true, attributionControl: true })
+    let currentDate = params.get("fecha") || smartDate();
+
+    // ── Mapa (zoom en bottom-right, sin control por defecto) ───────────────
+    const map = L.map("map", { zoomControl: false })
       .fitBounds(zona.bounds);
+
+    L.control.zoom({ position: "bottomright" }).addTo(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 12,
-      attribution: "&copy; OpenStreetMap · TROPOMI/ESA"
+      attribution: "&copy; OpenStreetMap · DLR EOC · TROPOMI/ESA"
     }).addTo(map);
 
-    // ── Capa WMS SO₂ ───────────────────────────────────────────────────────
+    // ── WMS SO₂ ────────────────────────────────────────────────────────────
     let so2Layer = null;
-
-    function toWmsTime(dateStr) {
-      return cfg.wms.timeFormat === "date" ? dateStr : `${dateStr}T05:00:00Z`;
-    }
 
     function loadSo2(dateStr) {
       if (so2Layer) map.removeLayer(so2Layer);
       const p = {
-        layers: cfg.wms.layers,
-        format: cfg.wms.format,
+        layers:      cfg.wms.layers,
+        format:      cfg.wms.format,
         transparent: cfg.wms.transparent,
-        version: cfg.wms.version,
-        time: toWmsTime(dateStr),
-        opacity: 0.85,
+        version:     cfg.wms.version,
+        time:        `${dateStr}T05:00:00Z`,
+        opacity:     0.85,
       };
       if (cfg.wms.styles !== undefined) p.styles = cfg.wms.styles;
       so2Layer = L.tileLayer.wms(cfg.wms.url, p).addTo(map);
     }
 
-    // ── Capas GeoJSON ──────────────────────────────────────────────────────
+    // ── Iconos ─────────────────────────────────────────────────────────────
     function ovdasIcon(sz) {
-      const w = sz, h = Math.round(sz * 1.15), cx = w / 2, sw = Math.max(0.5, sz/20);
+      const w = sz, h = Math.round(sz * 1.15), cx = w / 2, sw = Math.max(0.5, sz / 20);
       return L.divIcon({
         className: "volcano-icon",
         html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
           <path d="M${cx},0 L0,${h} L${w},${h} Z" fill="#4a5568" stroke="#1a202c" stroke-width="${sw}" stroke-linejoin="round"/>
           <path d="M${cx},0 L${cx*.52},${h*.38} Q${cx},${h*.28} ${cx*1.48},${h*.38} Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="${sw*.5}"/>
         </svg>`,
-        iconSize: [w, h], iconAnchor: [Math.round(w/2), h],
+        iconSize: [w, h], iconAnchor: [Math.round(w / 2), h],
       });
     }
     function otherIcon(sz) {
-      const w = sz, h = Math.round(sz * 1.1), sw = Math.max(0.5, sz/12);
+      const w = sz, h = Math.round(sz * 1.1), sw = Math.max(0.5, sz / 12);
       return L.divIcon({
         className: "volcano-icon",
         html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
           <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#718096" stroke="#2d3748" stroke-width="${sw}" stroke-linejoin="round"/>
         </svg>`,
-        iconSize: [w, h], iconAnchor: [Math.round(w/2), h],
+        iconSize: [w, h], iconAnchor: [Math.round(w / 2), h],
       });
     }
 
@@ -285,24 +359,41 @@
       return (props && (props.name || props.Name || props.NOMBRE)) || "";
     }
 
-    async function loadGeoJson(url, pointFn, labelClass) {
+    // ── Capas GeoJSON con zoom-gated labels ────────────────────────────────
+    // Las etiquetas son permanentes pero se muestran/ocultan según zoom.
+    // Umbrales: OVDAS >= 7, otros/fundiciones >= 9
+    const ZOOM_OVDAS   = 7;
+    const ZOOM_OTHER   = 9;
+
+    let ovdasLayer  = null;
+    let otrosLayer  = null;
+    let smelterLayer = null;
+
+    async function loadGeoJson(url, pointFn, zoomThreshold) {
       try {
         const r = await fetch(new URL(url, document.baseURI).toString(), { cache: "no-store" });
-        if (!r.ok) return;
+        if (!r.ok) return null;
         const gj = await r.json();
-        L.geoJSON(gj, {
+        const layer = L.geoJSON(gj, {
           pointToLayer: (f, ll) => pointFn(ll, f),
           onEachFeature: (f, lyr) => {
             const name = nameOf(f.properties);
-            if (name) {
-              lyr.bindTooltip(name, {
-                permanent: true, direction: "top", offset: [0, -10], opacity: 1,
-                className: "monitor-label",
-              });
-            }
-          }
+            if (!name) return;
+            lyr.bindTooltip(name, {
+              permanent: true,
+              direction: "top",
+              offset: [0, -10],
+              opacity: 1,
+              className: "monitor-tooltip",
+            });
+          },
         }).addTo(map);
-      } catch (e) { console.warn("GeoJSON no cargado:", url, e); }
+        layer._zoomThreshold = zoomThreshold;
+        return layer;
+      } catch (e) {
+        console.warn("GeoJSON no cargado:", url, e);
+        return null;
+      }
     }
 
     async function loadBorder() {
@@ -319,46 +410,29 @@
             );
           }),
         };
-        L.geoJSON(chile, { style: { color: "#fff", weight: 1.5, fillOpacity: 0, opacity: 0.5 } })
-          .addTo(map);
+        L.geoJSON(chile, {
+          style: { color: "#ffffff", weight: 1.5, fillOpacity: 0, opacity: 0.45 }
+        }).addTo(map);
       } catch (e) { console.warn("Borde no cargado:", e); }
     }
 
-    // ── Auto-refresh ───────────────────────────────────────────────────────
-    const REFRESH_MS = 30 * 60 * 1000;   // 30 minutos
-    let nextRefreshAt = Date.now() + REFRESH_MS;
-
-    function fmtTime(d) {
-      return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    // Muestra/oculta tooltips según el zoom actual
+    function updateLabels() {
+      const z = map.getZoom();
+      [ovdasLayer, otrosLayer, smelterLayer].forEach(layer => {
+        if (!layer) return;
+        const threshold = layer._zoomThreshold ?? 8;
+        layer.eachLayer(l => {
+          const t = l.getTooltip?.();
+          if (!t) return;
+          if (z >= threshold) l.openTooltip();
+          else                l.closeTooltip();
+        });
+      });
     }
+    map.on("zoomend", updateLabels);
 
-    function updateHud() {
-      const now = Date.now();
-      const secsLeft = Math.max(0, Math.round((nextRefreshAt - now) / 1000));
-      const m = String(Math.floor(secsLeft / 60)).padStart(2, "0");
-      const s = String(secsLeft % 60).padStart(2, "0");
-      document.getElementById("hudNextRefresh").textContent = `${m}:${s}`;
-    }
-
-    function doRefresh() {
-      const newDate = todayUtc();
-      if (newDate !== currentDate) {
-        currentDate = newDate;
-        document.getElementById("hudDate").textContent = currentDate;
-      }
-      loadSo2(currentDate);
-      const now = new Date();
-      document.getElementById("hudLastRefresh").textContent = fmtTime(now) + " UTC";
-      nextRefreshAt = Date.now() + REFRESH_MS;
-      document.getElementById("hudNextRefresh").textContent = fmtTime(new Date(nextRefreshAt)) + " UTC";
-    }
-
-    // Countdown HUD cada segundo
-    setInterval(updateHud, 1000);
-    // Refresh WMS cada 30 min
-    setInterval(doRefresh, REFRESH_MS);
-
-    // ── Navegación de fecha ────────────────────────────────────────────────
+    // ── HUD: fecha y navegación ────────────────────────────────────────────
     function setDate(dateStr) {
       currentDate = dateStr;
       document.getElementById("hudDate").textContent = currentDate;
@@ -367,34 +441,80 @@
 
     document.getElementById("btnPrev").addEventListener("click", () => setDate(shiftDate(currentDate, -1)));
     document.getElementById("btnNext").addEventListener("click", () => setDate(shiftDate(currentDate, +1)));
-    document.getElementById("btnHoy").addEventListener("click", () => setDate(todayUtc()));
+    document.getElementById("btnHoy").addEventListener("click", () => setDate(smartDate()));
 
-    // Teclas ← → para cambiar fecha sin ratón
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft")  setDate(shiftDate(currentDate, -1));
       if (e.key === "ArrowRight") setDate(shiftDate(currentDate, +1));
-      if (e.key === "Home")       setDate(todayUtc());
+      if (e.key === "Home")       setDate(smartDate());
     });
+
+    // ── Auto-refresh ───────────────────────────────────────────────────────
+    const REFRESH_MS = 30 * 60 * 1000;   // cada 30 min
+    let nextRefreshAt = Date.now() + REFRESH_MS;
+
+    function doRefresh() {
+      // Recompute smart date (puede que ya pasó 20:00 UTC → cambiar a hoy)
+      const newDate = smartDate();
+      setDate(newDate);
+      const now = new Date();
+      document.getElementById("hudLastRefresh").textContent = fmtUtc(now);
+      nextRefreshAt = Date.now() + REFRESH_MS;
+    }
+
+    // Countdown cada segundo
+    setInterval(() => {
+      const secsLeft = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
+      const m = String(Math.floor(secsLeft / 60)).padStart(2, "0");
+      const s = String(secsLeft % 60).padStart(2, "0");
+      document.getElementById("hudNextRefresh").textContent = `${m}:${s}`;
+    }, 1000);
+
+    // Refresh periódico
+    setInterval(doRefresh, REFRESH_MS);
+
+    // Refresh programado a las 20:15 UTC (cuando los datos del día están disponibles)
+    function scheduleEocRefresh() {
+      const now = new Date();
+      const target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(),
+                              now.getUTCDate(), 20, 15, 0));
+      if (target <= now) target.setUTCDate(target.getUTCDate() + 1);
+      const ms = target - now;
+      setTimeout(() => {
+        doRefresh();
+        scheduleEocRefresh();   // reprogramar para mañana
+      }, ms);
+    }
+    scheduleEocRefresh();
 
     // ── Init ───────────────────────────────────────────────────────────────
     async function init() {
-      loadSo2(currentDate);
+      setDate(currentDate);
 
       await Promise.all([
         loadBorder(),
-        loadGeoJson(cfg.data.volcanoesOvdas,
-          (ll) => L.marker(ll, { icon: ovdasIcon(22) })),
-        loadGeoJson(cfg.data.volcanoesAll,
-          (ll) => L.marker(ll, { icon: otherIcon(12) })),
-        loadGeoJson(cfg.data.smelters,
-          (ll) => L.circleMarker(ll, { radius: 6, weight: 1.5, fillOpacity: 0.9, color: "#000", fillColor: "#111" })),
+        loadGeoJson(
+          cfg.data.volcanoesOvdas,
+          ll => L.marker(ll, { icon: ovdasIcon(24) }),
+          ZOOM_OVDAS
+        ).then(l => { ovdasLayer = l; }),
+        loadGeoJson(
+          cfg.data.volcanoesAll,
+          ll => L.marker(ll, { icon: otherIcon(13) }),
+          ZOOM_OTHER
+        ).then(l => { otrosLayer = l; }),
+        loadGeoJson(
+          cfg.data.smelters,
+          ll => L.circleMarker(ll, { radius: 7, weight: 1.5, fillOpacity: 0.9, color: "#000", fillColor: "#111" }),
+          ZOOM_OTHER
+        ).then(l => { smelterLayer = l; }),
       ]);
+
+      updateLabels();   // aplicar visibilidad inicial según zoom de arranque
 
       // HUD inicial
       const now = new Date();
-      document.getElementById("hudLastRefresh").textContent = fmtTime(now) + " UTC";
-      document.getElementById("hudNextRefresh").textContent =
-        fmtTime(new Date(nextRefreshAt)) + " UTC";
+      document.getElementById("hudLastRefresh").textContent = fmtUtc(now);
     }
 
     init();
