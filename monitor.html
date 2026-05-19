@@ -348,7 +348,7 @@
         </svg>`,
         iconSize:   [w, h],
         iconAnchor: [Math.round(w / 2), h],
-        tooltipAnchor: [-Math.round(w / 2), -Math.round(h / 2)],  // izquierda, centro vertical
+        tooltipAnchor: [0, -h],  // encima, centro horizontal
       });
     }
 
@@ -362,7 +362,7 @@
         </svg>`,
         iconSize:   [w, h],
         iconAnchor: [Math.round(w / 2), h],
-        tooltipAnchor: [-Math.round(w / 2), -Math.round(h / 2)],  // izquierda, centro vertical
+        tooltipAnchor: [0, -h],  // encima, centro horizontal
       });
     }
 
@@ -412,8 +412,8 @@
             const name = nameOf(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
-              permanent: true, direction: "left",
-              offset: [-5, 0], opacity: 1,
+              permanent: true, direction: "top",
+              offset: [0, -4], opacity: 1,
               className: tooltipClass,
             });
           },
@@ -530,8 +530,8 @@
             const name = nameOf(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
-              permanent: true, direction: "left",
-              offset: [-5, 0], opacity: 1,
+              permanent: true, direction: "top",
+              offset: [0, -4], opacity: 1,
               className: "monitor-tooltip-ovdas",
             });
           },
