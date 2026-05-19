@@ -284,7 +284,7 @@
   let smeltersLayer = null;
 
   function bindPermanentLabel(layer, text, className, direction, offset) {
-    layer.bindTooltip(text, { permanent: false, direction: direction || "top", offset: offset || [0, -10], opacity: 1.0, className: className || "" });
+    layer.bindTooltip(text, { permanent: true, direction: direction || "top", offset: offset || [0, -10], opacity: 1.0, className: className || "" });
   }
 
   function updateLabelsByZoom() {
