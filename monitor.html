@@ -16,149 +16,171 @@
     html, body {
       margin: 0; padding: 0;
       height: 100%; width: 100%;
-      background: #0f1117;
+      background: #0a0d18;
       overflow: hidden;
       font-family: 'DM Sans', system-ui, sans-serif;
     }
 
     #map { height: 100vh; width: 100vw; }
 
-    /* ── HUD ── */
+    /* ── HUD principal (top-left) ── */
     .hud {
       position: fixed;
-      top: 16px; left: 16px;
-      background: rgba(15, 17, 23, 0.95);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 14px 16px;
+      top: 20px; left: 20px;
+      background: rgba(10, 13, 24, 0.97);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 18px 20px 16px;
       z-index: 900;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 28px rgba(0,0,0,0.55);
-      width: 210px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 6px 36px rgba(0,0,0,0.65);
+      width: 240px;
     }
-    /* Línea de acento superior */
     .hud::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, #e6a032, transparent 70%);
-      border-radius: 12px 12px 0 0;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #e6a032 0%, transparent 70%);
+      border-radius: 14px 14px 0 0;
     }
 
     .hud-zone {
-      font-size: 10px; font-weight: 700;
+      font-size: 11px; font-weight: 700;
       color: #e6a032;
-      text-transform: uppercase; letter-spacing: 0.12em;
+      text-transform: uppercase; letter-spacing: 0.14em;
       font-family: 'IBM Plex Mono', monospace;
     }
     .hud-product {
-      font-size: 13px; font-weight: 600;
+      font-size: 15px; font-weight: 600;
       color: #e2e8f0;
-      margin-top: 2px; letter-spacing: -0.01em;
+      margin-top: 3px; letter-spacing: -0.01em;
     }
 
     .hud-sep {
-      border: none; border-top: 1px solid rgba(255,255,255,0.07);
-      margin: 10px 0;
+      border: none; border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 12px 0;
     }
 
     .hud-date {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 22px; font-weight: 600;
-      color: #e2e8f0; letter-spacing: 0.02em;
+      font-size: 28px; font-weight: 600;
+      color: #f0f4ff; letter-spacing: 0.02em;
       line-height: 1.1;
     }
     .hud-nav {
-      display: flex; gap: 5px; margin-top: 8px;
+      display: flex; gap: 6px; margin-top: 10px;
     }
     .hud-btn {
-      flex: 1; padding: 6px 0;
+      flex: 1; padding: 8px 0;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 7px;
-      color: #7a8aaa; font-size: 13px; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 8px;
+      color: #7a8aaa; font-size: 14px; cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       transition: background 0.12s, color 0.12s, border-color 0.12s;
       text-align: center;
     }
-    .hud-btn:hover { background: rgba(230,160,50,0.15); color: #e6a032; border-color: rgba(230,160,50,0.3); }
+    .hud-btn:hover {
+      background: rgba(230,160,50,0.15);
+      color: #e6a032;
+      border-color: rgba(230,160,50,0.3);
+    }
 
     .hud-refresh {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 10px; color: #3d4d6a;
-      margin-top: 8px; line-height: 1.7;
+      font-size: 11px; color: #3d4d6a;
+      margin-top: 10px; line-height: 1.9;
     }
     .hud-refresh b { color: #7a8aaa; font-weight: 500; }
+    .hud-refresh-note { color: #2a3550; font-size: 10px; }
 
-    /* ── Leyenda de capas ── */
+    /* ── Leyenda de capas (parte baja del HUD) ── */
     .hud-legend {
-      margin-top: 10px;
+      margin-top: 12px;
       border-top: 1px solid rgba(255,255,255,0.07);
-      padding-top: 8px;
+      padding-top: 10px;
     }
     .hud-legend-title {
-      font-size: 9px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
-      color: #3d4d6a; text-transform: uppercase; letter-spacing: 0.1em;
-      margin-bottom: 6px;
+      font-size: 10px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+      color: #3d4d6a; text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 8px;
     }
     .hud-legend-item {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 11px; color: #7a8aaa;
-      margin: 4px 0;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #94a3b8;
+      margin: 6px 0;
     }
     .hud-legend-item svg { flex-shrink: 0; }
 
-    /* ── Leyenda SO₂ ── */
+    /* ── Escala SO₂ (bottom-left) ── */
     .so2-scale {
       position: fixed;
-      left: 16px; bottom: 24px;
-      background: rgba(22, 27, 38, 0.95);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 6px 8px 4px;
+      left: 20px; bottom: 28px;
+      background: rgba(16, 20, 32, 0.97);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 8px 10px 6px;
       z-index: 800;
-      transform: scale(0.52);
-      transform-origin: bottom left;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 
-    /* ── Marcadores volcán ── */
+    /* ── Marcadores ── */
     .volcano-icon { background: transparent; border: none; box-shadow: none; }
 
-    /* ── Tooltip: visible solo con zoom alto ── */
+    /* ── Tooltip videowall ── */
     .monitor-tooltip {
-      background: rgba(10, 13, 26, 0.95) !important;
-      border: 1px solid rgba(160,180,255,0.2) !important;
-      border-radius: 4px !important;
-      padding: 3px 8px !important;
-      font-size: 11px !important; font-weight: 600 !important;
-      color: #fff !important;
+      background: rgba(6, 8, 20, 0.96) !important;
+      border: 1px solid rgba(180,200,255,0.25) !important;
+      border-radius: 5px !important;
+      padding: 4px 10px !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: #e2e8f0 !important;
       white-space: nowrap !important;
-      box-shadow: none !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6) !important;
       font-family: 'DM Sans', sans-serif !important;
+      letter-spacing: 0.01em !important;
     }
     .monitor-tooltip::before { display: none !important; }
 
-    /* ── Overrides Leaflet ── */
+    /* Tooltip OVDAS: acento amarillo */
+    .monitor-tooltip-ovdas {
+      background: rgba(6, 8, 20, 0.97) !important;
+      border: 1px solid rgba(230,160,50,0.35) !important;
+      border-radius: 5px !important;
+      padding: 4px 10px !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #fde68a !important;
+      white-space: nowrap !important;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.7) !important;
+      font-family: 'DM Sans', sans-serif !important;
+      letter-spacing: 0.01em !important;
+    }
+    .monitor-tooltip-ovdas::before { display: none !important; }
+
+    /* ── Leaflet overrides ── */
     .leaflet-control-zoom {
       border: 1px solid rgba(255,255,255,0.09) !important;
-      border-radius: 8px !important;
+      border-radius: 10px !important;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.5) !important;
     }
     .leaflet-control-zoom a {
-      background: rgba(22,27,38,0.96) !important;
+      background: rgba(16,20,32,0.98) !important;
       border-color: rgba(255,255,255,0.08) !important;
       color: #7a8aaa !important;
-      font-size: 18px !important; font-weight: 400 !important;
-      width: 34px !important; height: 34px !important;
-      line-height: 34px !important;
+      font-size: 20px !important; font-weight: 400 !important;
+      width: 40px !important; height: 40px !important;
+      line-height: 40px !important;
     }
-    .leaflet-control-zoom a:hover { color: #e6a032 !important; background: rgba(230,160,50,0.12) !important; }
-
+    .leaflet-control-zoom a:hover {
+      color: #e6a032 !important;
+      background: rgba(230,160,50,0.12) !important;
+    }
     .leaflet-control-attribution {
-      background: rgba(15,17,23,0.75) !important;
-      color: #3d4d6a !important; font-size: 9px !important;
+      background: rgba(10,13,24,0.80) !important;
+      color: #3d4d6a !important; font-size: 10px !important;
     }
     .leaflet-control-attribution a { color: #7a8aaa !important; }
   </style>
@@ -170,7 +192,7 @@
   <!-- HUD -->
   <div class="hud">
     <div class="hud-zone" id="hudZone">Chile Norte</div>
-    <div class="hud-product">SO₂ · TROPOMI</div>
+    <div class="hud-product">SO₂ · TROPOMI L3</div>
 
     <hr class="hud-sep" />
 
@@ -184,34 +206,38 @@
     <div class="hud-refresh">
       Actualizado: <b id="hudLastRefresh">—</b><br>
       Próx. refresh: <b id="hudNextRefresh">—</b><br>
-      <span style="color:#2a3550">Datos disp. ~20:00 UTC</span>
+      <span class="hud-refresh-note">Datos disp. ~20:00 UTC</span>
     </div>
 
-    <!-- Leyenda de capas -->
+    <!-- Leyenda -->
     <div class="hud-legend">
-      <div class="hud-legend-title">Capas</div>
+      <div class="hud-legend-title">Referencias</div>
       <div class="hud-legend-item">
-        <svg width="16" height="18" viewBox="0 0 16 18">
-          <path d="M8,0 L0,18 L16,18 Z" fill="#4a5568" stroke="#1a202c" stroke-width="0.8"/>
-          <path d="M8,0 L4.2,6.8 Q8,5 11.8,6.8 Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
+        <!-- Triángulo OVDAS: gris oscuro con cima nevada -->
+        <svg width="20" height="22" viewBox="0 0 20 22">
+          <path d="M10,1 L1,21 L19,21 Z" fill="#4a5568" stroke="#0f1117" stroke-width="1"/>
+          <path d="M10,1 L6.5,8.5 Q10,6.5 13.5,8.5 Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
         </svg>
         <span>Volcán OVDAS</span>
       </div>
       <div class="hud-legend-item">
-        <svg width="14" height="15" viewBox="0 0 14 15">
-          <polygon points="7,1 0,14 14,14" fill="#718096" stroke="#2d3748" stroke-width="0.8"/>
+        <!-- Triángulo otro volcán: más claro, sin cima -->
+        <svg width="16" height="17" viewBox="0 0 16 17">
+          <polygon points="8,1 0,16 16,16" fill="#374151" stroke="#1f2937" stroke-width="0.8"/>
         </svg>
-        <span>Volcán</span>
+        <span>Volcán (no monit.)</span>
       </div>
       <div class="hud-legend-item">
-        <svg width="14" height="14" viewBox="0 0 14 14">
-          <circle cx="7" cy="7" r="5" fill="#111" stroke="#555" stroke-width="1.5"/>
+        <!-- Círculo fundición -->
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="5.5" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.5"/>
         </svg>
         <span>Fundición</span>
       </div>
       <div class="hud-legend-item">
-        <svg width="22" height="8" viewBox="0 0 22 8">
-          <line x1="0" y1="4" x2="22" y2="4" stroke="#fff" stroke-width="1.5" stroke-opacity="0.5"/>
+        <!-- Línea borde Chile -->
+        <svg width="24" height="10" viewBox="0 0 24 10">
+          <line x1="0" y1="5" x2="24" y2="5" stroke="#e2e8f0" stroke-width="1.5" stroke-opacity="0.45"/>
         </svg>
         <span>Límite Chile</span>
       </div>
@@ -220,9 +246,9 @@
 
   <!-- Escala SO₂ -->
   <div class="so2-scale">
-    <svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" viewBox="0 0 130 195">
-      <rect x="0" y="0" width="130" height="195" fill="#161b26" rx="2"/>
-      <text x="8" y="16" font-size="14" font-weight="600" fill="#e2e8f0"
+    <svg xmlns="http://www.w3.org/2000/svg" width="160" height="230" viewBox="0 0 160 230">
+      <rect x="0" y="0" width="160" height="230" fill="#10141f" rx="3"/>
+      <text x="10" y="20" font-size="16" font-weight="600" fill="#e2e8f0"
             font-family="IBM Plex Mono,monospace">SO₂ (DU)</text>
       <defs>
         <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
@@ -236,17 +262,17 @@
           <stop offset="100%" stop-color="#ffffff"/>
         </linearGradient>
       </defs>
-      <rect x="10" y="22" width="40" height="155" fill="url(#g)" stroke="#555" stroke-width="0.5"/>
-      <line x1="52" y1="22"  x2="60" y2="22"  stroke="#3d4d6a" stroke-width="1.2"/>
-      <text x="64" y="26"  font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">10.0</text>
-      <line x1="52" y1="60"  x2="60" y2="60"  stroke="#3d4d6a" stroke-width="1.2"/>
-      <text x="64" y="64"  font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">3.3</text>
-      <line x1="52" y1="100" x2="60" y2="100" stroke="#3d4d6a" stroke-width="1.2"/>
-      <text x="64" y="104" font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">1.1</text>
-      <line x1="52" y1="132" x2="60" y2="132" stroke="#3d4d6a" stroke-width="1.2"/>
-      <text x="64" y="136" font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">0.3</text>
-      <line x1="52" y1="177" x2="60" y2="177" stroke="#3d4d6a" stroke-width="1.2"/>
-      <text x="64" y="181" font-size="12" fill="#7a8aaa" font-family="IBM Plex Mono,monospace">0</text>
+      <rect x="12" y="28" width="46" height="182" fill="url(#g)" stroke="#444" stroke-width="0.8"/>
+      <line x1="60" y1="28"  x2="70" y2="28"  stroke="#4a5568" stroke-width="1.5"/>
+      <text x="74" y="33"  font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">10.0</text>
+      <line x1="60" y1="73"  x2="70" y2="73"  stroke="#4a5568" stroke-width="1.5"/>
+      <text x="74" y="78"  font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">3.3</text>
+      <line x1="60" y1="119" x2="70" y2="119" stroke="#4a5568" stroke-width="1.5"/>
+      <text x="74" y="124" font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">1.1</text>
+      <line x1="60" y1="155" x2="70" y2="155" stroke="#4a5568" stroke-width="1.5"/>
+      <text x="74" y="160" font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">0.3</text>
+      <line x1="60" y1="210" x2="70" y2="210" stroke="#4a5568" stroke-width="1.5"/>
+      <text x="74" y="215" font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">0</text>
     </svg>
   </div>
 
@@ -264,39 +290,27 @@
     const zonaKey = (params.get("zona") || "norte").toLowerCase();
 
     const ZONAS = {
-      norte: {
-        label:  "Chile Norte",
-        bounds: [[-35.5, -73.5], [-17.0, -61.5]],
-      },
-      sur: {
-        label:  "Chile Sur",
-        bounds: [[-56.0, -76.5], [-35.5, -64.0]],
-      },
+      norte: { label: "Chile Norte", bounds: [[-35.5, -73.5], [-17.0, -61.5]] },
+      sur:   { label: "Chile Sur",   bounds: [[-56.0, -76.5], [-35.5, -64.0]] },
     };
     const zona = ZONAS[zonaKey] || ZONAS.norte;
     document.title = `SO₂ Monitor · ${zona.label}`;
     document.getElementById("hudZone").textContent = zona.label;
 
     // ── Fecha inteligente ──────────────────────────────────────────────────
-    // El producto L3 P1D de EOC/DLR está disponible ~20:00 UTC.
-    // Antes de esa hora mostramos ayer (datos seguros); después, hoy.
     const EOC_UPDATE_HOUR_UTC = 20;
 
     function smartDate() {
       const now = new Date();
       const d   = new Date(now);
-      if (now.getUTCHours() < EOC_UPDATE_HOUR_UTC) {
-        d.setUTCDate(d.getUTCDate() - 1);
-      }
+      if (now.getUTCHours() < EOC_UPDATE_HOUR_UTC) d.setUTCDate(d.getUTCDate() - 1);
       return d.toISOString().slice(0, 10);
     }
-
     function shiftDate(dateStr, days) {
       const d = new Date(dateStr + "T00:00:00Z");
       d.setUTCDate(d.getUTCDate() + days);
       return d.toISOString().slice(0, 10);
     }
-
     function fmtUtc(d) {
       return String(d.getUTCHours()).padStart(2,"0") + ":" +
              String(d.getUTCMinutes()).padStart(2,"0") + " UTC";
@@ -304,54 +318,55 @@
 
     let currentDate = params.get("fecha") || smartDate();
 
-    // ── Mapa (zoom en bottom-right, sin control por defecto) ───────────────
-    const map = L.map("map", { zoomControl: false })
-      .fitBounds(zona.bounds);
-
+    // ── Mapa ───────────────────────────────────────────────────────────────
+    const map = L.map("map", { zoomControl: false }).fitBounds(zona.bounds);
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 12,
-      attribution: "&copy; OpenStreetMap · DLR EOC · TROPOMI/ESA"
+      attribution: "&copy; OpenStreetMap &middot; DLR EOC &middot; TROPOMI/ESA",
     }).addTo(map);
 
     // ── WMS SO₂ ────────────────────────────────────────────────────────────
     let so2Layer = null;
-
     function loadSo2(dateStr) {
       if (so2Layer) map.removeLayer(so2Layer);
       const p = {
-        layers:      cfg.wms.layers,
-        format:      cfg.wms.format,
-        transparent: cfg.wms.transparent,
-        version:     cfg.wms.version,
-        time:        `${dateStr}T05:00:00Z`,
-        opacity:     0.85,
+        layers: cfg.wms.layers, format: cfg.wms.format,
+        transparent: cfg.wms.transparent, version: cfg.wms.version,
+        time: `${dateStr}T05:00:00Z`, opacity: 0.85,
       };
       if (cfg.wms.styles !== undefined) p.styles = cfg.wms.styles;
       so2Layer = L.tileLayer.wms(cfg.wms.url, p).addTo(map);
     }
 
-    // ── Iconos ─────────────────────────────────────────────────────────────
-    function ovdasIcon(sz) {
-      const w = sz, h = Math.round(sz * 1.15), cx = w / 2, sw = Math.max(0.5, sz / 20);
+    // ── Iconos SVG ─────────────────────────────────────────────────────────
+    // OVDAS: triángulo gris oscuro con cima nevada – grande para videowall
+    function ovdasIcon() {
+      const w = 30, h = 34, cx = w / 2;
       return L.divIcon({
         className: "volcano-icon",
         html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-          <path d="M${cx},0 L0,${h} L${w},${h} Z" fill="#4a5568" stroke="#1a202c" stroke-width="${sw}" stroke-linejoin="round"/>
-          <path d="M${cx},0 L${cx*.52},${h*.38} Q${cx},${h*.28} ${cx*1.48},${h*.38} Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="${sw*.5}"/>
+          <path d="M${cx},0 L0,${h} L${w},${h} Z" fill="#4a5568" stroke="#0f1117" stroke-width="1" stroke-linejoin="round"/>
+          <path d="M${cx},0 L${cx*.52},${h*.38} Q${cx},${h*.28} ${cx*1.48},${h*.38} Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.6"/>
         </svg>`,
-        iconSize: [w, h], iconAnchor: [Math.round(w / 2), h],
+        iconSize:   [w, h],
+        iconAnchor: [Math.round(w / 2), h],
+        tooltipAnchor: [0, -h],
       });
     }
-    function otherIcon(sz) {
-      const w = sz, h = Math.round(sz * 1.1), sw = Math.max(0.5, sz / 12);
+
+    // Otro volcán: triángulo pequeño gris apagado – sin cima nevada
+    function otherIcon() {
+      const w = 16, h = 17;
       return L.divIcon({
         className: "volcano-icon",
         html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#718096" stroke="#2d3748" stroke-width="${sw}" stroke-linejoin="round"/>
+          <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#374151" stroke="#1f2937" stroke-width="0.8" stroke-linejoin="round"/>
         </svg>`,
-        iconSize: [w, h], iconAnchor: [Math.round(w / 2), h],
+        iconSize:   [w, h],
+        iconAnchor: [Math.round(w / 2), h],
+        tooltipAnchor: [0, -h],
       });
     }
 
@@ -359,36 +374,58 @@
       return (props && (props.name || props.Name || props.NOMBRE)) || "";
     }
 
-    // ── Capas GeoJSON con zoom-gated labels ────────────────────────────────
-    // Las etiquetas son permanentes pero se muestran/ocultan según zoom.
-    // Umbrales: OVDAS >= 7, otros/fundiciones >= 9
-    const ZOOM_OVDAS   = 7;
-    const ZOOM_OTHER   = 9;
+    // ── Zoom thresholds desde config ───────────────────────────────────────
+    const ZOOM_OVDAS   = cfg.zoomLabels?.ovdas   ?? 6;
+    const ZOOM_OTHER   = cfg.zoomLabels?.other    ?? 9;
+    const ZOOM_SMELTER = cfg.zoomLabels?.smelter  ?? 9;
 
-    let ovdasLayer  = null;
-    let otrosLayer  = null;
+    let ovdasLayer   = null;
+    let otrosLayer   = null;
     let smelterLayer = null;
 
-    async function loadGeoJson(url, pointFn, zoomThreshold) {
+    // ── Visibilidad de tooltips según zoom ─────────────────────────────────
+    function updateLabels() {
+      const z = map.getZoom();
+      const entries = [
+        { layer: ovdasLayer,   threshold: ZOOM_OVDAS   },
+        { layer: otrosLayer,   threshold: ZOOM_OTHER   },
+        { layer: smelterLayer, threshold: ZOOM_SMELTER },
+      ];
+      entries.forEach(({ layer, threshold }) => {
+        if (!layer) return;
+        layer.eachLayer(l => {
+          if (!l.getTooltip?.()) return;
+          if (z >= threshold) l.openTooltip();
+          else                l.closeTooltip();
+        });
+      });
+    }
+    map.on("zoomend", updateLabels);
+
+    // ── Carga GeoJSON genérica ─────────────────────────────────────────────
+    async function loadGeoJson(url, pointFn, tooltipClass, excludeNames) {
       try {
         const r = await fetch(new URL(url, document.baseURI).toString(), { cache: "no-store" });
         if (!r.ok) return null;
         const gj = await r.json();
+
         const layer = L.geoJSON(gj, {
+          filter: f => {
+            if (!excludeNames || !excludeNames.size) return true;
+            const n = nameOf(f.properties).toLowerCase().trim();
+            return !excludeNames.has(n);
+          },
           pointToLayer: (f, ll) => pointFn(ll, f),
           onEachFeature: (f, lyr) => {
             const name = nameOf(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
-              permanent: true,
-              direction: "top",
-              offset: [0, -10],
-              opacity: 1,
-              className: "monitor-tooltip",
+              permanent: true, direction: "top",
+              offset: [0, -4], opacity: 1,
+              className: tooltipClass,
             });
           },
         }).addTo(map);
-        layer._zoomThreshold = zoomThreshold;
         return layer;
       } catch (e) {
         console.warn("GeoJSON no cargado:", url, e);
@@ -396,6 +433,7 @@
       }
     }
 
+    // ── Borde Chile ────────────────────────────────────────────────────────
     async function loadBorder() {
       try {
         const r = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
@@ -411,26 +449,10 @@
           }),
         };
         L.geoJSON(chile, {
-          style: { color: "#ffffff", weight: 1.5, fillOpacity: 0, opacity: 0.45 }
+          style: { color: "#ffffff", weight: 1.5, fillOpacity: 0, opacity: 0.45 },
         }).addTo(map);
       } catch (e) { console.warn("Borde no cargado:", e); }
     }
-
-    // Muestra/oculta tooltips según el zoom actual
-    function updateLabels() {
-      const z = map.getZoom();
-      [ovdasLayer, otrosLayer, smelterLayer].forEach(layer => {
-        if (!layer) return;
-        const threshold = layer._zoomThreshold ?? 8;
-        layer.eachLayer(l => {
-          const t = l.getTooltip?.();
-          if (!t) return;
-          if (z >= threshold) l.openTooltip();
-          else                l.closeTooltip();
-        });
-      });
-    }
-    map.on("zoomend", updateLabels);
 
     // ── HUD: fecha y navegación ────────────────────────────────────────────
     function setDate(dateStr) {
@@ -441,7 +463,7 @@
 
     document.getElementById("btnPrev").addEventListener("click", () => setDate(shiftDate(currentDate, -1)));
     document.getElementById("btnNext").addEventListener("click", () => setDate(shiftDate(currentDate, +1)));
-    document.getElementById("btnHoy").addEventListener("click", () => setDate(smartDate()));
+    document.getElementById("btnHoy").addEventListener("click",  () => setDate(smartDate()));
 
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft")  setDate(shiftDate(currentDate, -1));
@@ -450,19 +472,16 @@
     });
 
     // ── Auto-refresh ───────────────────────────────────────────────────────
-    const REFRESH_MS = 30 * 60 * 1000;   // cada 30 min
+    const REFRESH_MS = 30 * 60 * 1000;
     let nextRefreshAt = Date.now() + REFRESH_MS;
 
     function doRefresh() {
-      // Recompute smart date (puede que ya pasó 20:00 UTC → cambiar a hoy)
-      const newDate = smartDate();
-      setDate(newDate);
+      setDate(smartDate());
       const now = new Date();
       document.getElementById("hudLastRefresh").textContent = fmtUtc(now);
       nextRefreshAt = Date.now() + REFRESH_MS;
     }
 
-    // Countdown cada segundo
     setInterval(() => {
       const secsLeft = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
       const m = String(Math.floor(secsLeft / 60)).padStart(2, "0");
@@ -470,51 +489,76 @@
       document.getElementById("hudNextRefresh").textContent = `${m}:${s}`;
     }, 1000);
 
-    // Refresh periódico
     setInterval(doRefresh, REFRESH_MS);
 
-    // Refresh programado a las 20:15 UTC (cuando los datos del día están disponibles)
     function scheduleEocRefresh() {
-      const now = new Date();
+      const now    = new Date();
       const target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(),
                               now.getUTCDate(), 20, 15, 0));
       if (target <= now) target.setUTCDate(target.getUTCDate() + 1);
-      const ms = target - now;
-      setTimeout(() => {
-        doRefresh();
-        scheduleEocRefresh();   // reprogramar para mañana
-      }, ms);
+      setTimeout(() => { doRefresh(); scheduleEocRefresh(); }, target - now);
     }
     scheduleEocRefresh();
 
-    // ── Init ───────────────────────────────────────────────────────────────
+    // ── Inicialización ─────────────────────────────────────────────────────
     async function init() {
       setDate(currentDate);
+      document.getElementById("hudLastRefresh").textContent = fmtUtc(new Date());
 
-      await Promise.all([
-        loadBorder(),
-        loadGeoJson(
-          cfg.data.volcanoesOvdas,
-          ll => L.marker(ll, { icon: ovdasIcon(24) }),
-          ZOOM_OVDAS
-        ).then(l => { ovdasLayer = l; }),
-        loadGeoJson(
-          cfg.data.volcanoesAll,
-          ll => L.marker(ll, { icon: otherIcon(13) }),
-          ZOOM_OTHER
-        ).then(l => { otrosLayer = l; }),
-        loadGeoJson(
-          cfg.data.smelters,
-          ll => L.circleMarker(ll, { radius: 7, weight: 1.5, fillOpacity: 0.9, color: "#000", fillColor: "#111" }),
-          ZOOM_OTHER
-        ).then(l => { smelterLayer = l; }),
-      ]);
+      await loadBorder();
 
-      updateLabels();   // aplicar visibilidad inicial según zoom de arranque
+      // 1. Cargar OVDAS primero para obtener el conjunto de nombres
+      const ovdasGj = await fetch(
+        new URL(cfg.data.volcanoesOvdas, document.baseURI).toString(), { cache: "no-store" }
+      ).then(r => r.ok ? r.json() : null).catch(() => null);
 
-      // HUD inicial
-      const now = new Date();
-      document.getElementById("hudLastRefresh").textContent = fmtUtc(now);
+      const ovdasNames = new Set();
+      if (ovdasGj) {
+        for (const f of (ovdasGj.features || [])) {
+          const n = nameOf(f.properties).toLowerCase().trim();
+          if (n) ovdasNames.add(n);
+        }
+      }
+
+      // 2. Cargar otros volcanes excluyendo los OVDAS (sin superposición)
+      otrosLayer = await loadGeoJson(
+        cfg.data.volcanoesAll,
+        ll => L.marker(ll, { icon: otherIcon(), zIndexOffset: 0 }),
+        "monitor-tooltip",
+        ovdasNames,    // ← excluye los 44 OVDAS
+      );
+
+      // 3. Fundiciones
+      smelterLayer = await loadGeoJson(
+        cfg.data.smelters,
+        ll => L.circleMarker(ll, {
+          radius: 8, weight: 2, fillOpacity: 0.9,
+          color: "#6366f1", fillColor: "#1a1a2e",
+        }),
+        "monitor-tooltip",
+        null,
+      );
+
+      // 4. OVDAS al final → siempre encima (z-order de inserción Leaflet)
+      if (ovdasGj) {
+        ovdasLayer = L.geoJSON(ovdasGj, {
+          pointToLayer: (f, ll) => L.marker(ll, {
+            icon: ovdasIcon(),
+            zIndexOffset: 1000,   // siempre por encima de otros marcadores
+          }),
+          onEachFeature: (f, lyr) => {
+            const name = nameOf(f.properties);
+            if (!name) return;
+            lyr.bindTooltip(name, {
+              permanent: true, direction: "top",
+              offset: [0, -4], opacity: 1,
+              className: "monitor-tooltip-ovdas",
+            });
+          },
+        }).addTo(map);
+      }
+
+      updateLabels();
     }
 
     init();
