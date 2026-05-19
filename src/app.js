@@ -76,6 +76,17 @@
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  // Último dato garantizado: siempre ayer. El WMS muestra vacío si hoy no
+  // tiene datos aún (~20-22 UTC), así que el default seguro es D-1.
+  function lastAvailableDateString() {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - 1);
+    const yyyy = d.getUTCFullYear();
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(d.getUTCDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   function toWmsTime(dateStr) {
     if (cfg.wms.timeFormat === "date") return dateStr;
     return `${dateStr}T05:00:00Z`;
@@ -249,18 +260,13 @@
     });
   }
   async function loadChileBorder() {
-    const r = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
-    if (!r.ok) throw new Error(`No se pudo cargar países: ${r.status}`);
+    // Usa el archivo local (6 KB, Natural Earth 1:110m) en vez del dataset
+    // mundial (~25 MB) — más rápido y sin dependencia de red externa.
+    const url = cfg.data.chileBorderUrl || "data/chile_border.geojson";
+    const r = await fetch(url, { cache: "force-cache" });
+    if (!r.ok) throw new Error(`No se pudo cargar borde Chile: ${r.status}`);
     const gj = await r.json();
-    function isChileFeature(props) {
-      if (!props) return false;
-      for (const k of cfg.data.chileNamePropertyCandidates) {
-        if (props[k] && String(props[k]).toLowerCase() === "chile") return true;
-      }
-      return false;
-    }
-    const chile = { type: "FeatureCollection", features: (gj.features || []).filter(f => isChileFeature(f.properties)) };
-    return L.geoJSON(chile, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
+    return L.geoJSON(gj, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
   }
 
   const layerControl = L.control.layers({}, {}, { collapsed: true }).addTo(map);
@@ -1082,7 +1088,7 @@
 
   async function init() {
     try {
-      dateInput.value = todayUtcDateString();
+      dateInput.value = lastAvailableDateString();   // ayer = último dato garantizado
       addSo2Layer(dateInput.value);
       setStatus("Cargando capas…");
 
@@ -1208,7 +1214,7 @@
   });
 
   todayBtn.addEventListener("click", () => {
-    dateInput.value = todayUtcDateString();
+    dateInput.value = lastAvailableDateString();   // último dato disponible (ayer)
     addSo2Layer(dateInput.value);
     rerenderVisibleWind();
   });

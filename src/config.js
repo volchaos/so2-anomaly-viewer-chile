@@ -23,6 +23,8 @@ window.APP_CONFIG = {
     volcanoesAll: "data/volcanoes.geojson",
     volcanoesOvdas: "data/volcanoes_ovdas_44.geojson",
     smelters: "data/smelters_13.geojson",
+    chileBorderUrl: "data/chile_border.geojson",
+    // Fallback world dataset (solo si chileBorderUrl falla)
     countriesUrl: "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson",
     chileNamePropertyCandidates: ["ADMIN", "name", "NAME", "COUNTRY", "SOVEREIGNT"]
   },

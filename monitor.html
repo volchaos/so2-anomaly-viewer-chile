@@ -298,12 +298,11 @@
     document.getElementById("hudZone").textContent = zona.label;
 
     // ── Fecha inteligente ──────────────────────────────────────────────────
-    const EOC_UPDATE_HOUR_UTC = 20;
-
+    // Siempre muestra ayer como fecha predeterminada (último dato garantizado).
+    // El usuario puede avanzar con → o "Hoy" para ver el día actual.
     function smartDate() {
-      const now = new Date();
-      const d   = new Date(now);
-      if (now.getUTCHours() < EOC_UPDATE_HOUR_UTC) d.setUTCDate(d.getUTCDate() - 1);
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - 1);
       return d.toISOString().slice(0, 10);
     }
     function shiftDate(dateStr, days) {
@@ -433,25 +432,17 @@
       }
     }
 
-    // ── Borde Chile ────────────────────────────────────────────────────────
+    // ── Borde Chile (archivo local de 6 KB, Natural Earth 1:110m) ──────────
     async function loadBorder() {
+      const borderUrl = cfg.data.chileBorderUrl || "data/chile_border.geojson";
       try {
-        const r = await fetch(cfg.data.countriesUrl, { cache: "force-cache" });
-        if (!r.ok) return;
+        const r = await fetch(new URL(borderUrl, document.baseURI).toString(), { cache: "force-cache" });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const gj = await r.json();
-        const chile = {
-          type: "FeatureCollection",
-          features: (gj.features || []).filter(f => {
-            const p = f.properties || {};
-            return cfg.data.chileNamePropertyCandidates.some(
-              k => p[k] && String(p[k]).toLowerCase() === "chile"
-            );
-          }),
-        };
-        L.geoJSON(chile, {
-          style: { color: "#ffffff", weight: 1.5, fillOpacity: 0, opacity: 0.45 },
+        L.geoJSON(gj, {
+          style: { color: "#ffffff", weight: 1.5, fillOpacity: 0, opacity: 0.50 },
         }).addTo(map);
-      } catch (e) { console.warn("Borde no cargado:", e); }
+      } catch (e) { console.warn("Borde Chile no cargado:", e); }
     }
 
     // ── HUD: fecha y navegación ────────────────────────────────────────────
