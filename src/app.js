@@ -260,13 +260,20 @@
     });
   }
   async function loadChileBorder() {
-    // Usa el archivo local (6 KB, Natural Earth 1:110m) en vez del dataset
-    // mundial (~25 MB) — más rápido y sin dependencia de red externa.
-    const url = cfg.data.chileBorderUrl || "data/chile_border.geojson";
-    const r = await fetch(url, { cache: "force-cache" });
-    if (!r.ok) throw new Error(`No se pudo cargar borde Chile: ${r.status}`);
-    const gj = await r.json();
-    return L.geoJSON(gj, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
+    // Intenta 10m (~400 KB) y cae a 110m (6 KB) si falla.
+    const urls = [
+      cfg.data.chileBorderUrl        || "data/chile_border_10m.geojson",
+      cfg.data.chileBorderUrlFallback || "data/chile_border.geojson",
+    ];
+    for (const url of urls) {
+      try {
+        const r = await fetch(url, { cache: "force-cache" });
+        if (!r.ok) continue;
+        const gj = await r.json();
+        return L.geoJSON(gj, { style: { color: "#000", weight: 2, fillOpacity: 0 } });
+      } catch { /* intenta siguiente */ }
+    }
+    throw new Error("No se pudo cargar borde Chile.");
   }
 
   const layerControl = L.control.layers({}, {}, { collapsed: true }).addTo(map);

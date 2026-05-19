@@ -23,8 +23,9 @@ window.APP_CONFIG = {
     volcanoesAll: "data/volcanoes.geojson",
     volcanoesOvdas: "data/volcanoes_ovdas_44.geojson",
     smelters: "data/smelters_13.geojson",
-    chileBorderUrl: "data/chile_border.geojson",
-    // Fallback world dataset (solo si chileBorderUrl falla)
+    chileBorderUrl: "data/chile_border_10m.geojson",   // Natural Earth 1:10m (~400 KB)
+    chileBorderUrlFallback: "data/chile_border.geojson", // 1:110m liviano como respaldo
+    // Fallback world dataset (solo si los locales fallan)
     countriesUrl: "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson",
     chileNamePropertyCandidates: ["ADMIN", "name", "NAME", "COUNTRY", "SOVEREIGNT"]
   },

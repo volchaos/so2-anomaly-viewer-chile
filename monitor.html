@@ -228,16 +228,9 @@
         <span>Volcán (no monit.)</span>
       </div>
       <div class="hud-legend-item">
-        <!-- Círculo fundición -->
-        <svg width="16" height="16" viewBox="0 0 16 16">
-          <circle cx="8" cy="8" r="5.5" fill="#1a1a2e" stroke="#6366f1" stroke-width="1.5"/>
-        </svg>
-        <span>Fundición</span>
-      </div>
-      <div class="hud-legend-item">
         <!-- Línea borde Chile -->
         <svg width="24" height="10" viewBox="0 0 24 10">
-          <line x1="0" y1="5" x2="24" y2="5" stroke="#e2e8f0" stroke-width="1.5" stroke-opacity="0.45"/>
+          <line x1="0" y1="5" x2="24" y2="5" stroke="#888" stroke-width="1.5"/>
         </svg>
         <span>Límite Chile</span>
       </div>
@@ -351,7 +344,7 @@
         </svg>`,
         iconSize:   [w, h],
         iconAnchor: [Math.round(w / 2), h],
-        tooltipAnchor: [0, -h],
+        tooltipAnchor: [-Math.round(w / 2), -Math.round(h / 2)],  // izquierda, centro vertical
       });
     }
 
@@ -365,7 +358,7 @@
         </svg>`,
         iconSize:   [w, h],
         iconAnchor: [Math.round(w / 2), h],
-        tooltipAnchor: [0, -h],
+        tooltipAnchor: [-Math.round(w / 2), -Math.round(h / 2)],  // izquierda, centro vertical
       });
     }
 
@@ -374,23 +367,19 @@
     }
 
     // ── Zoom thresholds desde config ───────────────────────────────────────
-    const ZOOM_OVDAS   = cfg.zoomLabels?.ovdas   ?? 6;
-    const ZOOM_OTHER   = cfg.zoomLabels?.other    ?? 9;
-    const ZOOM_SMELTER = cfg.zoomLabels?.smelter  ?? 9;
+    const ZOOM_OVDAS = cfg.zoomLabels?.ovdas ?? 6;
+    const ZOOM_OTHER = cfg.zoomLabels?.other ?? 9;
 
-    let ovdasLayer   = null;
-    let otrosLayer   = null;
-    let smelterLayer = null;
+    let ovdasLayer = null;
+    let otrosLayer = null;
 
     // ── Visibilidad de tooltips según zoom ─────────────────────────────────
     function updateLabels() {
       const z = map.getZoom();
-      const entries = [
-        { layer: ovdasLayer,   threshold: ZOOM_OVDAS   },
-        { layer: otrosLayer,   threshold: ZOOM_OTHER   },
-        { layer: smelterLayer, threshold: ZOOM_SMELTER },
-      ];
-      entries.forEach(({ layer, threshold }) => {
+      [
+        { layer: ovdasLayer, threshold: ZOOM_OVDAS },
+        { layer: otrosLayer, threshold: ZOOM_OTHER  },
+      ].forEach(({ layer, threshold }) => {
         if (!layer) return;
         layer.eachLayer(l => {
           if (!l.getTooltip?.()) return;
@@ -419,8 +408,8 @@
             const name = nameOf(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
-              permanent: true, direction: "top",
-              offset: [0, -4], opacity: 1,
+              permanent: true, direction: "left",
+              offset: [-5, 0], opacity: 1,
               className: tooltipClass,
             });
           },
@@ -432,17 +421,24 @@
       }
     }
 
-    // ── Borde Chile (archivo local de 6 KB, Natural Earth 1:110m) ──────────
+    // ── Borde Chile (Natural Earth 1:10m, ~400 KB) ────────────────────────
     async function loadBorder() {
-      const borderUrl = cfg.data.chileBorderUrl || "data/chile_border.geojson";
-      try {
-        const r = await fetch(new URL(borderUrl, document.baseURI).toString(), { cache: "force-cache" });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const gj = await r.json();
-        L.geoJSON(gj, {
-          style: { color: "#ffffff", weight: 1.5, fillOpacity: 0, opacity: 0.50 },
-        }).addTo(map);
-      } catch (e) { console.warn("Borde Chile no cargado:", e); }
+      const urls = [
+        cfg.data.chileBorderUrl        || "data/chile_border_10m.geojson",
+        cfg.data.chileBorderUrlFallback || "data/chile_border.geojson",
+      ];
+      for (const url of urls) {
+        try {
+          const r = await fetch(new URL(url, document.baseURI).toString(), { cache: "force-cache" });
+          if (!r.ok) continue;
+          const gj = await r.json();
+          L.geoJSON(gj, {
+            style: { color: "#777", weight: 1.5, fillOpacity: 0, opacity: 0.85 },
+          }).addTo(map);
+          return;
+        } catch { /* intenta siguiente */ }
+      }
+      console.warn("Borde Chile no cargado.");
     }
 
     // ── HUD: fecha y navegación ────────────────────────────────────────────
@@ -519,18 +515,7 @@
         ovdasNames,    // ← excluye los 44 OVDAS
       );
 
-      // 3. Fundiciones
-      smelterLayer = await loadGeoJson(
-        cfg.data.smelters,
-        ll => L.circleMarker(ll, {
-          radius: 8, weight: 2, fillOpacity: 0.9,
-          color: "#6366f1", fillColor: "#1a1a2e",
-        }),
-        "monitor-tooltip",
-        null,
-      );
-
-      // 4. OVDAS al final → siempre encima (z-order de inserción Leaflet)
+      // 3. OVDAS al final → siempre encima (z-order de inserción Leaflet)
       if (ovdasGj) {
         ovdasLayer = L.geoJSON(ovdasGj, {
           pointToLayer: (f, ll) => L.marker(ll, {
@@ -541,8 +526,8 @@
             const name = nameOf(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
-              permanent: true, direction: "top",
-              offset: [0, -4], opacity: 1,
+              permanent: true, direction: "left",
+              offset: [-5, 0], opacity: 1,
               className: "monitor-tooltip-ovdas",
             });
           },
