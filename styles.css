@@ -545,30 +545,38 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .label-volcano::before,
 .label-smelter::before { display: none !important; }
 
-/* OVDAS: ámbar, negrita — acorde al HUD y al ícono */
+/* Halo blanco: legible sobre mapa claro Y sobre SO₂ semitransparente */
+/* OVDAS: charcoal oscuro, negrita */
 .label-ovdas {
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #e6a032 !important;
+  color: #1e293b !important;
   text-shadow:
-    0 1px 5px rgba(0,0,0,0.95),
-    0 0 10px rgba(0,0,0,0.8) !important;
+    0 0 3px #fff, 0 0 5px rgba(255,255,255,0.9),
+    1px 0 0 #fff, -1px 0 0 #fff,
+    0 1px 0 #fff, 0 -1px 0 #fff !important;
 }
 
-/* Volcán no monitoreado: gris-azul claro */
+/* Volcán no monitoreado: slate medio */
 .label-volcano {
   font-size: 10px !important;
   font-weight: 500 !important;
-  color: #94a3b8 !important;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.95) !important;
+  color: #334155 !important;
+  text-shadow:
+    0 0 3px rgba(255,255,255,0.95),
+    1px 0 0 rgba(255,255,255,0.85), -1px 0 0 rgba(255,255,255,0.85),
+    0 1px 0 rgba(255,255,255,0.85), 0 -1px 0 rgba(255,255,255,0.85) !important;
 }
 
-/* Fundición: índigo claro */
+/* Fundición: slate-700, mismo halo */
 .label-smelter {
   font-size: 10px !important;
   font-weight: 500 !important;
-  color: #818cf8 !important;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.95) !important;
+  color: #334155 !important;
+  text-shadow:
+    0 0 3px rgba(255,255,255,0.95),
+    1px 0 0 rgba(255,255,255,0.85), -1px 0 0 rgba(255,255,255,0.85),
+    0 1px 0 rgba(255,255,255,0.85), 0 -1px 0 rgba(255,255,255,0.85) !important;
 }
 
 /* ===== Leyenda SO2 ===== */
