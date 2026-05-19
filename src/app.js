@@ -1114,7 +1114,7 @@
         const p = l.feature?.properties || {};
         const name = nameFromProps(p, "Volcán");
         ovdasNames.add(name);
-        bindPermanentLabel(l, name, "label-volcano", "top", [0, -12]);
+        bindPermanentLabel(l, name, "label-ovdas", "top", [0, -12]);
         const ll = l.getLatLng();
         ovdasVolcanoList.push({ name, lat: ll.lat, lon: ll.lng });
       });

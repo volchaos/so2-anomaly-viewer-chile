@@ -127,37 +127,37 @@
     /* ── Marcadores ── */
     .volcano-icon { background: transparent; border: none; box-shadow: none; }
 
-    /* ── Tooltip videowall ── */
-    .monitor-tooltip {
-      background: rgba(6, 8, 20, 0.96) !important;
-      border: 1px solid rgba(180,200,255,0.25) !important;
-      border-radius: 5px !important;
-      padding: 4px 10px !important;
-      font-size: 13px !important;
-      font-weight: 600 !important;
-      color: #e2e8f0 !important;
-      white-space: nowrap !important;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.6) !important;
-      font-family: 'DM Sans', sans-serif !important;
-      letter-spacing: 0.01em !important;
-    }
-    .monitor-tooltip::before { display: none !important; }
-
-    /* Tooltip OVDAS: acento amarillo */
+    /* ── Etiquetas volcán — sin marco, text-shadow (igual que visor principal) ── */
+    .monitor-tooltip,
     .monitor-tooltip-ovdas {
-      background: rgba(6, 8, 20, 0.97) !important;
-      border: 1px solid rgba(230,160,50,0.35) !important;
-      border-radius: 5px !important;
-      padding: 4px 10px !important;
-      font-size: 13px !important;
-      font-weight: 700 !important;
-      color: #fde68a !important;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 2px !important;
       white-space: nowrap !important;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.7) !important;
-      font-family: 'DM Sans', sans-serif !important;
+      font-family: 'DM Sans', system-ui, sans-serif !important;
       letter-spacing: 0.01em !important;
     }
+    .monitor-tooltip::before,
     .monitor-tooltip-ovdas::before { display: none !important; }
+
+    /* Volcán no monitoreado: gris-azul */
+    .monitor-tooltip {
+      font-size: 10px !important;
+      font-weight: 500 !important;
+      color: #94a3b8 !important;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.95) !important;
+    }
+
+    /* OVDAS: ámbar, negrita */
+    .monitor-tooltip-ovdas {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      color: #e6a032 !important;
+      text-shadow:
+        0 1px 5px rgba(0,0,0,0.95),
+        0 0 10px rgba(0,0,0,0.8) !important;
+    }
 
     /* ── Leaflet overrides ── */
     .leaflet-control-zoom {

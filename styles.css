@@ -529,31 +529,47 @@ main.split { height: calc(100% - 58px); display: flex; width: 100%; }
 .range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
 .lastn-row  { margin-top: 8px; }
 
-/* ===== Tooltips de volcán/fundición ===== */
-.label-volcano, .label-smelter {
-  background: rgba(10, 13, 26, 0.96) !important;
-  border: 1px solid rgba(160,180,255,0.25) !important;
-  border-radius: var(--r-sm) !important;
-  padding: 2px 7px !important;
-  font-size: 11px !important;
-  color: #ffffff !important;
-  white-space: nowrap !important;
+/* ===== Etiquetas volcanes / fundición — sin marco, text-shadow ===== */
+
+/* Base: sin caja, sin flecha */
+.label-ovdas, .label-volcano, .label-smelter {
+  background: none !important;
+  border: none !important;
   box-shadow: none !important;
+  padding: 0 2px !important;
+  white-space: nowrap !important;
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  letter-spacing: 0.01em !important;
 }
+.label-ovdas::before,
+.label-volcano::before,
+.label-smelter::before { display: none !important; }
+
+/* OVDAS: ámbar, negrita — acorde al HUD y al ícono */
+.label-ovdas {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #e6a032 !important;
+  text-shadow:
+    0 1px 5px rgba(0,0,0,0.95),
+    0 0 10px rgba(0,0,0,0.8) !important;
+}
+
+/* Volcán no monitoreado: gris-azul claro */
 .label-volcano {
-  font-weight: 600 !important;
-  color: #ffffff !important;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
-}
-.label-smelter {
+  font-size: 10px !important;
   font-weight: 500 !important;
-  color: #ffffff !important;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+  color: #94a3b8 !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.95) !important;
 }
-.leaflet-tooltip.label-volcano,
-.leaflet-tooltip.label-smelter { border: none !important; background: none !important; box-shadow: none !important; }
-.leaflet-tooltip.label-volcano::before,
-.leaflet-tooltip.label-smelter::before { display: none !important; }
+
+/* Fundición: índigo claro */
+.label-smelter {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: #818cf8 !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.95) !important;
+}
 
 /* ===== Leyenda SO2 ===== */
 .so2-legend {
