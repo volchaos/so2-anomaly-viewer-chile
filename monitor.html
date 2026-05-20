@@ -23,59 +23,59 @@
 
     #map { height: 100vh; width: 100vw; }
 
-    /* ── HUD principal (top-left) ── */
+    /* ── HUD principal (top-left) — optimizado TV portrait ── */
     .hud {
       position: fixed;
-      top: 20px; left: 20px;
+      top: 24px; left: 24px;
       background: rgba(10, 13, 24, 0.97);
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 14px;
-      padding: 18px 20px 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 22px 24px 20px;
       z-index: 900;
       backdrop-filter: blur(16px);
-      box-shadow: 0 6px 36px rgba(0,0,0,0.65);
-      width: 240px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.70);
+      width: 280px;
     }
     .hud::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, #e6a032 0%, transparent 70%);
-      border-radius: 14px 14px 0 0;
+      border-radius: 16px 16px 0 0;
     }
 
     .hud-zone {
-      font-size: 11px; font-weight: 700;
+      font-size: 13px; font-weight: 700;
       color: #e6a032;
       text-transform: uppercase; letter-spacing: 0.14em;
       font-family: 'IBM Plex Mono', monospace;
     }
     .hud-product {
-      font-size: 15px; font-weight: 600;
+      font-size: 18px; font-weight: 600;
       color: #e2e8f0;
-      margin-top: 3px; letter-spacing: -0.01em;
+      margin-top: 4px; letter-spacing: -0.01em;
     }
 
     .hud-sep {
       border: none; border-top: 1px solid rgba(255,255,255,0.08);
-      margin: 12px 0;
+      margin: 14px 0;
     }
 
     .hud-date {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 28px; font-weight: 600;
+      font-size: 34px; font-weight: 600;
       color: #f0f4ff; letter-spacing: 0.02em;
       line-height: 1.1;
     }
     .hud-nav {
-      display: flex; gap: 6px; margin-top: 10px;
+      display: flex; gap: 8px; margin-top: 12px;
     }
     .hud-btn {
-      flex: 1; padding: 8px 0;
+      flex: 1; padding: 10px 0;
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 8px;
-      color: #7a8aaa; font-size: 14px; cursor: pointer;
+      border-radius: 9px;
+      color: #7a8aaa; font-size: 16px; cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       transition: background 0.12s, color 0.12s, border-color 0.12s;
       text-align: center;
@@ -88,27 +88,27 @@
 
     .hud-refresh {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 11px; color: #3d4d6a;
-      margin-top: 10px; line-height: 1.9;
+      font-size: 13px; color: #4a5e80;
+      margin-top: 12px; line-height: 2.0;
     }
-    .hud-refresh b { color: #7a8aaa; font-weight: 500; }
-    .hud-refresh-note { color: #2a3550; font-size: 10px; }
+    .hud-refresh b { color: #94a3b8; font-weight: 500; }
+    .hud-refresh-note { color: #3a4d6a; font-size: 12px; }
 
     /* ── Leyenda de capas (parte baja del HUD) ── */
     .hud-legend {
-      margin-top: 12px;
+      margin-top: 14px;
       border-top: 1px solid rgba(255,255,255,0.07);
-      padding-top: 10px;
+      padding-top: 12px;
     }
     .hud-legend-title {
-      font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
       color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .hud-legend-item {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 14px; color: #cbd5e1;
-      margin: 6px 0;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 15px; color: #cbd5e1;
+      margin: 8px 0;
     }
     .hud-legend-item svg { flex-shrink: 0; }
 
@@ -143,22 +143,22 @@
 
     /* Volcán no monitoreado: slate medio + halo blanco */
     .monitor-tooltip {
-      font-size: 10px !important;
+      font-size: 12px !important;
       font-weight: 500 !important;
-      color: #334155 !important;
+      color: #1e293b !important;
       text-shadow:
-        0 0 3px rgba(255,255,255,0.95),
-        1px 0 0 rgba(255,255,255,0.85), -1px 0 0 rgba(255,255,255,0.85),
-        0 1px 0 rgba(255,255,255,0.85), 0 -1px 0 rgba(255,255,255,0.85) !important;
+        0 0 4px rgba(255,255,255,0.98),
+        1px 0 0 rgba(255,255,255,0.9), -1px 0 0 rgba(255,255,255,0.9),
+        0 1px 0 rgba(255,255,255,0.9), 0 -1px 0 rgba(255,255,255,0.9) !important;
     }
 
     /* OVDAS: charcoal oscuro, negrita + halo blanco fuerte */
     .monitor-tooltip-ovdas {
-      font-size: 11px !important;
+      font-size: 13px !important;
       font-weight: 700 !important;
-      color: #1e293b !important;
+      color: #0f172a !important;
       text-shadow:
-        0 0 3px #fff, 0 0 5px rgba(255,255,255,0.9),
+        0 0 4px #fff, 0 0 6px rgba(255,255,255,0.95),
         1px 0 0 #fff, -1px 0 0 #fff,
         0 1px 0 #fff, 0 -1px 0 #fff !important;
     }
@@ -174,9 +174,9 @@
       background: rgba(16,20,32,0.98) !important;
       border-color: rgba(255,255,255,0.08) !important;
       color: #7a8aaa !important;
-      font-size: 20px !important; font-weight: 400 !important;
-      width: 40px !important; height: 40px !important;
-      line-height: 40px !important;
+      font-size: 24px !important; font-weight: 400 !important;
+      width: 50px !important; height: 50px !important;
+      line-height: 50px !important;
     }
     .leaflet-control-zoom a:hover {
       color: #e6a032 !important;
@@ -243,9 +243,9 @@
 
   <!-- Escala SO₂ -->
   <div class="so2-scale">
-    <svg xmlns="http://www.w3.org/2000/svg" width="160" height="230" viewBox="0 0 160 230">
-      <rect x="0" y="0" width="160" height="230" fill="#10141f" rx="3"/>
-      <text x="10" y="20" font-size="16" font-weight="600" fill="#e2e8f0"
+    <svg xmlns="http://www.w3.org/2000/svg" width="190" height="270" viewBox="0 0 190 270">
+      <rect x="0" y="0" width="190" height="270" fill="#10141f" rx="4"/>
+      <text x="12" y="24" font-size="18" font-weight="600" fill="#e2e8f0"
             font-family="IBM Plex Mono,monospace">SO₂ (DU)</text>
       <defs>
         <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
@@ -259,17 +259,17 @@
           <stop offset="100%" stop-color="#ffffff"/>
         </linearGradient>
       </defs>
-      <rect x="12" y="28" width="46" height="182" fill="url(#g)" stroke="#444" stroke-width="0.8"/>
-      <line x1="60" y1="28"  x2="70" y2="28"  stroke="#4a5568" stroke-width="1.5"/>
-      <text x="74" y="33"  font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">10.0</text>
-      <line x1="60" y1="73"  x2="70" y2="73"  stroke="#4a5568" stroke-width="1.5"/>
-      <text x="74" y="78"  font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">3.3</text>
-      <line x1="60" y1="119" x2="70" y2="119" stroke="#4a5568" stroke-width="1.5"/>
-      <text x="74" y="124" font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">1.1</text>
-      <line x1="60" y1="155" x2="70" y2="155" stroke="#4a5568" stroke-width="1.5"/>
-      <text x="74" y="160" font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">0.3</text>
-      <line x1="60" y1="210" x2="70" y2="210" stroke="#4a5568" stroke-width="1.5"/>
-      <text x="74" y="215" font-size="14" fill="#94a3b8" font-family="IBM Plex Mono,monospace">0</text>
+      <rect x="14" y="33" width="50" height="215" fill="url(#g)" stroke="#444" stroke-width="0.8"/>
+      <line x1="66" y1="33"  x2="78" y2="33"  stroke="#4a5568" stroke-width="1.5"/>
+      <text x="83" y="39"  font-size="16" fill="#94a3b8" font-family="IBM Plex Mono,monospace">10.0</text>
+      <line x1="66" y1="86"  x2="78" y2="86"  stroke="#4a5568" stroke-width="1.5"/>
+      <text x="83" y="92"  font-size="16" fill="#94a3b8" font-family="IBM Plex Mono,monospace">3.3</text>
+      <line x1="66" y1="140" x2="78" y2="140" stroke="#4a5568" stroke-width="1.5"/>
+      <text x="83" y="146" font-size="16" fill="#94a3b8" font-family="IBM Plex Mono,monospace">1.1</text>
+      <line x1="66" y1="183" x2="78" y2="183" stroke="#4a5568" stroke-width="1.5"/>
+      <text x="83" y="189" font-size="16" fill="#94a3b8" font-family="IBM Plex Mono,monospace">0.3</text>
+      <line x1="66" y1="248" x2="78" y2="248" stroke="#4a5568" stroke-width="1.5"/>
+      <text x="83" y="254" font-size="16" fill="#94a3b8" font-family="IBM Plex Mono,monospace">0</text>
     </svg>
   </div>
 
