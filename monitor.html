@@ -88,11 +88,11 @@
 
     .hud-refresh {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 13px; color: #4a5e80;
+      font-size: 13px; color: #94a3b8;
       margin-top: 12px; line-height: 2.0;
     }
-    .hud-refresh b { color: #94a3b8; font-weight: 500; }
-    .hud-refresh-note { color: #3a4d6a; font-size: 12px; }
+    .hud-refresh b { color: #e2e8f0; font-weight: 600; }
+    .hud-refresh-note { color: #7a8aaa; font-size: 12px; }
 
     /* ── Leyenda de capas (parte baja del HUD) ── */
     .hud-legend {
@@ -288,9 +288,11 @@
 
     const ZONAS = {
       // Norte: Taapaca → Llaima/Villarrica. Sur: Antuco → Monte Burney.
-      // Traslape en ~-37°–-40° (Antuco, Copahue, Llaima, Villarrica visibles en ambas).
-      norte: { label: "Chile Norte", bounds: [[-40.5, -75.5], [-17.0, -63.0]] },
-      sur:   { label: "Chile Sur",   bounds: [[-53.5, -76.5], [-37.0, -65.0]] },
+      // Norte: Taapaca (-18.1°) → Llaima (-38.7°) con margen.
+      // Sur: Llaima (-38.7°) → Monte Burney (-52.3°) con margen.
+      // Traslape en zona Llaima/Villarrica (~-38° a -40°).
+      norte: { label: "Chile Norte", bounds: [[-39.5, -75.5], [-17.0, -63.0]] },
+      sur:   { label: "Chile Sur",   bounds: [[-53.5, -76.5], [-38.0, -65.0]] },
     };
     const zona = ZONAS[zonaKey] || ZONAS.norte;
     document.title = `SO₂ Monitor · ${zona.label}`;
@@ -317,7 +319,11 @@
     let currentDate = params.get("fecha") || smartDate();
 
     // ── Mapa ───────────────────────────────────────────────────────────────
-    const map = L.map("map", { zoomControl: false }).fitBounds(zona.bounds);
+    const map = L.map("map", {
+      zoomControl:        false,
+      zoomSnap:           0.25,   // incrementos de ¼ zoom en vez de 1
+      wheelPxPerZoomLevel: 120,   // más px de scroll por nivel → zoom más suave
+    }).fitBounds(zona.bounds);
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
