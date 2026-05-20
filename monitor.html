@@ -101,13 +101,13 @@
       padding-top: 10px;
     }
     .hud-legend-title {
-      font-size: 10px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
-      color: #3d4d6a; text-transform: uppercase; letter-spacing: 0.12em;
+      font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+      color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em;
       margin-bottom: 8px;
     }
     .hud-legend-item {
       display: flex; align-items: center; gap: 10px;
-      font-size: 13px; color: #94a3b8;
+      font-size: 14px; color: #cbd5e1;
       margin: 6px 0;
     }
     .hud-legend-item svg { flex-shrink: 0; }
@@ -287,8 +287,10 @@
     const zonaKey = (params.get("zona") || "norte").toLowerCase();
 
     const ZONAS = {
-      norte: { label: "Chile Norte", bounds: [[-35.5, -73.5], [-17.0, -61.5]] },
-      sur:   { label: "Chile Sur",   bounds: [[-56.0, -76.5], [-35.5, -64.0]] },
+      // Norte: Taapaca → Llaima/Villarrica. Sur: Antuco → Monte Burney.
+      // Traslape en ~-37°–-40° (Antuco, Copahue, Llaima, Villarrica visibles en ambas).
+      norte: { label: "Chile Norte", bounds: [[-40.5, -75.5], [-17.0, -63.0]] },
+      sur:   { label: "Chile Sur",   bounds: [[-53.5, -76.5], [-37.0, -65.0]] },
     };
     const zona = ZONAS[zonaKey] || ZONAS.norte;
     document.title = `SO₂ Monitor · ${zona.label}`;
@@ -336,29 +338,46 @@
       so2Layer = L.tileLayer.wms(cfg.wms.url, p).addTo(map);
     }
 
+    // ── Abreviaciones para nombres largos ──────────────────────────────────
+    const SHORT_NAMES = {
+      "Planchón - Peteroa":    "Planchón-Pet.",
+      "Grupo Descabezado Grande": "Desc. Grande",
+      "Tatara-San Pedro":      "Tatara-S.P.",
+      "Laguna del Maule":      "Lag. Maule",
+      "Nevado de Longaví":     "Nev. Longaví",
+      "Nevados de Chillán":    "Nev. Chillán",
+      "Mocho-Choshuenco":      "Mocho-Chosh.",
+      "Carrán-Los Venados":    "Carrán-L.V.",
+      "Puyehue-Cordón Caulle": "Puyehue-C.C.",
+      "Complejo Antillanca":   "C. Antillanca",
+    };
+    function labelName(name) {
+      return SHORT_NAMES[name] ?? name;
+    }
+
     // ── Iconos SVG ─────────────────────────────────────────────────────────
-    // OVDAS: triángulo gris oscuro con cima nevada – grande para videowall
+    // OVDAS: triángulo con cima nevada, reducido para evitar solapamiento
     function ovdasIcon() {
-      const w = 30, h = 34, cx = w / 2;
+      const w = 20, h = 23, cx = w / 2;
       return L.divIcon({
         className: "volcano-icon",
         html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-          <path d="M${cx},0 L0,${h} L${w},${h} Z" fill="#4a5568" stroke="#0f1117" stroke-width="1" stroke-linejoin="round"/>
-          <path d="M${cx},0 L${cx*.52},${h*.38} Q${cx},${h*.28} ${cx*1.48},${h*.38} Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.6"/>
+          <path d="M${cx},0 L0,${h} L${w},${h} Z" fill="#4a5568" stroke="#0f1117" stroke-width="0.8" stroke-linejoin="round"/>
+          <path d="M${cx},0 L${cx*.52},${h*.38} Q${cx},${h*.28} ${cx*1.48},${h*.38} Z" fill="#e8eaf0" stroke="#9aa5b4" stroke-width="0.5"/>
         </svg>`,
         iconSize:   [w, h],
         iconAnchor: [Math.round(w / 2), h],
-        tooltipAnchor: [0, -h],  // encima, centro horizontal
+        tooltipAnchor: [0, -h],
       });
     }
 
     // Otro volcán: triángulo pequeño gris apagado – sin cima nevada
     function otherIcon() {
-      const w = 16, h = 17;
+      const w = 11, h = 12;
       return L.divIcon({
         className: "volcano-icon",
         html: `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#374151" stroke="#1f2937" stroke-width="0.8" stroke-linejoin="round"/>
+          <polygon points="${w/2},0 0,${h} ${w},${h}" fill="#374151" stroke="#1f2937" stroke-width="0.6" stroke-linejoin="round"/>
         </svg>`,
         iconSize:   [w, h],
         iconAnchor: [Math.round(w / 2), h],
@@ -369,6 +388,8 @@
     function nameOf(props) {
       return (props && (props.name || props.Name || props.NOMBRE)) || "";
     }
+    // Usa abreviación si existe, si no devuelve el nombre completo
+    function displayName(props) { return labelName(nameOf(props)); }
 
     // ── Zoom thresholds desde config ───────────────────────────────────────
     const ZOOM_OVDAS = cfg.zoomLabels?.ovdas ?? 6;
@@ -409,7 +430,7 @@
           },
           pointToLayer: (f, ll) => pointFn(ll, f),
           onEachFeature: (f, lyr) => {
-            const name = nameOf(f.properties);
+            const name = displayName(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
               permanent: true, direction: "top",
@@ -527,7 +548,7 @@
             zIndexOffset: 1000,   // siempre por encima de otros marcadores
           }),
           onEachFeature: (f, lyr) => {
-            const name = nameOf(f.properties);
+            const name = displayName(f.properties);
             if (!name) return;
             lyr.bindTooltip(name, {
               permanent: true, direction: "top",
