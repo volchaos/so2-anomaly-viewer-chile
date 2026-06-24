@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-23",
+  "updated": "2026-06-24",
   "high_threshold_du": 0.45,
   "low_threshold_du": 0.2,
   "min_seed_pixels": 4,
@@ -11,14 +11,6 @@
       "lat": -39.42,
       "lon": -71.939,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -736,6 +728,14 @@
           "data_ok": true,
           "centroid_lat": -42.3157,
           "centroid_lon": -70.6646
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -743,14 +743,6 @@
       "lat": -38.694,
       "lon": -71.733,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -1468,6 +1460,14 @@
           "data_ok": true,
           "centroid_lat": -41.5833,
           "centroid_lon": -70.7433
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -1475,14 +1475,6 @@
       "lat": -41.329,
       "lon": -72.614,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -2204,6 +2196,14 @@
           "data_ok": true,
           "centroid_lat": -43.6832,
           "centroid_lon": -70.9827
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -2211,14 +2211,6 @@
       "lat": -36.871,
       "lon": -71.368,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -2936,6 +2928,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -2943,14 +2943,6 @@
       "lat": -40.585,
       "lon": -72.112,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -3674,6 +3666,14 @@
           "data_ok": true,
           "centroid_lat": -43.119,
           "centroid_lon": -70.6896
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -3681,14 +3681,6 @@
       "lat": -41.102,
       "lon": -72.499,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -4410,6 +4402,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -4417,14 +4417,6 @@
       "lat": -39.93,
       "lon": -72.03,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -5146,6 +5138,14 @@
           "data_ok": true,
           "centroid_lat": -42.655,
           "centroid_lon": -70.6908
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -5153,14 +5153,6 @@
       "lat": -37.41,
       "lon": -71.351,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -5876,6 +5868,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -5883,14 +5883,6 @@
       "lat": -40.366,
       "lon": -72.073,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -6616,6 +6608,14 @@
           "data_ok": true,
           "centroid_lat": -42.9595,
           "centroid_lon": -70.674
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -6623,14 +6623,6 @@
       "lat": -42.837,
       "lon": -72.65,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -7366,6 +7358,14 @@
           "data_ok": true,
           "centroid_lat": -44.8635,
           "centroid_lon": -71.1466
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -7373,14 +7373,6 @@
       "lat": -38.379,
       "lon": -71.589,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -8102,6 +8094,14 @@
           "data_ok": true,
           "centroid_lat": -41.2791,
           "centroid_lon": -70.7367
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -8109,14 +8109,6 @@
       "lat": -45.9,
       "lon": -72.97,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -8854,6 +8846,16 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 34943.03,
+          "max_du": 1.433,
+          "plume_pixels": 12632,
+          "plume_km2": 1077511.5,
+          "data_ok": true,
+          "centroid_lat": -47.8274,
+          "centroid_lon": -70.2884
         }
       ]
     },
@@ -8861,14 +8863,6 @@
       "lat": -23.363,
       "lon": -67.731,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -9582,6 +9576,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -9589,14 +9591,6 @@
       "lat": -42.798,
       "lon": -72.445,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -10330,6 +10324,16 @@
           "data_ok": true,
           "centroid_lat": -44.8239,
           "centroid_lon": -71.0513
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 24416.67,
+          "max_du": 1.116,
+          "plume_pixels": 10806,
+          "plume_km2": 965618.6,
+          "data_ok": true,
+          "centroid_lat": -44.9238,
+          "centroid_lon": -69.0986
         }
       ]
     },
@@ -10337,14 +10341,6 @@
       "lat": -41.759,
       "lon": -72.4,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -11066,6 +11062,16 @@
           "data_ok": true,
           "centroid_lat": -44.015,
           "centroid_lon": -70.9112
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 20792.92,
+          "max_du": 0.963,
+          "plume_pixels": 10126,
+          "plume_km2": 915240.9,
+          "data_ok": true,
+          "centroid_lat": -44.0189,
+          "centroid_lon": -69.3631
         }
       ]
     },
@@ -11073,14 +11079,6 @@
       "lat": -38.977,
       "lon": -71.519,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -11796,6 +11794,14 @@
           "data_ok": true,
           "centroid_lat": -41.9059,
           "centroid_lon": -70.5129
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -11803,14 +11809,6 @@
       "lat": -37.85,
       "lon": -71.17,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -12528,6 +12526,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -12535,14 +12541,6 @@
       "lat": -35.586,
       "lon": -70.751,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -13256,6 +13254,14 @@
           "data_ok": true,
           "centroid_lat": -35.4558,
           "centroid_lon": -70.6359
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -13263,14 +13269,6 @@
       "lat": -37.926,
       "lon": -71.446,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -13988,6 +13986,14 @@
           "data_ok": true,
           "centroid_lat": -40.8726,
           "centroid_lon": -70.7796
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -13995,14 +14001,6 @@
       "lat": -39.498,
       "lon": -71.717,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -14720,6 +14718,14 @@
           "data_ok": true,
           "centroid_lat": -42.3648,
           "centroid_lon": -70.5376
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -14727,14 +14733,6 @@
       "lat": -18.164,
       "lon": -69.143,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -15446,6 +15444,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -15453,14 +15459,6 @@
       "lat": -35.241,
       "lon": -70.574,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -16174,6 +16172,14 @@
           "data_ok": true,
           "centroid_lat": -35.4558,
           "centroid_lon": -70.6359
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -16181,14 +16187,6 @@
       "lat": -41.876,
       "lon": -72.431,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -16912,6 +16910,16 @@
           "data_ok": true,
           "centroid_lat": -44.1146,
           "centroid_lon": -70.9426
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 21215.97,
+          "max_du": 0.963,
+          "plume_pixels": 10198,
+          "plume_km2": 920491.6,
+          "data_ok": true,
+          "centroid_lat": -44.139,
+          "centroid_lon": -69.3433
         }
       ]
     },
@@ -16919,14 +16927,6 @@
       "lat": -39.639,
       "lon": -71.501,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -17646,6 +17646,14 @@
           "data_ok": true,
           "centroid_lat": -42.4686,
           "centroid_lon": -70.4217
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -17653,14 +17661,6 @@
       "lat": -40.776,
       "lon": -72.155,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -18386,6 +18386,14 @@
           "data_ok": true,
           "centroid_lat": -43.2808,
           "centroid_lon": -70.7243
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -18393,14 +18401,6 @@
       "lat": -36.058,
       "lon": -70.507,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -19112,6 +19112,16 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 8894.85,
+          "max_du": 0.518,
+          "plume_pixels": 5679,
+          "plume_km2": 541733.6,
+          "data_ok": true,
+          "centroid_lat": -39.9387,
+          "centroid_lon": -69.3228
         }
       ]
     },
@@ -19119,14 +19129,6 @@
       "lat": -44.072,
       "lon": -72.868,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -19868,6 +19870,16 @@
           "data_ok": true,
           "centroid_lat": -45.8616,
           "centroid_lon": -71.5656
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 27674.66,
+          "max_du": 0.63,
+          "plume_pixels": 11436,
+          "plume_km2": 1005205.1,
+          "data_ok": true,
+          "centroid_lat": -45.9398,
+          "centroid_lon": -69.4115
         }
       ]
     },
@@ -19875,14 +19887,6 @@
       "lat": -33.401,
       "lon": -69.802,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -20598,6 +20602,16 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 5539.74,
+          "max_du": 0.988,
+          "plume_pixels": 3747,
+          "plume_km2": 365292.9,
+          "data_ok": true,
+          "centroid_lat": -38.2558,
+          "centroid_lon": -69.3094
         }
       ]
     },
@@ -20605,14 +20619,6 @@
       "lat": -18.423,
       "lon": -69.089,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -21319,6 +21325,14 @@
         },
         {
           "date": "2026-06-22",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
           "so2_tons": 0.0,
           "max_du": 0.0,
           "plume_pixels": 0,
@@ -21332,14 +21346,6 @@
       "lon": -69.894,
       "history": [
         {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
-        {
           "date": "2026-03-26",
           "so2_tons": 0.0,
           "max_du": 0.0,
@@ -22050,6 +22056,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -22057,14 +22071,6 @@
       "lat": -52.326,
       "lon": -73.379,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -22838,6 +22844,16 @@
           "data_ok": true,
           "centroid_lat": -53.3522,
           "centroid_lon": -71.9874
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 47502.69,
+          "max_du": 10.787,
+          "plume_pixels": 11497,
+          "plume_km2": 885394.6,
+          "data_ok": true,
+          "centroid_lat": -53.5085,
+          "centroid_lon": -71.3394
         }
       ]
     },
@@ -22845,14 +22861,6 @@
       "lat": -18.112,
       "lon": -69.509,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -23564,6 +23572,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -23571,14 +23587,6 @@
       "lat": -42.379,
       "lon": -72.579,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -24310,6 +24318,14 @@
           "data_ok": true,
           "centroid_lat": -44.5138,
           "centroid_lon": -71.063
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -24317,14 +24333,6 @@
       "lat": -44.695,
       "lon": -73.079,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -25064,6 +25072,14 @@
           "data_ok": true,
           "centroid_lat": -46.3558,
           "centroid_lon": -71.8447
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -25071,14 +25087,6 @@
       "lat": -36.199,
       "lon": -71.164,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -25785,6 +25793,14 @@
         },
         {
           "date": "2026-06-22",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
           "so2_tons": 0.0,
           "max_du": 0.0,
           "plume_pixels": 0,
@@ -25798,14 +25814,6 @@
       "lon": -68.391,
       "history": [
         {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
-        {
           "date": "2026-03-26",
           "so2_tons": 0.0,
           "max_du": 0.0,
@@ -26516,6 +26524,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -26523,14 +26539,6 @@
       "lat": -45.104,
       "lon": -73.164,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -27268,6 +27276,16 @@
           "data_ok": true,
           "centroid_lat": -46.7207,
           "centroid_lon": -72.0521
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 31569.94,
+          "max_du": 1.608,
+          "plume_pixels": 12056,
+          "plume_km2": 1042784.2,
+          "data_ok": true,
+          "centroid_lat": -47.0163,
+          "centroid_lon": -70.0541
         }
       ]
     },
@@ -27275,14 +27293,6 @@
       "lat": -20.732,
       "lon": -68.56,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -27994,6 +28004,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -28001,14 +28019,6 @@
       "lat": -43.194,
       "lon": -72.794,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -28742,6 +28752,14 @@
           "data_ok": true,
           "centroid_lat": -45.1603,
           "centroid_lon": -71.2954
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -28749,14 +28767,6 @@
       "lat": -35.992,
       "lon": -70.855,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -29463,6 +29473,14 @@
         },
         {
           "date": "2026-06-22",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
           "so2_tons": 0.0,
           "max_du": 0.0,
           "plume_pixels": 0,
@@ -29476,14 +29494,6 @@
       "lon": -70.34,
       "history": [
         {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
-        {
           "date": "2026-03-26",
           "so2_tons": 0.0,
           "max_du": 0.0,
@@ -30194,6 +30204,16 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 7075.33,
+          "max_du": 1.136,
+          "plume_pixels": 4744,
+          "plume_km2": 457224.8,
+          "data_ok": true,
+          "centroid_lat": -39.082,
+          "centroid_lon": -69.4798
         }
       ]
     },
@@ -30202,14 +30222,6 @@
       "lon": -68.82,
       "history": [
         {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
-        {
           "date": "2026-03-26",
           "so2_tons": 0.0,
           "max_du": 0.0,
@@ -30915,6 +30927,14 @@
         },
         {
           "date": "2026-06-22",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
           "so2_tons": 0.0,
           "max_du": 0.0,
           "plume_pixels": 0,
@@ -30928,14 +30948,6 @@
       "lon": -68.18,
       "history": [
         {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
-        {
           "date": "2026-03-26",
           "so2_tons": 0.0,
           "max_du": 0.0,
@@ -31646,6 +31658,14 @@
           "plume_pixels": 0,
           "plume_km2": 0.0,
           "data_ok": true
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 0.0,
+          "max_du": 0.0,
+          "plume_pixels": 0,
+          "plume_km2": 0.0,
+          "data_ok": true
         }
       ]
     },
@@ -31653,14 +31673,6 @@
       "lat": -45.058,
       "lon": -72.988,
       "history": [
-        {
-          "date": "2026-03-25",
-          "so2_tons": 0.0,
-          "max_du": 0.0,
-          "plume_pixels": 0,
-          "plume_km2": 0.0,
-          "data_ok": true
-        },
         {
           "date": "2026-03-26",
           "so2_tons": 0.0,
@@ -32398,6 +32410,16 @@
           "data_ok": true,
           "centroid_lat": -46.6402,
           "centroid_lon": -71.9275
+        },
+        {
+          "date": "2026-06-23",
+          "so2_tons": 31405.5,
+          "max_du": 1.077,
+          "plume_pixels": 12122,
+          "plume_km2": 1049346.3,
+          "data_ok": true,
+          "centroid_lat": -46.9291,
+          "centroid_lon": -69.9104
         }
       ]
     }
